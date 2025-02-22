@@ -17,4 +17,7 @@ router.patch('/:id', followupsController.updateFollowup);
 // Send the followup email
 router.post('/:id/send', followupsController.sendFollowup);
 
+// Skip the followup
+router.post('/:id/skip', followupsController.skipFollowup);
+
 export default router;
