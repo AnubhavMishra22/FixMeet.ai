@@ -140,3 +140,29 @@ export interface MeetingBriefWithBooking extends MeetingBrief {
     eventTypeTitle: string;
   };
 }
+
+// ── Follow-ups ──────────────────────────────────────────────────────────
+
+export type FollowupStatus = 'draft' | 'sent' | 'skipped';
+
+export interface MeetingFollowup {
+  id: string;
+  bookingId: string;
+  userId: string;
+  subject: string | null;
+  body: string | null;
+  actionItems: string[];
+  status: FollowupStatus;
+  sentAt: string | null;
+  createdAt: string;
+}
+
+export interface MeetingFollowupWithBooking extends MeetingFollowup {
+  booking: {
+    inviteeName: string;
+    inviteeEmail: string;
+    startTime: string;
+    endTime: string;
+    eventTypeTitle: string;
+  };
+}
