@@ -18,6 +18,8 @@ import SettingsPage from './pages/dashboard/settings/index';
 import AIChatPage from './pages/dashboard/ai/index';
 import BriefsPage from './pages/dashboard/briefs/index';
 import BriefDetailsPage from './pages/dashboard/briefs/details';
+import FollowupsPage from './pages/dashboard/followups/index';
+import FollowupDetailsPage from './pages/dashboard/followups/details';
 
 // Public pages
 import PublicBookingPage from './pages/booking/public-booking';
@@ -128,6 +130,27 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <BriefDetailsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/followups"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <FollowupsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/followups/:id"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <FollowupDetailsPage />
               </DashboardLayout>
             </ProtectedRoute>
           }
