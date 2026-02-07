@@ -2,12 +2,12 @@ import { Request, Response } from 'express';
 import * as authService from './auth.service.js';
 import type { RegisterInput, LoginInput } from './auth.schema.js';
 import { UnauthorizedError } from '../../utils/errors.js';
-import { env } from '../../config/env.js';
+import { isProd } from '../../config/env.js';
 
 const REFRESH_TOKEN_COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  secure: isProd,
+  sameSite: isProd ? 'none' as const : 'lax' as const,
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   path: '/',
 };

@@ -16,9 +16,22 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
+
+// CORS - allow multiple origins for production
+const allowedOrigins = [env.FRONTEND_URL].filter(Boolean);
+
 app.use(
   cors({
-    origin: env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
@@ -27,9 +40,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// Health check
+// Health check endpoint (required for Railway)
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Routes
