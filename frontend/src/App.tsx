@@ -104,6 +104,7 @@ function App() {
 
         {/* Redirects */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/settings/calendars" element={<Navigate to="/dashboard/settings" replace />} />
       </Routes>
 
       <Toaster />
