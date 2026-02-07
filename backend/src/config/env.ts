@@ -8,7 +8,7 @@ const envSchema = z.object({
   PORT: z.string().default('3001').transform(Number),
   DATABASE_URL: z.string(),
   JWT_SECRET: z.string().min(32),
-  FRONTEND_URL: z.string().default('http://localhost:3000'),
+  FRONTEND_URL: z.string().default('http://localhost:5173'),
   // Email (Resend)
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default('FixMeet <notifications@fixmeet.ai>'),
@@ -18,4 +18,13 @@ const envSchema = z.object({
   GOOGLE_REDIRECT_URI: z.string().default('http://localhost:3001/api/calendars/google/callback'),
 });
 
-export const env = envSchema.parse(process.env);
+const parsed = envSchema.safeParse(process.env);
+
+if (!parsed.success) {
+  console.error('Invalid environment variables:', parsed.error.flatten().fieldErrors);
+  process.exit(1);
+}
+
+export const env = parsed.data;
+
+export const isProd = env.NODE_ENV === 'production';
