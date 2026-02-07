@@ -35,6 +35,7 @@ coverage/
 
 # Claude Code local settings
 .claude/
+CLAUDE.md
 
 # OS files
 Thumbs.db

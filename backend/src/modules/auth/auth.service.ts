@@ -17,7 +17,7 @@ import type {
   AuthResponse,
   TokenResponse,
 } from './auth.types.js';
-import type { RegisterInput, LoginInput } from './auth.schema.js';
+import type { RegisterInput, LoginInput, UpdateProfileInput } from './auth.schema.js';
 
 function generateUsername(email: string): string {
   const base = email.split('@')[0] ?? 'user';
@@ -213,6 +213,56 @@ export async function getCurrentUser(userId: string): Promise<User> {
   `;
 
   const user = users[0];
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  return sanitizeUser(user);
+}
+
+export async function updateProfile(
+  userId: string,
+  input: UpdateProfileInput
+): Promise<User> {
+  // Check username uniqueness if changing
+  if (input.username) {
+    const existing = await sql<{ id: string }[]>`
+      SELECT id FROM users WHERE username = ${input.username} AND id != ${userId}
+    `;
+    if (existing.length > 0) {
+      throw new ConflictError('Username already taken');
+    }
+  }
+
+  const updates: string[] = [];
+  const values: string[] = [];
+
+  if (input.name !== undefined) {
+    updates.push('name');
+    values.push(input.name);
+  }
+  if (input.username !== undefined) {
+    updates.push('username');
+    values.push(input.username);
+  }
+  if (input.timezone !== undefined) {
+    updates.push('timezone');
+    values.push(input.timezone);
+  }
+
+  if (updates.length === 0) {
+    return getCurrentUser(userId);
+  }
+
+  // Build SET clause dynamically
+  const setClauses = updates.map((col, i) => `${col} = $${i + 2}`).join(', ');
+
+  const result = await sql.unsafe<UserWithPassword[]>(
+    `UPDATE users SET ${setClauses}, updated_at = NOW() WHERE id = $1 RETURNING *`,
+    [userId, ...values]
+  );
+
+  const user = result[0];
   if (!user) {
     throw new NotFoundError('User not found');
   }
