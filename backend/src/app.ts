@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import { env } from './config/env.js';
+import { env, isProd } from './config/env.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 import { authMiddleware } from './middleware/auth.middleware.js';
 import authRoutes from './modules/auth/auth.routes.js';
@@ -23,10 +23,9 @@ const allowedOrigins = [env.FRONTEND_URL].filter(Boolean);
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, etc.)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
+      // Allow origin-less requests in dev (curl, Postman), enforce in production
+      const isAllowed = allowedOrigins.includes(origin!) || (!origin && !isProd);
+      if (isAllowed) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
