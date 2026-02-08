@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { env, isProd } from './config/env.js';
+import { AppError } from './utils/errors.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 import { authMiddleware } from './middleware/auth.middleware.js';
 import authRoutes from './modules/auth/auth.routes.js';
@@ -72,10 +73,19 @@ app.use((req, _res, next) => {
   next();
 });
 
+// Simple test route to confirm routing works
+app.get('/api/test', (_req, res) => {
+  res.json({ test: 'working', timestamp: new Date().toISOString() });
+});
+console.log('TEST ROUTE OK');
+
 // Routes
 try {
+  console.log('Auth routes type:', typeof authRoutes);
+  console.log('Auth routes:', authRoutes);
   app.use('/api/auth', authRoutes);
   console.log('AUTH ROUTES OK');
+  console.log('ROUTES MOUNTED');
 } catch (e) {
   console.error('AUTH ROUTES FAILED:', e);
 }
@@ -107,6 +117,12 @@ try {
 } catch (e) {
   console.error('PUBLIC ROUTES FAILED:', e);
 }
+
+// 404 catch-all - return JSON error via errorMiddleware
+app.use((req, _res, next) => {
+  console.log(`NO ROUTE MATCHED: ${req.method} ${req.path}`);
+  next(new AppError(`Route not found: ${req.method} ${req.path}`, 404, 'NOT_FOUND'));
+});
 
 // Error handling - always log full details for debugging
 app.use(errorMiddleware);
