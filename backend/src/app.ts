@@ -40,28 +40,16 @@ try {
   console.error('HELMET FAILED:', e);
 }
 
-// CORS - allow multiple origins for production
-try {
-  const allowedOrigins = [env.FRONTEND_URL].filter(Boolean);
-
-  app.use(
-    cors({
-      origin: (origin, callback) => {
-        // Allow origin-less requests in dev (curl, Postman), enforce in production
-        const isAllowed = allowedOrigins.includes(origin!) || (!origin && !isProd);
-        if (isAllowed) {
-          callback(null, true);
-        } else {
-          callback(new Error('Not allowed by CORS'));
-        }
-      },
-      credentials: true,
-    })
-  );
-  console.log('CORS OK');
-} catch (e) {
-  console.error('CORS FAILED:', e);
-}
+// CORS - allow all origins temporarily for debugging
+// TODO: Restrict to FRONTEND_URL once deployment is stable
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.options('*', cors());
+console.log('CORS OK (all origins allowed)');
 
 // Body parsing
 try {
