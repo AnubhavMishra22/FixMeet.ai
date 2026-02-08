@@ -57,30 +57,32 @@ app.get('/api/test', (_req, res) => {
 // Mount routes with dynamic imports to catch import-time errors
 async function mountRoutes() {
   try {
-    const { authMiddleware } = await import('./middleware/auth.middleware.js');
-    console.log('AUTH MIDDLEWARE IMPORTED OK');
+    const [
+      { authMiddleware },
+      authRoutes,
+      eventTypesRoutes,
+      bookingsRoutes,
+      calendarsRoutes,
+      publicRoutes,
+    ] = await Promise.all([
+      import('./middleware/auth.middleware.js'),
+      import('./modules/auth/auth.routes.js'),
+      import('./modules/event-types/event-types.routes.js'),
+      import('./modules/bookings/bookings.routes.js'),
+      import('./modules/calendars/calendars.routes.js'),
+      import('./modules/public/public.routes.js'),
+    ]);
 
-    const authRoutes = await import('./modules/auth/auth.routes.js');
     app.use('/api/auth', authRoutes.default);
-    console.log('AUTH ROUTES MOUNTED');
-
-    const eventTypesRoutes = await import('./modules/event-types/event-types.routes.js');
     app.use('/api/event-types', authMiddleware, eventTypesRoutes.default);
-    console.log('EVENT TYPES ROUTES MOUNTED');
-
-    const bookingsRoutes = await import('./modules/bookings/bookings.routes.js');
     app.use('/api/bookings', authMiddleware, bookingsRoutes.default);
-    console.log('BOOKINGS ROUTES MOUNTED');
-
-    const calendarsRoutes = await import('./modules/calendars/calendars.routes.js');
     app.use('/api/calendars', calendarsRoutes.default);
-    console.log('CALENDARS ROUTES MOUNTED');
-
-    const publicRoutes = await import('./modules/public/public.routes.js');
     app.use('/api/public', publicRoutes.default);
-    console.log('PUBLIC ROUTES MOUNTED');
+
+    console.log('All routes imported and mounted successfully.');
   } catch (e) {
     console.error('FAILED TO MOUNT ROUTES:', e);
+    throw e;
   }
 
   // 404 catch-all - MUST be after all routes
