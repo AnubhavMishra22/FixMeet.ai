@@ -7,12 +7,33 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
+ * Resolve the migrations directory.
+ *
+ * In dev  (tsx):  __dirname = backend/src/config  → ../db/migrations
+ * In prod (node): __dirname = backend/dist/config → ../../src/db/migrations
+ *
+ * TypeScript doesn't copy .sql files to dist/, so we always read from src/.
+ */
+function getMigrationsDir(): string {
+  const isCompiledDist =
+    __dirname.includes(path.sep + 'dist' + path.sep) ||
+    __dirname.endsWith(path.sep + 'dist');
+
+  if (isCompiledDist) {
+    // dist/config -> dist -> backend root -> src/db/migrations
+    return path.resolve(__dirname, '..', '..', 'src', 'db', 'migrations');
+  }
+  // src/config -> src/db/migrations
+  return path.resolve(__dirname, '..', 'db', 'migrations');
+}
+
+/**
  * Run all SQL migrations on startup.
  * All migrations use CREATE TABLE IF NOT EXISTS / CREATE INDEX IF NOT EXISTS,
  * so they are idempotent and safe to re-run on every deploy.
  */
 export async function runMigrations(): Promise<void> {
-  const migrationsDir = path.join(__dirname, '..', 'db', 'migrations');
+  const migrationsDir = getMigrationsDir();
   const allFiles = await readdir(migrationsDir);
   const files = allFiles.filter(f => f.endsWith('.sql')).sort();
 
