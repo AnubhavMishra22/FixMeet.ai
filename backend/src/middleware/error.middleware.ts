@@ -4,13 +4,17 @@ import { env } from '../config/env.js';
 
 export function errorMiddleware(
   err: Error,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ): void {
-  if (env.NODE_ENV === 'development') {
-    console.error('Error:', err);
-  }
+  // Always log full error details for debugging
+  console.error('ERROR DETAILS:', {
+    message: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+  });
 
   if (err instanceof AppError) {
     res.status(err.statusCode).json({

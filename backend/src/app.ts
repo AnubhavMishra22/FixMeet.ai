@@ -14,6 +14,14 @@ import calendarsRoutes from './modules/calendars/calendars.routes.js';
 
 console.log('APP.TS LOADING...');
 
+// Debug: check env variables are loaded
+console.log('ENV CHECK:', {
+  NODE_ENV: process.env.NODE_ENV,
+  FRONTEND_URL: process.env.FRONTEND_URL,
+  JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'MISSING',
+  DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'MISSING',
+});
+
 const app = express();
 
 console.log('EXPRESS APP CREATED');
@@ -70,6 +78,12 @@ try {
   console.error('COOKIE PARSER FAILED:', e);
 }
 
+// Debug: request logger - traces every request through middleware
+app.use((req, _res, next) => {
+  console.log(`REQUEST: ${req.method} ${req.path}`);
+  next();
+});
+
 // Routes
 try {
   app.use('/api/auth', authRoutes);
@@ -106,7 +120,7 @@ try {
   console.error('PUBLIC ROUTES FAILED:', e);
 }
 
-// Error handling
+// Error handling - always log full details for debugging
 app.use(errorMiddleware);
 
 console.log('APP.TS FULLY LOADED');
