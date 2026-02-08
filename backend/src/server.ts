@@ -1,4 +1,4 @@
-import app from './app.js';
+import app, { mountRoutes } from './app.js';
 import { env } from './config/env.js';
 import { runMigrations } from './config/migrate.js';
 import { processReminders } from './jobs/reminder.job.js';
@@ -6,6 +6,9 @@ import { processReminders } from './jobs/reminder.job.js';
 async function start() {
   // Run database migrations before starting the server
   await runMigrations();
+
+  // Mount all routes (dynamic imports to catch import-time errors)
+  await mountRoutes();
 
   const server = app.listen(env.PORT, () => {
     console.log(`Server running on port ${env.PORT}`);

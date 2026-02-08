@@ -6,12 +6,6 @@ import cookieParser from 'cookie-parser';
 import { env, isProd } from './config/env.js';
 import { AppError } from './utils/errors.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
-import { authMiddleware } from './middleware/auth.middleware.js';
-import authRoutes from './modules/auth/auth.routes.js';
-import eventTypesRoutes from './modules/event-types/event-types.routes.js';
-import bookingsRoutes from './modules/bookings/bookings.routes.js';
-import publicRoutes from './modules/public/public.routes.js';
-import calendarsRoutes from './modules/calendars/calendars.routes.js';
 
 console.log('APP.TS LOADING...');
 
@@ -29,17 +23,11 @@ console.log('EXPRESS APP CREATED');
 
 // Health check FIRST - before any middleware
 app.get('/health', (_req, res) => {
-  console.log('HEALTH ENDPOINT HIT');
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Security middleware
-try {
-  app.use(helmet());
-  console.log('HELMET OK');
-} catch (e) {
-  console.error('HELMET FAILED:', e);
-}
+app.use(helmet());
 
 // CORS - allow all origins temporarily for debugging
 // TODO: Restrict to FRONTEND_URL once deployment is stable
@@ -50,24 +38,12 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.options('*', cors());
-console.log('CORS OK (all origins allowed)');
 
 // Body parsing
-try {
-  app.use(express.json());
-  console.log('JSON OK');
-} catch (e) {
-  console.error('JSON FAILED:', e);
-}
+app.use(express.json());
+app.use(cookieParser());
 
-try {
-  app.use(cookieParser());
-  console.log('COOKIE PARSER OK');
-} catch (e) {
-  console.error('COOKIE PARSER FAILED:', e);
-}
-
-// Debug: request logger - traces every request through middleware
+// Debug: request logger
 app.use((req, _res, next) => {
   console.log(`REQUEST: ${req.method} ${req.path}`);
   next();
@@ -77,56 +53,49 @@ app.use((req, _res, next) => {
 app.get('/api/test', (_req, res) => {
   res.json({ test: 'working', timestamp: new Date().toISOString() });
 });
-console.log('TEST ROUTE OK');
 
-// Routes
-try {
-  console.log('Auth routes type:', typeof authRoutes);
-  console.log('Auth routes:', authRoutes);
-  app.use('/api/auth', authRoutes);
-  console.log('AUTH ROUTES OK');
-  console.log('ROUTES MOUNTED');
-} catch (e) {
-  console.error('AUTH ROUTES FAILED:', e);
+// Mount routes with dynamic imports to catch import-time errors
+async function mountRoutes() {
+  try {
+    const [
+      { authMiddleware },
+      authRoutes,
+      eventTypesRoutes,
+      bookingsRoutes,
+      calendarsRoutes,
+      publicRoutes,
+    ] = await Promise.all([
+      import('./middleware/auth.middleware.js'),
+      import('./modules/auth/auth.routes.js'),
+      import('./modules/event-types/event-types.routes.js'),
+      import('./modules/bookings/bookings.routes.js'),
+      import('./modules/calendars/calendars.routes.js'),
+      import('./modules/public/public.routes.js'),
+    ]);
+
+    app.use('/api/auth', authRoutes.default);
+    app.use('/api/event-types', authMiddleware, eventTypesRoutes.default);
+    app.use('/api/bookings', authMiddleware, bookingsRoutes.default);
+    app.use('/api/calendars', calendarsRoutes.default);
+    app.use('/api/public', publicRoutes.default);
+
+    console.log('All routes imported and mounted successfully.');
+  } catch (e) {
+    console.error('FAILED TO MOUNT ROUTES:', e);
+    throw e;
+  }
+
+  // 404 catch-all - MUST be after all routes
+  app.use((req, _res, next) => {
+    console.log(`NO ROUTE MATCHED: ${req.method} ${req.path}`);
+    next(new AppError(`Route not found: ${req.method} ${req.path}`, 404, 'NOT_FOUND'));
+  });
+
+  // Error handling
+  app.use(errorMiddleware);
+
+  console.log('ALL ROUTES MOUNTED');
 }
 
-try {
-  app.use('/api/event-types', authMiddleware, eventTypesRoutes);
-  console.log('EVENT TYPES ROUTES OK');
-} catch (e) {
-  console.error('EVENT TYPES ROUTES FAILED:', e);
-}
-
-try {
-  app.use('/api/bookings', authMiddleware, bookingsRoutes);
-  console.log('BOOKINGS ROUTES OK');
-} catch (e) {
-  console.error('BOOKINGS ROUTES FAILED:', e);
-}
-
-try {
-  app.use('/api/calendars', calendarsRoutes);
-  console.log('CALENDARS ROUTES OK');
-} catch (e) {
-  console.error('CALENDARS ROUTES FAILED:', e);
-}
-
-try {
-  app.use('/api/public', publicRoutes);
-  console.log('PUBLIC ROUTES OK');
-} catch (e) {
-  console.error('PUBLIC ROUTES FAILED:', e);
-}
-
-// 404 catch-all - return JSON error via errorMiddleware
-app.use((req, _res, next) => {
-  console.log(`NO ROUTE MATCHED: ${req.method} ${req.path}`);
-  next(new AppError(`Route not found: ${req.method} ${req.path}`, 404, 'NOT_FOUND'));
-});
-
-// Error handling - always log full details for debugging
-app.use(errorMiddleware);
-
-console.log('APP.TS FULLY LOADED');
-
+export { mountRoutes };
 export default app;
