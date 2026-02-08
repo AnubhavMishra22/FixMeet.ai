@@ -7,24 +7,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Resolve the migrations directory.
+ * Resolve the migrations directory, always pointing to the `src` directory.
  *
- * In dev  (tsx):  __dirname = backend/src/config  → ../db/migrations
- * In prod (node): __dirname = backend/dist/config → ../../src/db/migrations
+ * This works for both development (running from `src`) and production (running
+ * from `dist`) because the file's location relative to the `backend` root is
+ * consistent: `backend/{src|dist}/config/migrate.ts`.
  *
  * TypeScript doesn't copy .sql files to dist/, so we always read from src/.
  */
 function getMigrationsDir(): string {
-  const isCompiledDist =
-    __dirname.includes(path.sep + 'dist' + path.sep) ||
-    __dirname.endsWith(path.sep + 'dist');
-
-  if (isCompiledDist) {
-    // dist/config -> dist -> backend root -> src/db/migrations
-    return path.resolve(__dirname, '..', '..', 'src', 'db', 'migrations');
-  }
-  // src/config -> src/db/migrations
-  return path.resolve(__dirname, '..', 'db', 'migrations');
+  // From `backend/src/config` or `backend/dist/config`, go up two levels to `backend`.
+  const backendRoot = path.resolve(__dirname, '..', '..');
+  return path.join(backendRoot, 'src', 'db', 'migrations');
 }
 
 /**
