@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import { env } from './config/env.js';
+import { env, isProd } from './config/env.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 import { authMiddleware } from './middleware/auth.middleware.js';
 import authRoutes from './modules/auth/auth.routes.js';
@@ -16,9 +16,21 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
+
+// CORS - allow multiple origins for production
+const allowedOrigins = [env.FRONTEND_URL].filter(Boolean);
+
 app.use(
   cors({
-    origin: env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      // Allow origin-less requests in dev (curl, Postman), enforce in production
+      const isAllowed = allowedOrigins.includes(origin!) || (!origin && !isProd);
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
@@ -27,9 +39,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// Health check
+// Health check endpoint (required for Railway)
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Routes
