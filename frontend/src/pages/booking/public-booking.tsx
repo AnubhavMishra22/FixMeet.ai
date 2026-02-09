@@ -315,11 +315,12 @@ export default function PublicBookingPage() {
                   ) : slots.length === 0 ? (
                     <p className="text-gray-500 py-12 text-center">No available times on this date</p>
                   ) : (
-                    <div className="grid grid-cols-3 gap-2 max-h-80 overflow-y-auto">
+                    <div className="max-h-96 overflow-y-auto pr-1 space-y-2">
                       {slots.map((slot) => (
                         <Button
                           key={slot.start}
                           variant={selectedSlot === slot.start ? 'default' : 'outline'}
+                          className="w-full justify-center"
                           onClick={() => handleSlotSelect(slot.start)}
                         >
                           {slot.start}
@@ -409,8 +410,8 @@ export default function PublicBookingPage() {
                     <CheckCircle className="h-8 w-8 text-green-600" />
                   </div>
                   <h2 className="text-xl font-bold mb-2">You're Scheduled!</h2>
-                  <p className="text-gray-600 mb-6">
-                    A confirmation email has been sent to {formData.email}
+                  <p className="text-gray-600 mb-4">
+                    A confirmation email has been sent to <strong>{formData.email}</strong>
                   </p>
 
                   <div className="bg-gray-50 rounded-lg p-6 text-left space-y-3">
@@ -453,6 +454,14 @@ export default function PublicBookingPage() {
                         </p>
                       </div>
                     )}
+                  </div>
+
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
+                    <p className="mb-1">You can safely close this window.</p>
+                    <p>
+                      Need to make changes? Check your confirmation email or contact{' '}
+                      <strong>{host.name}</strong> to reschedule or cancel.
+                    </p>
                   </div>
                 </div>
               )}

@@ -9,7 +9,7 @@ import { Label } from '../../../components/ui/label';
 import { useAuthStore } from '../../../stores/auth-store';
 import { useToast } from '../../../stores/toast-store';
 import api from '../../../lib/api';
-import { CalendarConnection } from '../../../types';
+import type { CalendarConnection } from '../../../types';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),

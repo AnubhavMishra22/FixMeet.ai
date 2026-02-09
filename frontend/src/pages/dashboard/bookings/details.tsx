@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useToast } from '../../../stores/toast-store';
-import { BookingWithDetails } from '../../../types';
+import type { BookingWithDetails } from '../../../types';
 
 export default function BookingDetailsPage() {
   const { id } = useParams<{ id: string }>();
