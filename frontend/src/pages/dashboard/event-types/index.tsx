@@ -5,7 +5,7 @@ import { Card, CardContent } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Plus, Copy, ExternalLink, Pencil, Trash } from 'lucide-react';
 import api from '../../../lib/api';
-import { EventType } from '../../../types';
+import type { EventType } from '../../../types';
 import { useAuthStore } from '../../../stores/auth-store';
 import { useToast } from '../../../stores/toast-store';
 
