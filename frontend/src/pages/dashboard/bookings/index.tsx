@@ -6,7 +6,7 @@ import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { Calendar, Clock, User, Video } from 'lucide-react';
 import api from '../../../lib/api';
-import { BookingWithDetails } from '../../../types';
+import type { BookingWithDetails } from '../../../types';
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
