@@ -291,10 +291,10 @@ function generateSlotsForRange(
   let currentMinutes = (startHours ?? 0) * 60 + (startMinutes ?? 0);
   const endMinutesTotal = (endHours ?? 0) * 60 + (endMinutes ?? 0);
 
-  // Account for buffer before first slot
-  currentMinutes += bufferBefore;
-
-  while (currentMinutes + durationMinutes + bufferAfter <= endMinutesTotal) {
+  // Slots start at the range start time (no buffer offset).
+  // Buffers are enforced when checking conflicts with existing bookings,
+  // not by shifting slot start times.
+  while (currentMinutes + durationMinutes <= endMinutesTotal) {
     const slotStart = minutesToTime(currentMinutes);
     const slotEnd = minutesToTime(currentMinutes + durationMinutes);
 
