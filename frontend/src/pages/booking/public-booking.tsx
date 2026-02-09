@@ -45,6 +45,16 @@ interface BookingResponse {
 
 type Step = 'calendar' | 'time' | 'form' | 'confirmed';
 
+// Convert "HH:mm" (24h) to "h:mm AM/PM" (12h)
+function formatTime12h(time: string): string {
+  const [hourStr, minute] = time.split(':');
+  let hour = parseInt(hourStr ?? '0', 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  if (hour === 0) hour = 12;
+  else if (hour > 12) hour -= 12;
+  return `${hour}:${minute} ${ampm}`;
+}
+
 export default function PublicBookingPage() {
   const { username, slug } = useParams<{ username: string; slug: string }>();
 
@@ -332,7 +342,7 @@ export default function PublicBookingPage() {
                           className="w-full justify-center"
                           onClick={() => handleSlotSelect(slot.start)}
                         >
-                          {slot.start} ({timezoneAbbr})
+                          {formatTime12h(slot.start)} ({timezoneAbbr})
                         </Button>
                       ))}
                     </div>
@@ -352,7 +362,7 @@ export default function PublicBookingPage() {
 
                   <p className="text-sm text-gray-600 mb-6 p-3 bg-gray-50 rounded-lg">
                     {selectedDate && format(selectedDate, 'EEEE, MMMM d, yyyy')} at{' '}
-                    <strong>{selectedSlot}</strong>
+                    <strong>{selectedSlot ? formatTime12h(selectedSlot) : ''} ({timezoneAbbr})</strong>
                   </p>
 
                   <div className="space-y-4">
