@@ -12,13 +12,13 @@ import type {
 import type { JSONValue } from 'postgres';
 
 const DEFAULT_SCHEDULE: WeeklySchedule = {
-  monday: [{ start: '09:00', end: '17:00' }],
-  tuesday: [{ start: '09:00', end: '17:00' }],
-  wednesday: [{ start: '09:00', end: '17:00' }],
-  thursday: [{ start: '09:00', end: '17:00' }],
-  friday: [{ start: '09:00', end: '17:00' }],
-  saturday: [],
-  sunday: [],
+  monday: [{ start: '06:00', end: '23:00' }],
+  tuesday: [{ start: '06:00', end: '23:00' }],
+  wednesday: [{ start: '06:00', end: '23:00' }],
+  thursday: [{ start: '06:00', end: '23:00' }],
+  friday: [{ start: '06:00', end: '23:00' }],
+  saturday: [{ start: '06:00', end: '23:00' }],
+  sunday: [{ start: '06:00', end: '23:00' }],
 };
 
 function rowToEventType(row: EventTypeRow): EventType {

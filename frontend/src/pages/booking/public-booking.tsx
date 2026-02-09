@@ -72,6 +72,12 @@ export default function PublicBookingPage() {
 
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+  // Get short timezone abbreviation (e.g., PST, IST, EST)
+  const timezoneAbbr = new Date().toLocaleTimeString('en-US', {
+    timeZoneName: 'short',
+    timeZone: timezone,
+  }).split(' ').pop() || timezone;
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -228,7 +234,7 @@ export default function PublicBookingPage() {
 
                 <div className="flex items-center gap-2 text-gray-600">
                   <Globe className="h-4 w-4" />
-                  <span className="text-sm">{timezone}</span>
+                  <span className="text-sm">{timezone} ({timezoneAbbr})</span>
                 </div>
 
                 {eventType.description && (
@@ -299,9 +305,12 @@ export default function PublicBookingPage() {
               {step === 'time' && (
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="font-semibold">
-                      {selectedDate && format(selectedDate, 'EEEE, MMMM d')}
-                    </h2>
+                    <div>
+                      <h2 className="font-semibold">
+                        {selectedDate && format(selectedDate, 'EEEE, MMMM d')}
+                      </h2>
+                      <p className="text-xs text-gray-500 mt-0.5">Times shown in {timezoneAbbr}</p>
+                    </div>
                     <Button variant="ghost" size="sm" onClick={() => setStep('calendar')}>
                       <ChevronLeft className="h-4 w-4 mr-1" />
                       Back
@@ -323,7 +332,7 @@ export default function PublicBookingPage() {
                           className="w-full justify-center"
                           onClick={() => handleSlotSelect(slot.start)}
                         >
-                          {slot.start}
+                          {slot.start} ({timezoneAbbr})
                         </Button>
                       ))}
                     </div>
@@ -456,7 +465,7 @@ export default function PublicBookingPage() {
                     )}
                   </div>
 
-                  <div className="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
+                  <div role="status" className="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
                     <p className="mb-1">You can safely close this window.</p>
                     <p>
                       Need to make changes? Check your confirmation email or contact{' '}
