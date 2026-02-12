@@ -26,7 +26,20 @@ function getMigrationsDir(): string {
  * All migrations use CREATE TABLE IF NOT EXISTS / CREATE INDEX IF NOT EXISTS,
  * so they are idempotent and safe to re-run on every deploy.
  */
-export async function runMigrations(): Promise<void> {
+const BASE_BACKOFF_MS = 2000;
+
+export async function runMigrations(retries = 3): Promise<void> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await sql`SELECT 1`;
+      break;
+    } catch (err) {
+      console.error(`DB connection attempt ${attempt}/${retries} failed:`, err);
+      if (attempt === retries) throw err;
+      await new Promise(r => setTimeout(r, attempt * BASE_BACKOFF_MS));
+    }
+  }
+
   const migrationsDir = getMigrationsDir();
   const allFiles = await readdir(migrationsDir);
   const files = allFiles.filter(f => f.endsWith('.sql')).sort();
