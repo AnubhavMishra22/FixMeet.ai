@@ -7,6 +7,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().default('3001').transform(Number),
   DATABASE_URL: z.string(),
+  DATABASE_SSL: z.enum(['true', 'false']).default('false').transform(v => v === 'true'),
   JWT_SECRET: z.string().min(32),
   FRONTEND_URL: z.string().default('http://localhost:5173'),
   // Email (Resend)
