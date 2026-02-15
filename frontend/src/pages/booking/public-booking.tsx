@@ -45,7 +45,7 @@ interface BookingResponse {
 
 type Step = 'calendar' | 'time' | 'form' | 'confirmed';
 
-const PAGE_BG = 'bg-sky-200';
+const PAGE_BG = 'bg-sky-50';
 
 // Convert "HH:mm" (24h) to "h:mm AM/PM" (12h)
 function formatTime12h(time: string): string {
