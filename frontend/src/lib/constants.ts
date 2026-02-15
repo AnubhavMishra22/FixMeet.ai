@@ -1,6 +1,9 @@
 export const APP_NAME = 'FixMeet';
 
-export const LOGO_PATH = '/favicon.ico';
+// Large logo for login/register pages
+export const LOGO_PATH = '/android-chrome-512x512.png';
+// Small logo for the navbar
+export const LOGO_SMALL_PATH = '/android-chrome-192x192.png';
 
 export const BOOKING_STATUS = {
   confirmed: { label: 'Confirmed', color: 'bg-green-100 text-green-800' },
