@@ -2,6 +2,8 @@
 
 A modern, open-source scheduling and booking platform — a self-hostable alternative to Calendly. Create event types, share public booking pages, and manage appointments with Google Calendar integration and email notifications.
 
+**Live at [fixmeet.vercel.app](https://fixmeet.vercel.app)**
+
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)
 ![Node.js](https://img.shields.io/badge/Node.js-20+-green?logo=node.js)
 ![React](https://img.shields.io/badge/React-19-blue?logo=react)

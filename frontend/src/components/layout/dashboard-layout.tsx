@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
+import { LOGO_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
 import {
   Calendar,
@@ -37,7 +38,8 @@ export function DashboardLayout({ children }: Props) {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b">
-            <Link to="/dashboard" className="text-xl font-bold text-primary">
+            <Link to="/dashboard" className="flex items-center gap-2 text-xl font-bold text-primary">
+              <img src={LOGO_PATH} alt="FixMeet" className="h-7 w-7" />
               FixMeet
             </Link>
           </div>
@@ -90,7 +92,7 @@ export function DashboardLayout({ children }: Props) {
       </aside>
 
       {/* Main content */}
-      <main className="pl-64 bg-sky-200 min-h-screen">
+      <main className="pl-64 bg-sky-50 min-h-screen">
         <div className="max-w-5xl mx-auto p-8">{children}</div>
       </main>
     </div>

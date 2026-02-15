@@ -1,5 +1,7 @@
 export const APP_NAME = 'FixMeet';
 
+export const LOGO_PATH = '/favicon.ico';
+
 export const BOOKING_STATUS = {
   confirmed: { label: 'Confirmed', color: 'bg-green-100 text-green-800' },
   cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800' },

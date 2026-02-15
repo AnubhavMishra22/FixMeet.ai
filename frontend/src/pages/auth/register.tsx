@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { useAuthStore } from '../../stores/auth-store';
+import { LOGO_PATH } from '../../lib/constants';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -41,7 +42,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-sky-300">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-sky-100">
+      <img src={LOGO_PATH} alt="FixMeet" className="h-20 w-20 mb-6" />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Create an account</CardTitle>
