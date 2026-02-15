@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import {
-  Calendar, Clock, User, Mail, Globe, Video,
+  Calendar, User, Globe, Video,
   MapPin, Phone, ArrowLeft, X
 } from 'lucide-react';
 import api from '../../../lib/api';

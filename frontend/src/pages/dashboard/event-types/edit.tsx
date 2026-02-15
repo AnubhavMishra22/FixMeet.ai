@@ -60,7 +60,8 @@ export default function EditEventTypePage() {
     reset,
     formState: { errors },
   } = useForm<EventTypeForm>({
-    resolver: zodResolver(eventTypeSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(eventTypeSchema) as any,
   });
 
   const selectedColor = watch('color');

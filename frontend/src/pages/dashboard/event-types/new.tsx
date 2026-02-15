@@ -56,7 +56,8 @@ export default function NewEventTypePage() {
     setValue,
     formState: { errors },
   } = useForm<EventTypeForm>({
-    resolver: zodResolver(eventTypeSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(eventTypeSchema) as any,
     defaultValues: {
       durationMinutes: 30,
       locationType: 'google_meet',
