@@ -19,13 +19,13 @@ const eventTypeSchema = z.object({
     .max(100)
     .regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and hyphens'),
   description: z.string().max(1000).optional(),
-  durationMinutes: z.coerce.number().int().min(5).max(480),
+  durationMinutes: z.number().int().min(5).max(480),
   locationType: z.enum(['google_meet', 'zoom', 'teams', 'phone', 'in_person', 'custom']),
   locationValue: z.string().optional(),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
-  bufferBefore: z.coerce.number().int().min(0).max(120),
-  bufferAfter: z.coerce.number().int().min(0).max(120),
-  minNoticeMinutes: z.coerce.number().int().min(0).max(43200),
+  bufferBefore: z.number().int().min(0).max(120),
+  bufferAfter: z.number().int().min(0).max(120),
+  minNoticeMinutes: z.number().int().min(0).max(43200),
 });
 
 type EventTypeForm = z.infer<typeof eventTypeSchema>;
@@ -153,7 +153,7 @@ export default function NewEventTypePage() {
                 type="number"
                 min={5}
                 max={480}
-                {...register('durationMinutes')}
+                {...register('durationMinutes', { valueAsNumber: true })}
               />
               {errors.durationMinutes && (
                 <p className="text-sm text-red-500 mt-1">{errors.durationMinutes.message}</p>
@@ -239,7 +239,7 @@ export default function NewEventTypePage() {
                   type="number"
                   min={0}
                   max={120}
-                  {...register('bufferBefore')}
+                  {...register('bufferBefore', { valueAsNumber: true })}
                 />
                 <p className="text-xs text-gray-500 mt-1">Time blocked before each meeting</p>
               </div>
@@ -250,7 +250,7 @@ export default function NewEventTypePage() {
                   type="number"
                   min={0}
                   max={120}
-                  {...register('bufferAfter')}
+                  {...register('bufferAfter', { valueAsNumber: true })}
                 />
                 <p className="text-xs text-gray-500 mt-1">Time blocked after each meeting</p>
               </div>
@@ -262,7 +262,7 @@ export default function NewEventTypePage() {
                 id="minNoticeMinutes"
                 type="number"
                 min={0}
-                {...register('minNoticeMinutes')}
+                {...register('minNoticeMinutes', { valueAsNumber: true })}
               />
               <p className="text-xs text-gray-500 mt-1">How far in advance must bookings be made (60 = 1 hour)</p>
             </div>
