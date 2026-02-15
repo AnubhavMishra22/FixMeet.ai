@@ -45,6 +45,8 @@ interface BookingResponse {
 
 type Step = 'calendar' | 'time' | 'form' | 'confirmed';
 
+const PAGE_BG = 'bg-sky-200';
+
 // Convert "HH:mm" (24h) to "h:mm AM/PM" (12h)
 function formatTime12h(time: string): string {
   const [hourStr, minute] = time.split(':');
@@ -200,7 +202,7 @@ export default function PublicBookingPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={`min-h-screen ${PAGE_BG} flex items-center justify-center`}>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
@@ -208,7 +210,7 @@ export default function PublicBookingPage() {
 
   if (error || !eventType || !host) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={`min-h-screen ${PAGE_BG} flex items-center justify-center`}>
         <Card className="max-w-md w-full mx-4">
           <CardContent className="py-12 text-center">
             <h2 className="text-xl font-bold mb-2">Not Found</h2>
@@ -220,7 +222,7 @@ export default function PublicBookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className={`min-h-screen ${PAGE_BG} py-8 px-4`}>
       <div className="max-w-4xl mx-auto">
         <Card className="overflow-hidden">
           <div className="md:flex">
