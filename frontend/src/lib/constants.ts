@@ -1,6 +1,8 @@
 export const APP_NAME = 'FixMeet';
 
+// Large logo for login/register pages
 export const LOGO_PATH = '/android-chrome-512x512.png';
+// Small logo for the navbar
 export const LOGO_SMALL_PATH = '/android-chrome-192x192.png';
 
 export const BOOKING_STATUS = {
