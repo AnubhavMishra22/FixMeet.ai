@@ -90,7 +90,7 @@ export function DashboardLayout({ children }: Props) {
       </aside>
 
       {/* Main content */}
-      <main className="pl-64 bg-sky-50 min-h-screen">
+      <main className="pl-64 bg-sky-200 min-h-screen">
         <div className="max-w-5xl mx-auto p-8">{children}</div>
       </main>
     </div>
