@@ -31,7 +31,7 @@ export function DashboardLayout({ children }: Props) {
   };
 
   return (
-    <div className="min-h-screen">
+    <div>
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 w-64 bg-white border-r">
         <div className="flex flex-col h-full">
