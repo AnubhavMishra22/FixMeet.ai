@@ -200,7 +200,7 @@ export default function PublicBookingPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-sky-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
@@ -208,7 +208,7 @@ export default function PublicBookingPage() {
 
   if (error || !eventType || !host) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-sky-50 flex items-center justify-center">
         <Card className="max-w-md w-full mx-4">
           <CardContent className="py-12 text-center">
             <h2 className="text-xl font-bold mb-2">Not Found</h2>
@@ -220,7 +220,7 @@ export default function PublicBookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-sky-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <Card className="overflow-hidden">
           <div className="md:flex">
