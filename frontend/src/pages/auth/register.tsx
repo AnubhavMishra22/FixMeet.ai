@@ -41,7 +41,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-sky-100">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-sky-100">
+      <img src="/favicon.ico" alt="FixMeet" className="h-20 w-20 mb-6" />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Create an account</CardTitle>
