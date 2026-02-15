@@ -31,7 +31,7 @@ export function DashboardLayout({ children }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 w-64 bg-white border-r">
         <div className="flex flex-col h-full">
@@ -90,8 +90,8 @@ export function DashboardLayout({ children }: Props) {
       </aside>
 
       {/* Main content */}
-      <main className="pl-64">
-        <div className="p-8">{children}</div>
+      <main className="pl-64 bg-sky-50 min-h-screen">
+        <div className="max-w-5xl mx-auto p-8">{children}</div>
       </main>
     </div>
   );
