@@ -19,13 +19,13 @@ const eventTypeSchema = z.object({
     .max(100)
     .regex(/^[a-z0-9-]+$/),
   description: z.string().max(1000).optional(),
-  durationMinutes: z.coerce.number().int().min(5).max(480),
+  durationMinutes: z.number().int().min(5).max(480),
   locationType: z.enum(['google_meet', 'zoom', 'teams', 'phone', 'in_person', 'custom']),
   locationValue: z.string().optional(),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
-  bufferBefore: z.coerce.number().int().min(0).max(120),
-  bufferAfter: z.coerce.number().int().min(0).max(120),
-  minNoticeMinutes: z.coerce.number().int().min(0).max(43200),
+  bufferBefore: z.number().int().min(0).max(120),
+  bufferAfter: z.number().int().min(0).max(120),
+  minNoticeMinutes: z.number().int().min(0).max(43200),
   isActive: z.boolean(),
 });
 
@@ -60,8 +60,7 @@ export default function EditEventTypePage() {
     reset,
     formState: { errors },
   } = useForm<EventTypeForm>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(eventTypeSchema) as any,
+    resolver: zodResolver(eventTypeSchema),
   });
 
   const selectedColor = watch('color');
@@ -155,7 +154,7 @@ export default function EditEventTypePage() {
 
             <div>
               <Label htmlFor="durationMinutes">Duration (minutes) *</Label>
-              <Input id="durationMinutes" type="number" {...register('durationMinutes')} />
+              <Input id="durationMinutes" type="number" {...register('durationMinutes', { valueAsNumber: true })} />
             </div>
 
             <div>
@@ -217,16 +216,16 @@ export default function EditEventTypePage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="bufferBefore">Buffer Before (min)</Label>
-                <Input id="bufferBefore" type="number" {...register('bufferBefore')} />
+                <Input id="bufferBefore" type="number" {...register('bufferBefore', { valueAsNumber: true })} />
               </div>
               <div>
                 <Label htmlFor="bufferAfter">Buffer After (min)</Label>
-                <Input id="bufferAfter" type="number" {...register('bufferAfter')} />
+                <Input id="bufferAfter" type="number" {...register('bufferAfter', { valueAsNumber: true })} />
               </div>
             </div>
             <div>
               <Label htmlFor="minNoticeMinutes">Minimum Notice (min)</Label>
-              <Input id="minNoticeMinutes" type="number" {...register('minNoticeMinutes')} />
+              <Input id="minNoticeMinutes" type="number" {...register('minNoticeMinutes', { valueAsNumber: true })} />
             </div>
           </CardContent>
         </Card>
