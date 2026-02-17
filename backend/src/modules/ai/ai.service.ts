@@ -8,6 +8,8 @@ const RATE_LIMIT_DELAY_MS = 1000;
 const MAX_RETRIES = 3;
 
 let model: ChatGoogleGenerativeAI | null = null;
+// Note: In-memory rate limiter works for single-instance deployment.
+// For multi-instance, replace with Redis-based rate limiting.
 let lastRequestTime = 0;
 
 function sleep(ms: number): Promise<void> {
@@ -106,7 +108,9 @@ export async function chat(
         : JSON.stringify(response.content);
     } catch (error: unknown) {
       const isRateLimit =
-        error instanceof Error && error.message?.includes('429');
+        (error instanceof Error && error.message?.includes('429')) ||
+        (error as { status?: number })?.status === 429 ||
+        (error as { response?: { status?: number } })?.response?.status === 429;
 
       if (isRateLimit && attempt < MAX_RETRIES) {
         const backoffMs = RATE_LIMIT_DELAY_MS * attempt;
