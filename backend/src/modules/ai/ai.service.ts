@@ -1,15 +1,15 @@
-import { ChatAnthropic } from '@langchain/anthropic';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 import type { BaseMessage } from '@langchain/core/messages';
 import { SYSTEM_PROMPT } from './prompts/system-prompt.js';
 
-let model: ChatAnthropic | null = null;
+let model: ChatGoogleGenerativeAI | null = null;
 
 export function initializeAI(apiKey: string): void {
-  model = new ChatAnthropic({
+  model = new ChatGoogleGenerativeAI({
     apiKey,
-    model: 'claude-3-5-sonnet-20241022',
-    maxTokens: 1024,
+    model: 'gemini-2.0-flash',
+    maxOutputTokens: 1024,
   });
 }
 
