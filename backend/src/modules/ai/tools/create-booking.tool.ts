@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { sql } from '../../../config/database.js';
 import { createBooking } from '../../bookings/bookings.service.js';
 import { fromZonedTime } from 'date-fns-tz';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import type { EventTypeRow } from '../../event-types/event-types.types.js';
 
 export function createCreateBookingTool(userId: string, userTimezone: string) {
@@ -64,8 +64,9 @@ export function createCreateBookingTool(userId: string, userTimezone: string) {
         }
 
         // Build ISO datetime string from date + time in user's timezone
+        // Pass string directly to fromZonedTime to avoid server-local timezone parsing
         const localDateTimeStr = `${date}T${time}:00`;
-        const startTimeUtc = fromZonedTime(new Date(localDateTimeStr), userTimezone);
+        const startTimeUtc = fromZonedTime(localDateTimeStr, userTimezone);
 
         // Validate the datetime is valid
         if (isNaN(startTimeUtc.getTime())) {
@@ -83,7 +84,7 @@ export function createCreateBookingTool(userId: string, userTimezone: string) {
         });
 
         // Format the confirmation
-        const formattedDate = format(new Date(`${date}T${time}:00`), 'EEEE, MMMM d, yyyy');
+        const formattedDate = format(parseISO(date), 'EEEE, MMMM d, yyyy');
         const meetingUrl = booking.meetingUrl ? `\nMeeting link: ${booking.meetingUrl}` : '';
 
         return [

@@ -221,6 +221,9 @@ export async function chat(
   }
 
   // Exhausted tool rounds, do one final call
+  if (!consumeToken()) {
+    throw new RateLimitError();
+  }
   const finalResponse = await invokeWithRetry(boundModel, messages);
   return extractContent(finalResponse);
 }
