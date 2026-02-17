@@ -8,7 +8,7 @@ let model: ChatAnthropic | null = null;
 export function initializeAI(apiKey: string): void {
   model = new ChatAnthropic({
     apiKey,
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-3-5-sonnet-20241022',
     maxTokens: 1024,
   });
 }

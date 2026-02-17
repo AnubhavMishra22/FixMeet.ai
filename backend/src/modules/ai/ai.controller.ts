@@ -8,10 +8,15 @@ export async function chat(
 ): Promise<void> {
   const { message, conversationHistory } = req.body;
 
-  const response = await aiService.chat(message, conversationHistory);
+  try {
+    const response = await aiService.chat(message, conversationHistory);
 
-  res.json({
-    success: true,
-    data: { response },
-  });
+    res.json({
+      success: true,
+      data: { response },
+    });
+  } catch (error) {
+    console.error('AI chat error:', error);
+    throw error;
+  }
 }
