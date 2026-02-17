@@ -3,26 +3,41 @@ import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages
 import type { BaseMessage } from '@langchain/core/messages';
 import { buildSystemPrompt } from './prompts/system-prompt.js';
 import { sql } from '../../config/database.js';
+import { RateLimitError } from '../../utils/errors.js';
 
-const RATE_LIMIT_DELAY_MS = 1000;
-const MAX_RETRIES = 3;
+// Token bucket rate limiter — Gemini free tier: 10 RPM
+// Note: In-memory bucket works for single-instance deployment.
+// For multi-instance, replace with Redis-based rate limiting.
+const BUCKET_CAPACITY = 10;
+const REFILL_INTERVAL_MS = 60_000; // 1 minute
+let tokens = BUCKET_CAPACITY;
+let lastRefillTime = Date.now();
+
+function refillTokens(): void {
+  const now = Date.now();
+  const elapsed = now - lastRefillTime;
+  const tokensToAdd = Math.floor(elapsed / REFILL_INTERVAL_MS) * BUCKET_CAPACITY;
+  if (tokensToAdd > 0) {
+    tokens = Math.min(BUCKET_CAPACITY, tokens + tokensToAdd);
+    lastRefillTime = now;
+  }
+}
+
+function consumeToken(): boolean {
+  refillTokens();
+  if (tokens > 0) {
+    tokens--;
+    return true;
+  }
+  return false;
+}
+
+const MAX_RETRIES = 2;
 
 let model: ChatGoogleGenerativeAI | null = null;
-// Note: In-memory rate limiter works for single-instance deployment.
-// For multi-instance, replace with Redis-based rate limiting.
-let lastRequestTime = 0;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function enforceRateLimit(): Promise<void> {
-  const now = Date.now();
-  const elapsed = now - lastRequestTime;
-  if (elapsed < RATE_LIMIT_DELAY_MS) {
-    await sleep(RATE_LIMIT_DELAY_MS - elapsed);
-  }
-  lastRequestTime = Date.now();
 }
 
 export function initializeAI(apiKey: string): void {
@@ -66,6 +81,11 @@ export async function chat(
     throw new Error('AI service not initialized. Please set GOOGLE_AI_API_KEY.');
   }
 
+  // Token bucket check — reject immediately if no tokens left
+  if (!consumeToken()) {
+    throw new RateLimitError();
+  }
+
   // Fetch user info for personalized system prompt
   const userContext = await getUserContext(userId);
 
@@ -100,7 +120,6 @@ export async function chat(
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      await enforceRateLimit();
       const response = await model.invoke(messages);
 
       return typeof response.content === 'string'
@@ -113,10 +132,14 @@ export async function chat(
         (error as { response?: { status?: number } })?.response?.status === 429;
 
       if (isRateLimit && attempt < MAX_RETRIES) {
-        const backoffMs = RATE_LIMIT_DELAY_MS * attempt;
-        console.log(`Rate limited, retrying in ${backoffMs}ms (attempt ${attempt}/${MAX_RETRIES})...`);
-        await sleep(backoffMs);
+        // If Gemini rate-limits us, wait and retry once
+        await sleep(4000);
         continue;
+      }
+
+      // If rate limit exhausted retries, throw user-friendly error
+      if (isRateLimit) {
+        throw new RateLimitError();
       }
 
       throw error;
