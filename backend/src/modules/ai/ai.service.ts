@@ -8,7 +8,7 @@ let model: ChatGoogleGenerativeAI | null = null;
 export function initializeAI(apiKey: string): void {
   model = new ChatGoogleGenerativeAI({
     apiKey,
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.0-flash-lite',
     maxOutputTokens: 1024,
   });
 }
