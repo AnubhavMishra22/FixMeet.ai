@@ -1,7 +1,8 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 import type { BaseMessage } from '@langchain/core/messages';
-import { SYSTEM_PROMPT } from './prompts/system-prompt.js';
+import { buildSystemPrompt } from './prompts/system-prompt.js';
+import { sql } from '../../config/database.js';
 
 const RATE_LIMIT_DELAY_MS = 1000;
 const MAX_RETRIES = 3;
@@ -30,22 +31,60 @@ export function initializeAI(apiKey: string): void {
   });
 }
 
+export function isInitialized(): boolean {
+  return model !== null;
+}
+
 export interface ConversationMessage {
   role: 'user' | 'assistant';
   content: string;
 }
 
+async function getUserContext(userId: string) {
+  const [user] = await sql`
+    SELECT name, timezone FROM users WHERE id = ${userId}
+  `;
+
+  if (!user) {
+    return { userName: 'User', userTimezone: 'UTC' };
+  }
+
+  return {
+    userName: user.name || 'User',
+    userTimezone: user.timezone || 'UTC',
+  };
+}
+
 export async function chat(
   message: string,
   conversationHistory: ConversationMessage[] = [],
+  userId: string,
 ): Promise<string> {
   if (!model) {
-    throw new Error('AI service not initialized');
+    throw new Error('AI service not initialized. Please set GOOGLE_AI_API_KEY.');
   }
 
-  const messages: BaseMessage[] = [
-    new SystemMessage(SYSTEM_PROMPT),
-  ];
+  // Fetch user info for personalized system prompt
+  const userContext = await getUserContext(userId);
+
+  const now = new Date();
+  const currentDateTime = now.toLocaleString('en-US', {
+    timeZone: userContext.userTimezone,
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const systemPrompt = buildSystemPrompt({
+    userName: userContext.userName,
+    userTimezone: userContext.userTimezone,
+    currentDateTime,
+  });
+
+  const messages: BaseMessage[] = [new SystemMessage(systemPrompt)];
 
   for (const msg of conversationHistory) {
     if (msg.role === 'user') {
@@ -57,7 +96,6 @@ export async function chat(
 
   messages.push(new HumanMessage(message));
 
-  // Retry with delay to stay under free tier rate limits (15 RPM)
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       await enforceRateLimit();
@@ -71,8 +109,9 @@ export async function chat(
         error instanceof Error && error.message?.includes('429');
 
       if (isRateLimit && attempt < MAX_RETRIES) {
-        console.log(`Rate limited, retrying in ${RATE_LIMIT_DELAY_MS}ms (attempt ${attempt}/${MAX_RETRIES})...`);
-        await sleep(RATE_LIMIT_DELAY_MS);
+        const backoffMs = RATE_LIMIT_DELAY_MS * attempt;
+        console.log(`Rate limited, retrying in ${backoffMs}ms (attempt ${attempt}/${MAX_RETRIES})...`);
+        await sleep(backoffMs);
         continue;
       }
 
