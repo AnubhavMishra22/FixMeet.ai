@@ -8,12 +8,14 @@ import {
   LogOut,
   LayoutDashboard,
   Link as LinkIcon,
+  Sparkles,
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Event Types', href: '/dashboard/event-types', icon: LinkIcon },
   { name: 'Bookings', href: '/dashboard/bookings', icon: Calendar },
+  { name: 'AI Assistant', href: '/dashboard/ai', icon: Sparkles },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 

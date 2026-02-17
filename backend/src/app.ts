@@ -79,6 +79,17 @@ async function mountRoutes() {
     app.use('/api/calendars', calendarsRoutes.default);
     app.use('/api/public', publicRoutes.default);
 
+    // AI routes - only mount if GOOGLE_AI_API_KEY is configured
+    if (process.env.GOOGLE_AI_API_KEY) {
+      const { initializeAI } = await import('./modules/ai/ai.service.js');
+      const aiRoutes = await import('./modules/ai/ai.routes.js');
+      initializeAI(process.env.GOOGLE_AI_API_KEY);
+      app.use('/api/ai', authMiddleware, aiRoutes.default);
+      console.log('AI routes mounted (GOOGLE_AI_API_KEY configured).');
+    } else {
+      console.log('AI routes skipped (no GOOGLE_AI_API_KEY).');
+    }
+
     console.log('All routes imported and mounted successfully.');
   } catch (e) {
     console.error('FAILED TO MOUNT ROUTES:', e);

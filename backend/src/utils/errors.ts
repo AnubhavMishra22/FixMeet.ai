@@ -32,3 +32,9 @@ export class ConflictError extends AppError {
     super(message, 409, 'CONFLICT');
   }
 }
+
+export class RateLimitError extends AppError {
+  constructor(message = "You're chatting too fast! Please wait a moment.") {
+    super(message, 429, 'RATE_LIMITED');
+  }
+}
