@@ -3,12 +3,29 @@ import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages
 import type { BaseMessage } from '@langchain/core/messages';
 import { SYSTEM_PROMPT } from './prompts/system-prompt.js';
 
+const RATE_LIMIT_DELAY_MS = 4000;
+const MAX_RETRIES = 3;
+
 let model: ChatGoogleGenerativeAI | null = null;
+let lastRequestTime = 0;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function enforceRateLimit(): Promise<void> {
+  const now = Date.now();
+  const elapsed = now - lastRequestTime;
+  if (elapsed < RATE_LIMIT_DELAY_MS) {
+    await sleep(RATE_LIMIT_DELAY_MS - elapsed);
+  }
+  lastRequestTime = Date.now();
+}
 
 export function initializeAI(apiKey: string): void {
   model = new ChatGoogleGenerativeAI({
     apiKey,
-    model: 'gemini-2.0-flash-lite',
+    model: 'gemini-1.5-flash',
     maxOutputTokens: 1024,
   });
 }
@@ -40,9 +57,28 @@ export async function chat(
 
   messages.push(new HumanMessage(message));
 
-  const response = await model.invoke(messages);
+  // Retry with delay to stay under free tier rate limits (15 RPM)
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      await enforceRateLimit();
+      const response = await model.invoke(messages);
 
-  return typeof response.content === 'string'
-    ? response.content
-    : JSON.stringify(response.content);
+      return typeof response.content === 'string'
+        ? response.content
+        : JSON.stringify(response.content);
+    } catch (error: unknown) {
+      const isRateLimit =
+        error instanceof Error && error.message?.includes('429');
+
+      if (isRateLimit && attempt < MAX_RETRIES) {
+        console.log(`Rate limited, retrying in ${RATE_LIMIT_DELAY_MS}ms (attempt ${attempt}/${MAX_RETRIES})...`);
+        await sleep(RATE_LIMIT_DELAY_MS);
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  throw new Error('AI request failed after max retries');
 }
