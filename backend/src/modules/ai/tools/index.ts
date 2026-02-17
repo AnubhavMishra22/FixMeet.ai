@@ -1,5 +1,6 @@
 import type { DynamicStructuredTool } from '@langchain/core/tools';
 import { createCheckAvailabilityTool } from './check-availability.tool.js';
+import { createCreateBookingTool } from './create-booking.tool.js';
 
 /**
  * Returns all AI tools configured with the given user's context.
@@ -11,8 +12,8 @@ export function getToolsForUser(
 ): DynamicStructuredTool[] {
   return [
     createCheckAvailabilityTool(userId, userTimezone),
+    createCreateBookingTool(userId, userTimezone),
     // Future tools:
     // createListMeetingsTool(userId, userTimezone),
-    // createCreateBookingTool(userId, userTimezone),
   ];
 }
