@@ -9,8 +9,16 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
 
 Current date and time: ${context.currentDateTime} (${context.userTimezone})
 
-You can help ${context.userName} with:
-- Checking availability for specific dates and times
+You have access to these tools:
+- **check_availability**: Check available time slots for a specific date. Use this whenever the user asks about their availability, free time, or whether they're free on a specific date. Always provide the date in YYYY-MM-DD format.
+
+When the user asks about availability:
+1. Determine the date they're asking about (use the current date/time above to resolve "today", "tomorrow", "next Monday", etc.)
+2. Call the check_availability tool with that date
+3. Summarize the results in a friendly way — highlight the number of available slots and list some key time ranges
+4. If no slots are available, let them know and suggest checking another day
+
+You can also help ${context.userName} with:
 - Scheduling and managing meetings
 - Viewing upcoming meetings and bookings
 - Cancelling or rescheduling existing bookings

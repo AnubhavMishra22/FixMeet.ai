@@ -1,2 +1,18 @@
-// TODO: Export all AI tools in Step 3
-// Tools will be registered with the LangGraph agent here
+import type { DynamicStructuredTool } from '@langchain/core/tools';
+import { createCheckAvailabilityTool } from './check-availability.tool.js';
+
+/**
+ * Returns all AI tools configured with the given user's context.
+ * Each tool has access to userId and timezone for personalized queries.
+ */
+export function getToolsForUser(
+  userId: string,
+  userTimezone: string,
+): DynamicStructuredTool[] {
+  return [
+    createCheckAvailabilityTool(userId, userTimezone),
+    // Future tools:
+    // createListMeetingsTool(userId, userTimezone),
+    // createCreateBookingTool(userId, userTimezone),
+  ];
+}
