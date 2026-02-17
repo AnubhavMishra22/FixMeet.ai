@@ -32,7 +32,8 @@ function consumeToken(): boolean {
   return false;
 }
 
-const MAX_RETRIES = 2;
+const MAX_ATTEMPTS = 2;
+const RETRY_DELAY_MS = 4000;
 
 let model: ChatGoogleGenerativeAI | null = null;
 
@@ -40,11 +41,21 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** Check if an error is a rate limit (429) response from the API */
+function isRateLimitError(error: unknown): boolean {
+  if (error instanceof Error && error.message?.includes('429')) return true;
+  if ((error as { status?: number })?.status === 429) return true;
+  if ((error as { response?: { status?: number } })?.response?.status === 429) return true;
+  return false;
+}
+
 export function initializeAI(apiKey: string): void {
   model = new ChatGoogleGenerativeAI({
     apiKey,
-    model: 'gemini-2.5-flash',
-    maxOutputTokens: 1024,
+    model: process.env.GOOGLE_AI_MODEL_NAME || 'gemini-2.5-flash',
+    maxOutputTokens: process.env.GOOGLE_AI_MAX_TOKENS
+      ? parseInt(process.env.GOOGLE_AI_MAX_TOKENS, 10)
+      : 1024,
   });
 }
 
@@ -118,7 +129,7 @@ export async function chat(
 
   messages.push(new HumanMessage(message));
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       const response = await model.invoke(messages);
 
@@ -126,19 +137,13 @@ export async function chat(
         ? response.content
         : JSON.stringify(response.content);
     } catch (error: unknown) {
-      const isRateLimit =
-        (error instanceof Error && error.message?.includes('429')) ||
-        (error as { status?: number })?.status === 429 ||
-        (error as { response?: { status?: number } })?.response?.status === 429;
-
-      if (isRateLimit && attempt < MAX_RETRIES) {
-        // If Gemini rate-limits us, wait and retry once
-        await sleep(4000);
+      if (isRateLimitError(error) && attempt < MAX_ATTEMPTS) {
+        await sleep(RETRY_DELAY_MS);
         continue;
       }
 
       // If rate limit exhausted retries, throw user-friendly error
-      if (isRateLimit) {
+      if (isRateLimitError(error)) {
         throw new RateLimitError();
       }
 
