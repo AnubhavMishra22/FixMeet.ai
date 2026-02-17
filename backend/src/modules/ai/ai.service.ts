@@ -3,7 +3,7 @@ import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages
 import type { BaseMessage } from '@langchain/core/messages';
 import { SYSTEM_PROMPT } from './prompts/system-prompt.js';
 
-const RATE_LIMIT_DELAY_MS = 4000;
+const RATE_LIMIT_DELAY_MS = 1000;
 const MAX_RETRIES = 3;
 
 let model: ChatGoogleGenerativeAI | null = null;
