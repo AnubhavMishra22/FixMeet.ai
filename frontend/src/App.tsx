@@ -15,6 +15,7 @@ import EditEventTypePage from './pages/dashboard/event-types/edit';
 import BookingsPage from './pages/dashboard/bookings/index';
 import BookingDetailsPage from './pages/dashboard/bookings/details';
 import SettingsPage from './pages/dashboard/settings/index';
+import AIChatPage from './pages/dashboard/ai/index';
 
 // Public pages
 import PublicBookingPage from './pages/booking/public-booking';
@@ -94,6 +95,17 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <SettingsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/ai"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <AIChatPage />
               </DashboardLayout>
             </ProtectedRoute>
           }
