@@ -1,6 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { SendHorizontal } from 'lucide-react';
+
+const DEBOUNCE_MS = 500;
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -10,6 +12,7 @@ interface ChatInputProps {
 export function ChatInput({ onSend, isLoading }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lastSentRef = useRef<number>(0);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -20,16 +23,22 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
     }
   }, [message]);
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     const trimmed = message.trim();
     if (!trimmed || isLoading) return;
+
+    // Debounce: prevent double-click / rapid sends
+    const now = Date.now();
+    if (now - lastSentRef.current < DEBOUNCE_MS) return;
+    lastSentRef.current = now;
+
     onSend(trimmed);
     setMessage('');
     // Reset height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
-  };
+  }, [message, isLoading, onSend]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import * as aiService from './ai.service.js';
 import type { ChatInput } from './ai.schema.js';
-import { UnauthorizedError } from '../../utils/errors.js';
+import { UnauthorizedError, TimeoutError } from '../../utils/errors.js';
 
 export async function chat(
   req: Request<object, object, ChatInput>,
@@ -14,10 +14,25 @@ export async function chat(
 
   const { message, conversationHistory } = req.body;
 
-  const response = await aiService.chat(message, conversationHistory, userId);
+  try {
+    const response = await aiService.chat(message, conversationHistory, userId);
 
-  res.json({
-    success: true,
-    data: { response },
-  });
+    res.json({
+      success: true,
+      data: { response },
+    });
+  } catch (error) {
+    // Let AppError subclasses (RateLimitError etc.) bubble up to error middleware
+    if (error instanceof TimeoutError) {
+      res.status(504).json({
+        success: false,
+        error: {
+          message: 'The AI is taking too long to respond. Please try again.',
+          code: 'TIMEOUT',
+        },
+      });
+      return;
+    }
+    throw error;
+  }
 }
