@@ -1,373 +1,348 @@
 # FixMeet.ai - Architecture Reference
 
 ## Overview
-FixMeet.ai is a Calendly competitor with AI-powered features. This document serves as the single source of truth for architectural decisions.
+FixMeet.ai is a Calendly competitor — a scheduling/booking platform where users create event types, share public booking pages, and manage appointments. Includes Google Calendar integration, email notifications, and an AI copilot for natural-language scheduling.
 
 ---
 
 ## Tech Stack
 
-### Backend
-- **Runtime**: Node.js 20+ with TypeScript
-- **Framework**: Express.js with express-async-errors
-- **Database**: PostgreSQL 15+ with postgres.js (not Prisma)
-- **Cache**: Redis (ioredis)
-- **Queue**: BullMQ for background jobs
-- **Validation**: Zod
-- **Auth**: Custom JWT + refresh tokens (access: 15min, refresh: 7days)
+### Backend (Node.js + Express + TypeScript)
+- **Runtime**: Node.js 20+ with TypeScript (strict mode, ES modules)
+- **Framework**: Express.js 4.18+ with express-async-errors
+- **Database**: PostgreSQL 15+ with `postgres.js` (raw SQL, NOT Prisma/ORM)
+- **Validation**: Zod for all input validation
+- **Auth**: Custom JWT (15min access token + 7day refresh token with rotation)
+- **Password**: bcryptjs
+- **Email**: Resend (graceful fallback to console.log in dev)
+- **Calendar**: Google Calendar API via `googleapis`
+- **AI**: LangChain + Google Gemini (gemini-2.5-flash) with DynamicStructuredTool
+- **Dates/Timezone**: date-fns + date-fns-tz (all stored UTC)
+- **Security**: Helmet, CORS, httpOnly cookies, cancel tokens
 
-### Frontend
-- **Framework**: Next.js 14+ (App Router)
-- **Styling**: Tailwind CSS + shadcn/ui
-- **State**: Zustand
+### Frontend (React + Vite + TypeScript)
+- **Framework**: React 19 + Vite 7 (SPA, NOT Next.js)
+- **Styling**: Tailwind CSS 4 + Radix UI primitives (shadcn-style)
+- **State**: Zustand 5
 - **Forms**: React Hook Form + Zod
-- **HTTP Client**: Axios or fetch with custom wrapper
+- **Routing**: React Router DOM 7
+- **HTTP**: Axios with auth interceptor (access token in memory)
+- **Icons**: Lucide React
 
 ### Infrastructure
-- **Email**: Resend (or SendGrid)
-- **SMS**: Twilio
-- **File Storage**: S3-compatible
-- **Hosting**: Railway/Render (backend), Vercel (frontend)
+- **Email**: Resend (falls back to console.log without API key)
+- **Background Jobs**: Simple setInterval (no Redis/BullMQ)
+- **Hosting**: Railway (backend), Vercel (frontend)
 
 ---
 
 ## Project Structure
 
 ```
-scheduleflow/
+FixMeet.ai/
 ├── backend/
 │   ├── src/
 │   │   ├── config/
-│   │   │   ├── database.ts      # postgres.js connection
-│   │   │   ├── redis.ts         # Redis connection
-│   │   │   ├── env.ts           # Environment validation with Zod
+│   │   │   ├── database.ts          # PostgreSQL connection (postgres.js)
+│   │   │   ├── env.ts               # Zod-validated environment variables
 │   │   │   └── index.ts
-│   │   ├── modules/
-│   │   │   ├── auth/
-│   │   │   │   ├── auth.routes.ts
-│   │   │   │   ├── auth.controller.ts
-│   │   │   │   ├── auth.service.ts
-│   │   │   │   ├── auth.schema.ts    # Zod schemas
-│   │   │   │   └── auth.types.ts
-│   │   │   ├── users/
-│   │   │   ├── event-types/
-│   │   │   ├── bookings/
-│   │   │   ├── calendars/
-│   │   │   └── organizations/
 │   │   ├── middleware/
-│   │   │   ├── auth.middleware.ts
-│   │   │   ├── error.middleware.ts
-│   │   │   ├── validate.middleware.ts
-│   │   │   └── rateLimit.middleware.ts
-│   │   ├── utils/
-│   │   │   ├── password.ts      # bcrypt helpers
-│   │   │   ├── jwt.ts           # JWT helpers
-│   │   │   ├── dates.ts         # date-fns-tz helpers
-│   │   │   └── errors.ts        # Custom error classes
-│   │   ├── jobs/
-│   │   │   ├── queue.ts         # BullMQ setup
-│   │   │   ├── email.job.ts
-│   │   │   └── reminder.job.ts
+│   │   │   ├── auth.middleware.ts    # JWT authentication
+│   │   │   ├── error.middleware.ts   # Global error handler
+│   │   │   └── validate.middleware.ts
+│   │   ├── modules/
+│   │   │   ├── auth/                # register, login, refresh, logout, me
+│   │   │   ├── event-types/         # CRUD + availability calculation
+│   │   │   ├── bookings/            # create, cancel, reschedule
+│   │   │   ├── public/              # public booking pages (no auth)
+│   │   │   ├── calendars/           # Google Calendar OAuth + sync
+│   │   │   │   └── google/          # google-auth.service + google-calendar.service
+│   │   │   ├── email/               # Resend integration + templates
+│   │   │   └── ai/                  # AI Copilot
+│   │   │       ├── ai.routes.ts
+│   │   │       ├── ai.controller.ts
+│   │   │       ├── ai.service.ts    # LangChain agent loop, rate limiter
+│   │   │       ├── ai.schema.ts
+│   │   │       ├── prompts/
+│   │   │       │   └── system-prompt.ts
+│   │   │       └── tools/
+│   │   │           ├── index.ts
+│   │   │           ├── check-availability.tool.ts
+│   │   │           ├── create-booking.tool.ts
+│   │   │           ├── list-meetings.tool.ts
+│   │   │           └── cancel-meeting.tool.ts
 │   │   ├── db/
-│   │   │   ├── migrations/
-│   │   │   ├── seeds/
-│   │   │   └── queries/         # Raw SQL query files (optional)
-│   │   ├── app.ts               # Express app setup
-│   │   └── server.ts            # Entry point
-│   ├── tests/
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── .env.example
-├── frontend/
-│   ├── src/
-│   │   ├── app/                 # Next.js App Router
-│   │   ├── components/
-│   │   ├── lib/
-│   │   ├── hooks/
-│   │   └── stores/
+│   │   │   ├── migrate.ts
+│   │   │   └── migrations/          # 5 migration files (001-005)
+│   │   ├── jobs/
+│   │   │   └── reminder.job.ts      # setInterval every 15 min
+│   │   ├── utils/
+│   │   │   ├── errors.ts            # AppError, RateLimitError, etc.
+│   │   │   ├── jwt.ts
+│   │   │   └── password.ts
+│   │   ├── app.ts                   # Express app + route mounting
+│   │   └── server.ts               # Entry point
+│   ├── docker-compose.yml           # PostgreSQL container
 │   ├── package.json
 │   └── tsconfig.json
-├── packages/
-│   └── shared/                  # Shared types between frontend/backend
-│       ├── src/
-│       │   └── types/
-│       └── package.json
-├── docker-compose.yml
-├── .gitignore
-└── README.md
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ui/                  # Button, Input, Card, Label, etc.
+│   │   │   ├── layout/             # dashboard-layout.tsx (sidebar + nav)
+│   │   │   ├── ai/                 # chat-message.tsx, chat-input.tsx
+│   │   │   └── auth/               # protected-route.tsx
+│   │   ├── pages/
+│   │   │   ├── auth/               # login, register
+│   │   │   ├── dashboard/          # home, event-types, bookings, ai, settings
+│   │   │   └── booking/            # public-booking.tsx
+│   │   ├── lib/
+│   │   │   ├── api.ts              # Axios + token refresh interceptor
+│   │   │   ├── constants.ts
+│   │   │   ├── utils.ts            # cn() helper
+│   │   │   └── markdown.tsx        # Markdown formatting for AI chat
+│   │   ├── stores/
+│   │   │   ├── auth-store.ts       # Zustand: auth state
+│   │   │   └── toast-store.ts      # Zustand: toast notifications
+│   │   ├── types/index.ts
+│   │   ├── App.tsx                 # Route definitions
+│   │   ├── main.tsx
+│   │   └── index.css               # Tailwind + CSS variables
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tsconfig.json
+│
+├── ARCHITECTURE.md                  # This file
+└── docker-compose.yml
 ```
 
 ---
 
-## Database Schema
+## Database Schema (7 tables, 5 migrations)
 
-### Core Tables
+### Migration 001: users + refresh_tokens
+- `users` — id (UUID), email, password_hash, name, username, timezone, created_at, updated_at
+- `refresh_tokens` — id, user_id (FK), token_hash, expires_at
 
-```sql
--- Users
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    name VARCHAR(255),
-    username VARCHAR(100) UNIQUE NOT NULL,
-    avatar_url TEXT,
-    timezone VARCHAR(100) DEFAULT 'UTC',
-    email_verified BOOLEAN DEFAULT false,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+### Migration 002: event_types + availability_overrides
+- `event_types` — id, user_id, slug, title, description, duration_minutes, location_type/value, color, schedule (JSONB), buffer_before/after, min_notice_minutes, slot_interval, max_bookings_per_day, range_type/days/start/end, questions (JSONB), is_active. UNIQUE(user_id, slug)
+- `availability_overrides` — id, user_id, event_type_id (nullable), date, is_available, time_ranges (JSONB)
 
--- Refresh tokens
-CREATE TABLE refresh_tokens (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token_hash VARCHAR(255) NOT NULL,
-    expires_at TIMESTAMPTZ NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+### Migration 003: bookings
+- `bookings` — id, event_type_id, host_id, invitee_name/email/timezone/notes, start_time/end_time (UTC), location_type/value, meeting_url, status, cancellation_reason, cancelled_by, responses (JSONB), cancel_token, host_calendar_event_id, source
 
--- Calendar connections
-CREATE TABLE calendar_connections (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    provider VARCHAR(50) NOT NULL,  -- google, outlook, apple
-    provider_account_id VARCHAR(255),
-    access_token TEXT NOT NULL,
-    refresh_token TEXT,
-    token_expires_at TIMESTAMPTZ,
-    calendar_id VARCHAR(255),
-    calendar_name VARCHAR(255),
-    is_primary BOOLEAN DEFAULT false,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(user_id, provider, provider_account_id)
-);
+### Migration 004: sent_reminders
+- `sent_reminders` — id, booking_id (FK), reminder_type (24h/1h), sent_at. UNIQUE(booking_id, reminder_type)
 
--- Event types (booking page configurations)
-CREATE TABLE event_types (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    slug VARCHAR(100) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    duration_minutes INTEGER NOT NULL DEFAULT 30,
-    
-    -- Location
-    location_type VARCHAR(50) DEFAULT 'google_meet',  -- google_meet, zoom, teams, phone, in_person, custom
-    location_value TEXT,  -- Phone number, address, or custom link
-    
-    -- Appearance
-    color VARCHAR(7) DEFAULT '#3B82F6',
-    
-    -- Availability
-    schedule JSONB NOT NULL DEFAULT '{
-        "monday": [{"start": "09:00", "end": "17:00"}],
-        "tuesday": [{"start": "09:00", "end": "17:00"}],
-        "wednesday": [{"start": "09:00", "end": "17:00"}],
-        "thursday": [{"start": "09:00", "end": "17:00"}],
-        "friday": [{"start": "09:00", "end": "17:00"}],
-        "saturday": [],
-        "sunday": []
-    }',
-    
-    -- Booking rules
-    buffer_before INTEGER DEFAULT 0,       -- minutes
-    buffer_after INTEGER DEFAULT 0,        -- minutes
-    min_notice INTEGER DEFAULT 60,         -- minutes (1 hour default)
-    slot_interval INTEGER DEFAULT 30,      -- minutes between available slots
-    max_bookings_per_day INTEGER,
-    
-    -- Date range
-    range_type VARCHAR(50) DEFAULT 'rolling',  -- rolling, range, indefinite
-    range_days INTEGER DEFAULT 60,             -- for rolling
-    range_start DATE,                          -- for range
-    range_end DATE,                            -- for range
-    
-    -- Custom questions
-    questions JSONB DEFAULT '[]',
-    
-    -- Status
-    is_active BOOLEAN DEFAULT true,
-    
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(user_id, slug)
-);
-
--- Bookings
-CREATE TABLE bookings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_type_id UUID NOT NULL REFERENCES event_types(id) ON DELETE CASCADE,
-    host_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    
-    -- Invitee info
-    invitee_name VARCHAR(255) NOT NULL,
-    invitee_email VARCHAR(255) NOT NULL,
-    invitee_timezone VARCHAR(100) NOT NULL,
-    invitee_notes TEXT,
-    
-    -- Time (always stored in UTC)
-    start_time TIMESTAMPTZ NOT NULL,
-    end_time TIMESTAMPTZ NOT NULL,
-    
-    -- Location
-    location_type VARCHAR(50),
-    location_value TEXT,
-    meeting_url TEXT,
-    
-    -- Status
-    status VARCHAR(50) DEFAULT 'confirmed',  -- confirmed, cancelled, rescheduled, completed, no_show
-    cancellation_reason TEXT,
-    cancelled_by VARCHAR(50),  -- host, invitee
-    cancelled_at TIMESTAMPTZ,
-    
-    -- Responses to custom questions
-    responses JSONB DEFAULT '{}',
-    
-    -- Calendar event IDs (for syncing)
-    host_calendar_event_id VARCHAR(255),
-    
-    -- Metadata
-    source VARCHAR(50) DEFAULT 'booking_page',  -- booking_page, embed, api
-    
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Availability overrides (specific dates)
-CREATE TABLE availability_overrides (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    event_type_id UUID REFERENCES event_types(id) ON DELETE CASCADE,  -- NULL = applies to all
-    date DATE NOT NULL,
-    is_available BOOLEAN DEFAULT true,
-    time_ranges JSONB DEFAULT '[]',  -- [{"start": "10:00", "end": "14:00"}]
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(user_id, event_type_id, date)
-);
-
--- Indexes
-CREATE INDEX idx_bookings_host_time ON bookings(host_id, start_time);
-CREATE INDEX idx_bookings_event_type ON bookings(event_type_id);
-CREATE INDEX idx_bookings_status ON bookings(status);
-CREATE INDEX idx_event_types_user ON event_types(user_id);
-CREATE INDEX idx_calendar_connections_user ON calendar_connections(user_id);
-CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
-```
+### Migration 005: calendar_connections
+- `calendar_connections` — id, user_id, provider, provider_account_id, access_token, refresh_token, token_expires_at, calendar_id, calendar_name, is_primary, is_active. UNIQUE(user_id, provider)
 
 ---
 
 ## API Routes
 
-### Auth
+### Auth (`/api/auth`)
 ```
-POST   /api/auth/register        # Create account
-POST   /api/auth/login           # Get tokens
-POST   /api/auth/logout          # Invalidate refresh token
-POST   /api/auth/refresh         # Refresh access token
-GET    /api/auth/me              # Get current user
-```
-
-### Users
-```
-GET    /api/users/me             # Get profile
-PATCH  /api/users/me             # Update profile
+POST   /register     # Create account (auto-generates username)
+POST   /login        # Get tokens + set refresh cookie
+POST   /refresh      # Refresh access token (rotates refresh token)
+POST   /logout       # Clear refresh token
+GET    /me           # Current user (auth required)
+PATCH  /me           # Update profile (auth required)
 ```
 
-### Event Types
+### Event Types (`/api/event-types` — auth required)
 ```
-GET    /api/event-types          # List user's event types
-POST   /api/event-types          # Create event type
-GET    /api/event-types/:id      # Get event type
-PATCH  /api/event-types/:id      # Update event type
-DELETE /api/event-types/:id      # Delete event type
-```
-
-### Bookings
-```
-GET    /api/bookings             # List user's bookings
-GET    /api/bookings/:id         # Get booking details
-PATCH  /api/bookings/:id         # Update booking
-POST   /api/bookings/:id/cancel  # Cancel booking
+GET    /             # List user's event types
+POST   /             # Create event type
+GET    /:id          # Get single
+PATCH  /:id          # Update
+DELETE /:id          # Delete
 ```
 
-### Calendar Connections
+### Bookings (`/api/bookings` — auth required)
 ```
-GET    /api/calendars                    # List connections
-GET    /api/calendars/google/auth-url    # Get OAuth URL
-GET    /api/calendars/google/callback    # OAuth callback
-DELETE /api/calendars/:id                # Disconnect
+GET    /             # List bookings (?upcoming=true supported)
+GET    /:id          # Details
+PATCH  /:id          # Update
+POST   /:id/cancel   # Cancel (host)
+POST   /:id/reschedule  # Reschedule
 ```
 
-### Public (No Auth Required)
+### Calendar (`/api/calendars`)
 ```
-GET    /api/public/:username/:slug              # Get event type info
-GET    /api/public/:username/:slug/slots        # Get available slots for date range
-POST   /api/public/:username/:slug/book         # Create booking
-GET    /api/public/bookings/:id                 # Get booking (with secret token)
-POST   /api/public/bookings/:id/cancel          # Cancel (with secret token)
+GET    /                  # List connections (auth required)
+GET    /google/connect    # OAuth URL (auth required)
+GET    /google/callback   # OAuth callback (public)
+DELETE /:id               # Disconnect (auth required)
 ```
+
+### AI Copilot (`/api/ai` — auth required, conditionally mounted)
+```
+POST   /chat         # Send message to AI copilot
+```
+- Only mounted if `GOOGLE_AI_API_KEY` env var is set
+- Body: `{ message: string, conversationHistory: [{role, content}] }`
+- Returns: `{ response: string }`
+- Rate limited: token bucket (10 RPM), returns 429
+- Timeout: 60 seconds, returns 504
+
+### Public (`/api/public` — no auth)
+```
+GET    /:username/:slug          # Event type info
+GET    /:username/:slug/slots    # Available slots (?date=YYYY-MM-DD&timezone=...)
+POST   /:username/:slug/book     # Create booking
+GET    /bookings/:id             # Booking (with cancel token)
+POST   /bookings/:id/cancel      # Cancel (with cancel token)
+```
+
+---
+
+## AI Copilot Architecture
+
+The AI copilot uses **LangChain + Google Gemini** with an agent loop pattern.
+
+### Agent Loop
+```
+User message → Model (with tools) → Tool calls? → Execute tools → ToolMessage → Model formulates response
+                                                                    ↑ (max 3 rounds)
+```
+
+### 4 AI Tools (DynamicStructuredTool)
+| Tool | Description |
+|------|-------------|
+| `check_availability` | Query active event types + availability service for free slots |
+| `create_booking` | Create real bookings with 2-step confirmation flow |
+| `list_meetings` | Query bookings by timeframe (today/tomorrow/this_week/next_week) |
+| `cancel_meeting` | Find meetings by name/date/ID, cancel with confirmation |
+
+### Key Features
+- Dynamic system prompt with user context (name, timezone, current datetime)
+- Token bucket rate limiter (10 tokens, 60s refill)
+- 60s timeout wrapper with 504 response
+- Tool execution errors caught and fed back to AI for user-friendly explanation
+- Conditionally mounted: routes only load if `GOOGLE_AI_API_KEY` is set
+
+### Frontend Chat UI
+- Message bubbles (user/AI/error), typing indicator, markdown formatting
+- Error messages with Retry button
+- Conversation persisted in sessionStorage
+- Clear chat button, send debounce (500ms)
 
 ---
 
 ## Key Design Decisions
 
-### 1. Timezone Handling
+### 1. Raw SQL over ORM
+`postgres.js` for full query control, no Prisma.
+
+### 2. Authentication
+- Access token (JWT, 15min) stored in memory (NOT localStorage)
+- Refresh token (7 days) in httpOnly cookie, rotated on each use
+
+### 3. Timezone Handling
 - Store ALL times in UTC in database
-- Convert to user's timezone only in API responses
-- Use `date-fns-tz` for conversions
-- Always require timezone from invitee during booking
+- Convert to user's timezone only at API boundary
+- Use `date-fns-tz` (`fromZonedTime` / `toZonedTime`) for conversions
 
-### 2. Availability Calculation
+### 4. Availability Formula
 ```
-Available slots = (Weekly schedule + Overrides) - Existing bookings - Buffer times - External calendar events
+Available slots = (Weekly schedule + Overrides) - Bookings - Buffers - Calendar events
 ```
 
-### 3. Authentication Flow
-- Access token (JWT): 15 minutes, stored in memory
-- Refresh token: 7 days, stored in httpOnly cookie
-- On refresh token use, rotate it (one-time use)
+### 5. Frontend: Vite+React SPA
+Simple SPA approach instead of Next.js. No SSR needed for a dashboard app.
 
-### 4. Module Pattern
-Each module (auth, bookings, etc.) has:
-- `*.routes.ts` - Route definitions
-- `*.controller.ts` - Request handling, validation
-- `*.service.ts` - Business logic
-- `*.schema.ts` - Zod schemas
-- `*.types.ts` - TypeScript types
+### 6. Background Jobs
+Simple `setInterval` for reminder jobs (every 15 min). No Redis/BullMQ.
+
+### 7. Module Pattern
+Each backend feature: `routes.ts → controller.ts → service.ts → schema.ts → types.ts`
+
+### 8. AI Routes Conditionally Mounted
+AI module only loads if `GOOGLE_AI_API_KEY` environment variable is set. Without it, the app runs normally without AI features.
+
+---
+
+## Frontend Routes
+
+| Route | Component | Auth |
+|-------|-----------|------|
+| `/login` | LoginPage | No |
+| `/register` | RegisterPage | No |
+| `/dashboard` | DashboardPage | Yes |
+| `/dashboard/event-types` | EventTypesPage | Yes |
+| `/dashboard/event-types/new` | NewEventTypePage | Yes |
+| `/dashboard/event-types/:id` | EditEventTypePage | Yes |
+| `/dashboard/bookings` | BookingsPage | Yes |
+| `/dashboard/bookings/:id` | BookingDetailsPage | Yes |
+| `/dashboard/ai` | AIChatPage | Yes |
+| `/dashboard/settings` | SettingsPage | Yes |
+| `/:username/:slug` | PublicBookingPage | No |
 
 ---
 
 ## Environment Variables
 
+### Backend (.env)
 ```env
-# Server
 NODE_ENV=development
 PORT=3001
-API_URL=http://localhost:3001
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:5173
+DATABASE_URL=postgres://fixmeet:fixmeet@localhost:5432/fixmeet
+JWT_SECRET=<min 32 chars>
 
-# Database
-DATABASE_URL=postgres://user:password@localhost:5432/scheduleflow
+# Optional — falls back to console.log
+RESEND_API_KEY=re_xxxx
+EMAIL_FROM=FixMeet <notifications@fixmeet.ai>
 
-# Redis
-REDIS_URL=redis://localhost:6379
-
-# Auth
-JWT_SECRET=your-super-secret-jwt-key
-JWT_ACCESS_EXPIRY=15m
-JWT_REFRESH_EXPIRY=7d
-
-# Google OAuth
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
+# Optional — for Google Calendar integration
+GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-xxxxx
 GOOGLE_REDIRECT_URI=http://localhost:3001/api/calendars/google/callback
 
-# Email (Resend)
-RESEND_API_KEY=
-
-# Optional: Encryption key for tokens at rest
-ENCRYPTION_KEY=
+# Optional — enables AI copilot
+GOOGLE_AI_API_KEY=AIza...
+GOOGLE_AI_MODEL_NAME=gemini-2.5-flash   # default
+GOOGLE_AI_MAX_TOKENS=1024               # default
 ```
+
+### Frontend (.env)
+```env
+VITE_API_URL=http://localhost:3001
+VITE_APP_URL=http://localhost:5173
+```
+
+---
+
+## Development
+
+```bash
+# Start PostgreSQL
+docker-compose up -d
+
+# Backend
+cd backend && npm install
+npm run db:migrate
+npm run dev                # port 3001
+
+# Frontend
+cd frontend && npm install
+npm run dev                # port 5173
+```
+
+---
+
+## Implementation Status
+
+| Phase | Feature | Status |
+|-------|---------|--------|
+| 1 | Auth (register, login, JWT, refresh tokens) | Done |
+| 2 | Event Types (CRUD, schedule, booking rules) | Done |
+| 3 | Bookings (create, cancel, conflict detection) | Done |
+| 4 | Email (confirmations, cancellations, reminders) | Done |
+| 5 | Google Calendar (OAuth, sync, Meet links) | Done |
+| 6 | Frontend Foundation (auth, dashboard, API client) | Done |
+| 7 | Feature Pages (event types, bookings, settings, public booking) | Done |
+| 11 | AI Copilot (LangChain + Gemini, 4 tools, chat UI) | Done |
