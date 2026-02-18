@@ -2,8 +2,8 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { sql } from '../../../config/database.js';
 import { cancelBooking } from '../../bookings/bookings.service.js';
-import { format } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
+import { format, addDays } from 'date-fns';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 interface BookingSearchRow {
   id: string;
@@ -57,16 +57,18 @@ export function createCancelMeetingTool(userId: string, userTimezone: string) {
         const params: (string | Date)[] = [userId];
 
         if (date) {
-          // Search by date range (full day in user's timezone)
+          // Search by date range (full day in user's timezone, converted to UTC)
           query += ` AND b.start_time >= $${params.length + 1} AND b.start_time < $${params.length + 2}`;
-          const dayStart = new Date(`${date}T00:00:00`);
-          const dayEnd = new Date(`${date}T23:59:59`);
-          params.push(dayStart.toISOString(), dayEnd.toISOString());
+          const dayStartUTC = fromZonedTime(`${date}T00:00:00`, userTimezone);
+          const nextDayStartUTC = addDays(dayStartUTC, 1);
+          params.push(dayStartUTC.toISOString(), nextDayStartUTC.toISOString());
         }
 
         if (inviteeName) {
           query += ` AND LOWER(b.invitee_name) LIKE $${params.length + 1}`;
-          params.push(`%${inviteeName.toLowerCase()}%`);
+          // Escape LIKE wildcards (%, _) in user input to prevent unintended pattern matching
+          const safeName = inviteeName.toLowerCase().replace(/[%_]/g, '\\$&');
+          params.push(`%${safeName}%`);
         }
 
         query += ` ORDER BY b.start_time ASC LIMIT 5`;
@@ -79,7 +81,7 @@ export function createCancelMeetingTool(userId: string, userTimezone: string) {
 
         if (rows.length === 1) {
           // Exactly one match — cancel it
-          const match = rows[0];
+          const match = rows[0]!;
           const booking = await cancelBooking(match.id, 'host', reason, userId);
           const startZoned = toZonedTime(match.start_time, userTimezone);
           const dateStr = format(startZoned, 'EEE, MMM d');

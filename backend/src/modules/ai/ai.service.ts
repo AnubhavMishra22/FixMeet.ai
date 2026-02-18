@@ -37,6 +37,7 @@ const MAX_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 4000;
 const MAX_TOOL_ROUNDS = 3;
 const CHAT_TIMEOUT_MS = 60_000; // 60 second max for entire chat request
+export const TIMEOUT_ERROR_MESSAGE = 'Request timed out. Please try again.';
 
 let model: ChatGoogleGenerativeAI | null = null;
 
@@ -137,7 +138,7 @@ export async function chat(
 
   // Wrap entire chat in a timeout
   const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error('Request timed out. Please try again.')), CHAT_TIMEOUT_MS)
+    setTimeout(() => reject(new Error(TIMEOUT_ERROR_MESSAGE)), CHAT_TIMEOUT_MS)
   );
 
   return Promise.race([chatInternal(message, conversationHistory, userId), timeoutPromise]);
