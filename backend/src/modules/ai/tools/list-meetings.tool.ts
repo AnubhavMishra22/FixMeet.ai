@@ -92,22 +92,17 @@ export function createListMeetingsTool(userId: string, userTimezone: string) {
           [userId, rangeStart.toISOString(), rangeEnd.toISOString()]
         );
 
-        if (rows.length === 0) {
-          const timeframeLabels: Record<string, string> = {
-            today: 'today',
-            tomorrow: 'tomorrow',
-            this_week: 'this week',
-            next_week: 'next week',
-          };
-          return `No meetings found for ${timeframeLabels[timeframe]}.`;
-        }
-
         const timeframeLabels: Record<string, string> = {
           today: 'Today',
           tomorrow: 'Tomorrow',
           this_week: 'This Week',
           next_week: 'Next Week',
         };
+
+        if (rows.length === 0) {
+          const label = (timeframeLabels[timeframe] ?? timeframe).toLowerCase();
+          return `No meetings found for ${label}.`;
+        }
 
         const lines: string[] = [
           `**${timeframeLabels[timeframe]}'s Meetings** (${rows.length} total):\n`,
