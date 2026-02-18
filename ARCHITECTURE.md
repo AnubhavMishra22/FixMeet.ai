@@ -82,7 +82,6 @@ FixMeet.ai/
 │   │   │   └── password.ts
 │   │   ├── app.ts                   # Express app + route mounting
 │   │   └── server.ts               # Entry point
-│   ├── docker-compose.yml           # PostgreSQL container
 │   ├── package.json
 │   └── tsconfig.json
 │
