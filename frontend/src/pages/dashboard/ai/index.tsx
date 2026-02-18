@@ -45,7 +45,13 @@ export default function AIChatPage() {
   const [messages, setMessages] = useState<Message[]>(loadMessages);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef(messages);
   const { toast } = useToast();
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // Persist messages to sessionStorage whenever they change
   useEffect(() => {
@@ -70,8 +76,8 @@ export default function AIChatPage() {
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
-    // Build conversation history from non-error messages
-    const conversationHistory: ConversationMessage[] = messages
+    // Build conversation history from non-error messages (use ref to avoid stale closure)
+    const conversationHistory: ConversationMessage[] = messagesRef.current
       .filter((m): m is Message & { role: 'user' | 'assistant' } => m.role !== 'error')
       .map((m) => ({ role: m.role, content: m.content }));
 
@@ -115,19 +121,18 @@ export default function AIChatPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, toast]);
+  }, [isLoading, toast]);
 
   const handleRetry = useCallback((failedContent: string, errorId: string) => {
     // Remove the error message and the failed user message before it
     setMessages((prev) => {
       const errorIdx = prev.findIndex((m) => m.id === errorId);
-      if (errorIdx < 0) return prev;
+      if (errorIdx < 1) return prev;
       // Remove error and the user message right before it
-      const filtered = prev.filter((_, i) => i !== errorIdx && i !== errorIdx - 1);
-      return filtered;
+      return prev.filter((_, i) => i !== errorIdx && i !== errorIdx - 1);
     });
-    // Retry after a tick so state updates first
-    setTimeout(() => sendMessage(failedContent), 0);
+    // sendMessage uses messagesRef so it always reads current state — no setTimeout needed
+    sendMessage(failedContent);
   }, [sendMessage]);
 
   const handleClearChat = () => {

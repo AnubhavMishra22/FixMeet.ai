@@ -38,3 +38,9 @@ export class RateLimitError extends AppError {
     super(message, 429, 'RATE_LIMITED');
   }
 }
+
+export class TimeoutError extends AppError {
+  constructor(message = 'Request timed out. Please try again.') {
+    super(message, 504, 'TIMEOUT');
+  }
+}

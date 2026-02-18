@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import * as aiService from './ai.service.js';
-import { TIMEOUT_ERROR_MESSAGE } from './ai.service.js';
 import type { ChatInput } from './ai.schema.js';
-import { UnauthorizedError } from '../../utils/errors.js';
+import { UnauthorizedError, TimeoutError } from '../../utils/errors.js';
 
 export async function chat(
   req: Request<object, object, ChatInput>,
@@ -24,7 +23,7 @@ export async function chat(
     });
   } catch (error) {
     // Let AppError subclasses (RateLimitError etc.) bubble up to error middleware
-    if (error instanceof Error && error.message === TIMEOUT_ERROR_MESSAGE) {
+    if (error instanceof TimeoutError) {
       res.status(504).json({
         success: false,
         error: {
