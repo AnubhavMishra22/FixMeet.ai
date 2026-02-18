@@ -36,6 +36,7 @@ function consumeToken(): boolean {
 const MAX_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 4000;
 const MAX_TOOL_ROUNDS = 3;
+const CHAT_TIMEOUT_MS = 60_000; // 60 second max for entire chat request
 
 let model: ChatGoogleGenerativeAI | null = null;
 
@@ -134,6 +135,19 @@ export async function chat(
     throw new RateLimitError();
   }
 
+  // Wrap entire chat in a timeout
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('Request timed out. Please try again.')), CHAT_TIMEOUT_MS)
+  );
+
+  return Promise.race([chatInternal(message, conversationHistory, userId), timeoutPromise]);
+}
+
+async function chatInternal(
+  message: string,
+  conversationHistory: ConversationMessage[],
+  userId: string,
+): Promise<string> {
   // Fetch user info for personalized system prompt
   const userContext = await getUserContext(userId);
 
@@ -159,7 +173,7 @@ export async function chat(
   const toolMap = new Map(tools.map((t) => [t.name, t]));
 
   // Bind tools to the model
-  const boundModel = model.bindTools(tools);
+  const boundModel = model!.bindTools(tools);
 
   // Build message history
   const messages: BaseMessage[] = [new SystemMessage(systemPrompt)];
@@ -207,14 +221,25 @@ export async function chat(
         continue;
       }
 
-      // Execute the tool
-      const result = await tool.invoke(toolCall.args);
-      messages.push(
-        new ToolMessage({
-          tool_call_id: toolCall.id ?? toolCall.name,
-          content: typeof result === 'string' ? result : JSON.stringify(result),
-        })
-      );
+      // Execute the tool — catch errors so AI can explain the issue
+      try {
+        const result = await tool.invoke(toolCall.args);
+        messages.push(
+          new ToolMessage({
+            tool_call_id: toolCall.id ?? toolCall.name,
+            content: typeof result === 'string' ? result : JSON.stringify(result),
+          })
+        );
+      } catch (toolError) {
+        const errorMsg = toolError instanceof Error ? toolError.message : 'Unknown tool error';
+        console.error(`Tool "${toolCall.name}" execution error:`, toolError);
+        messages.push(
+          new ToolMessage({
+            tool_call_id: toolCall.id ?? toolCall.name,
+            content: `Error executing tool: ${errorMsg}`,
+          })
+        );
+      }
     }
 
     // Loop back — model will see tool results and formulate a response
