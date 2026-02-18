@@ -1,7 +1,8 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
-import type { BaseMessage } from '@langchain/core/messages';
+import { HumanMessage, AIMessage, SystemMessage, ToolMessage } from '@langchain/core/messages';
+import type { BaseMessage, AIMessageChunk } from '@langchain/core/messages';
 import { buildSystemPrompt } from './prompts/system-prompt.js';
+import { getToolsForUser } from './tools/index.js';
 import { sql } from '../../config/database.js';
 import { RateLimitError } from '../../utils/errors.js';
 
@@ -34,6 +35,7 @@ function consumeToken(): boolean {
 
 const MAX_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 4000;
+const MAX_TOOL_ROUNDS = 3;
 
 let model: ChatGoogleGenerativeAI | null = null;
 
@@ -83,6 +85,41 @@ async function getUserContext(userId: string) {
   };
 }
 
+/** Extract text content from an AI response */
+function extractContent(response: AIMessageChunk): string {
+  if (typeof response.content === 'string') return response.content;
+  if (Array.isArray(response.content)) {
+    return response.content
+      .filter((c): c is { type: 'text'; text: string } =>
+        typeof c === 'object' && c !== null && 'type' in c && c.type === 'text')
+      .map((c) => c.text)
+      .join('');
+  }
+  return JSON.stringify(response.content);
+}
+
+/** Invoke the model with retry logic for rate limits */
+async function invokeWithRetry(
+  boundModel: ReturnType<ChatGoogleGenerativeAI['bindTools']>,
+  messages: BaseMessage[],
+): Promise<AIMessageChunk> {
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      return await boundModel.invoke(messages) as AIMessageChunk;
+    } catch (error: unknown) {
+      if (isRateLimitError(error) && attempt < MAX_ATTEMPTS) {
+        await sleep(RETRY_DELAY_MS);
+        continue;
+      }
+      if (isRateLimitError(error)) {
+        throw new RateLimitError();
+      }
+      throw error;
+    }
+  }
+  throw new Error('AI request failed after max retries');
+}
+
 export async function chat(
   message: string,
   conversationHistory: ConversationMessage[] = [],
@@ -117,6 +154,14 @@ export async function chat(
     currentDateTime,
   });
 
+  // Build tools for this user
+  const tools = getToolsForUser(userId, userContext.userTimezone);
+  const toolMap = new Map(tools.map((t) => [t.name, t]));
+
+  // Bind tools to the model
+  const boundModel = model.bindTools(tools);
+
+  // Build message history
   const messages: BaseMessage[] = [new SystemMessage(systemPrompt)];
 
   for (const msg of conversationHistory) {
@@ -129,27 +174,56 @@ export async function chat(
 
   messages.push(new HumanMessage(message));
 
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    try {
-      const response = await model.invoke(messages);
+  // Agent loop: invoke model → handle tool calls → repeat until text response
+  for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+    // Consume additional token for each tool round after the first
+    if (round > 0 && !consumeToken()) {
+      throw new RateLimitError();
+    }
 
-      return typeof response.content === 'string'
-        ? response.content
-        : JSON.stringify(response.content);
-    } catch (error: unknown) {
-      if (isRateLimitError(error) && attempt < MAX_ATTEMPTS) {
-        await sleep(RETRY_DELAY_MS);
+    const response = await invokeWithRetry(boundModel, messages);
+
+    // Check if the AI wants to call any tools
+    const toolCalls = response.tool_calls ?? [];
+
+    if (toolCalls.length === 0) {
+      // No tool calls — return the final text response
+      return extractContent(response);
+    }
+
+    // AI wants to use tools — add its message then execute each tool
+    messages.push(response);
+
+    for (const toolCall of toolCalls) {
+      const tool = toolMap.get(toolCall.name);
+
+      if (!tool) {
+        messages.push(
+          new ToolMessage({
+            tool_call_id: toolCall.id ?? toolCall.name,
+            content: `Tool "${toolCall.name}" not found.`,
+          })
+        );
         continue;
       }
 
-      // If rate limit exhausted retries, throw user-friendly error
-      if (isRateLimitError(error)) {
-        throw new RateLimitError();
-      }
-
-      throw error;
+      // Execute the tool
+      const result = await tool.invoke(toolCall.args);
+      messages.push(
+        new ToolMessage({
+          tool_call_id: toolCall.id ?? toolCall.name,
+          content: typeof result === 'string' ? result : JSON.stringify(result),
+        })
+      );
     }
+
+    // Loop back — model will see tool results and formulate a response
   }
 
-  throw new Error('AI request failed after max retries');
+  // Exhausted tool rounds, do one final call
+  if (!consumeToken()) {
+    throw new RateLimitError();
+  }
+  const finalResponse = await invokeWithRetry(boundModel, messages);
+  return extractContent(finalResponse);
 }
