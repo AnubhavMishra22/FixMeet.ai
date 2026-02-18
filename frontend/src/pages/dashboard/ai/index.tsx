@@ -90,8 +90,8 @@ export default function AIChatPage() {
           <Sparkles className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold">FixMeet AI</h1>
-          <p className="text-xs text-gray-500">Your scheduling assistant</p>
+          <h1 className="text-lg font-semibold">AI Copilot</h1>
+          <p className="text-xs text-gray-500">Check availability, manage meetings, and schedule — all through chat</p>
         </div>
       </div>
 
@@ -131,19 +131,19 @@ function EmptyState({ onSuggestionClick }: { onSuggestionClick: (msg: string) =>
       <p className="text-gray-500 max-w-md mb-6">
         I can help you check your availability, manage meetings, and answer questions about your schedule.
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl">
         {[
-          'What meetings do I have today?',
-          'Am I free tomorrow at 2pm?',
-          'How many bookings do I have this week?',
-          'What are my event types?',
+          { label: "What's my schedule today?", icon: '📅' },
+          { label: 'Am I free tomorrow afternoon?', icon: '🕐' },
+          { label: 'Schedule a meeting', icon: '✨' },
         ].map((suggestion) => (
           <button
-            key={suggestion}
-            className="text-left text-sm px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-primary/30 transition-colors text-gray-600"
-            onClick={() => onSuggestionClick(suggestion)}
+            key={suggestion.label}
+            className="text-left text-sm px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-primary/30 hover:shadow-sm transition-all text-gray-600 group"
+            onClick={() => onSuggestionClick(suggestion.label)}
           >
-            {suggestion}
+            <span className="mr-2">{suggestion.icon}</span>
+            {suggestion.label}
           </button>
         ))}
       </div>
