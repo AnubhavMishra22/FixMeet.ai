@@ -64,6 +64,7 @@ async function mountRoutes() {
       bookingsRoutes,
       calendarsRoutes,
       publicRoutes,
+      briefsRoutes,
     ] = await Promise.all([
       import('./middleware/auth.middleware.js'),
       import('./modules/auth/auth.routes.js'),
@@ -71,6 +72,7 @@ async function mountRoutes() {
       import('./modules/bookings/bookings.routes.js'),
       import('./modules/calendars/calendars.routes.js'),
       import('./modules/public/public.routes.js'),
+      import('./modules/briefs/briefs.routes.js'),
     ]);
 
     app.use('/api/auth', authRoutes.default);
@@ -78,12 +80,17 @@ async function mountRoutes() {
     app.use('/api/bookings', authMiddleware, bookingsRoutes.default);
     app.use('/api/calendars', calendarsRoutes.default);
     app.use('/api/public', publicRoutes.default);
+    app.use('/api/briefs', authMiddleware, briefsRoutes.default);
 
     // AI routes - only mount if GOOGLE_AI_API_KEY is configured
     if (process.env.GOOGLE_AI_API_KEY) {
       const { initializeAI } = await import('./modules/ai/ai.service.js');
       const aiRoutes = await import('./modules/ai/ai.routes.js');
-      initializeAI(process.env.GOOGLE_AI_API_KEY);
+      initializeAI({
+        apiKey: process.env.GOOGLE_AI_API_KEY,
+        modelName: process.env.GOOGLE_AI_MODEL_NAME,
+        maxTokens: process.env.GOOGLE_AI_MAX_TOKENS,
+      });
       app.use('/api/ai', authMiddleware, aiRoutes.default);
       console.log('AI routes mounted (GOOGLE_AI_API_KEY configured).');
     } else {
