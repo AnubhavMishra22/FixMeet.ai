@@ -104,3 +104,36 @@ export interface CalendarConnection {
   isActive: boolean;
   createdAt: string;
 }
+
+export type BriefStatus = 'pending' | 'generating' | 'completed' | 'failed';
+
+export interface PreviousMeeting {
+  date: string;
+  title: string;
+  notes?: string;
+}
+
+export interface MeetingBrief {
+  id: string;
+  bookingId: string;
+  userId: string;
+  inviteeSummary: string | null;
+  companySummary: string | null;
+  previousMeetings: PreviousMeeting[];
+  talkingPoints: string[];
+  status: BriefStatus;
+  attemptCount: number;
+  generatedAt: string | null;
+  sentAt: string | null;
+  createdAt: string;
+}
+
+export interface MeetingBriefWithBooking extends MeetingBrief {
+  booking: {
+    inviteeName: string;
+    inviteeEmail: string;
+    startTime: string;
+    endTime: string;
+    eventTypeTitle: string;
+  };
+}

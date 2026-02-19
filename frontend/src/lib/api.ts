@@ -58,4 +58,19 @@ api.interceptors.response.use(
   }
 );
 
+// ---------------------------------------------------------------------------
+// Meeting Briefs
+// ---------------------------------------------------------------------------
+import type { MeetingBriefWithBooking, MeetingBrief } from '../types';
+
+export async function getBriefs(): Promise<MeetingBriefWithBooking[]> {
+  const { data } = await api.get('/api/briefs');
+  return data.data;
+}
+
+export async function getBrief(bookingId: string): Promise<MeetingBrief> {
+  const { data } = await api.get(`/api/briefs/${bookingId}`);
+  return data.data;
+}
+
 export default api;

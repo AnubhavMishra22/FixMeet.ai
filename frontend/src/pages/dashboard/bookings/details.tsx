@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import {
   Calendar, User, Globe, Video,
-  MapPin, Phone, ArrowLeft, X
+  MapPin, Phone, ArrowLeft, X, FileText
 } from 'lucide-react';
-import api from '../../../lib/api';
+import api, { getBrief } from '../../../lib/api';
 import { useToast } from '../../../stores/toast-store';
 import type { BookingWithDetails } from '../../../types';
 
@@ -19,6 +19,7 @@ export default function BookingDetailsPage() {
   const [booking, setBooking] = useState<BookingWithDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [hasBrief, setHasBrief] = useState(false);
 
   useEffect(() => {
     fetchBooking();
@@ -28,6 +29,14 @@ export default function BookingDetailsPage() {
     try {
       const { data } = await api.get(`/api/bookings/${id}`);
       setBooking(data.data.booking);
+
+      // Check if a meeting brief exists for this booking
+      try {
+        await getBrief(id!);
+        setHasBrief(true);
+      } catch {
+        setHasBrief(false);
+      }
     } catch {
       toast({ title: 'Failed to load booking', variant: 'destructive' });
       navigate('/dashboard/bookings');
@@ -111,17 +120,27 @@ export default function BookingDetailsPage() {
                 )}
               </div>
             </div>
-            {canCancel && (
-              <Button
-                variant="outline"
-                className="text-red-600 hover:bg-red-50"
-                onClick={handleCancel}
-                disabled={isCancelling}
-              >
-                <X className="h-4 w-4 mr-1" />
-                {isCancelling ? 'Cancelling...' : 'Cancel'}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {hasBrief && (
+                <Link to={`/dashboard/briefs/${booking.id}`}>
+                  <Button variant="outline" size="sm" className="text-purple-600 hover:bg-purple-50">
+                    <FileText className="h-4 w-4 mr-1" />
+                    View Meeting Brief
+                  </Button>
+                </Link>
+              )}
+              {canCancel && (
+                <Button
+                  variant="outline"
+                  className="text-red-600 hover:bg-red-50"
+                  onClick={handleCancel}
+                  disabled={isCancelling}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  {isCancelling ? 'Cancelling...' : 'Cancel'}
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
