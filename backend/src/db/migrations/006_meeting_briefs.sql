@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS meeting_briefs (
 
     -- Status tracking
     status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'generating', 'completed', 'failed')),
+    attempt_count INTEGER NOT NULL DEFAULT 0,
 
     generated_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),

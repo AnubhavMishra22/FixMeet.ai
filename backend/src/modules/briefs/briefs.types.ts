@@ -9,6 +9,7 @@ export interface MeetingBrief {
   previousMeetings: PreviousMeeting[];
   talkingPoints: string[];
   status: BriefStatus;
+  attemptCount: number;
   generatedAt: Date | null;
   createdAt: Date;
 }
@@ -28,6 +29,7 @@ export interface MeetingBriefRow {
   previous_meetings: PreviousMeeting[];
   talking_points: string[];
   status: string;
+  attempt_count: number;
   generated_at: Date | null;
   created_at: Date;
 }
