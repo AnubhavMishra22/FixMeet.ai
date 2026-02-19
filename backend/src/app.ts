@@ -83,7 +83,11 @@ async function mountRoutes() {
     if (process.env.GOOGLE_AI_API_KEY) {
       const { initializeAI } = await import('./modules/ai/ai.service.js');
       const aiRoutes = await import('./modules/ai/ai.routes.js');
-      initializeAI(process.env.GOOGLE_AI_API_KEY);
+      initializeAI({
+        apiKey: process.env.GOOGLE_AI_API_KEY,
+        modelName: process.env.GOOGLE_AI_MODEL_NAME,
+        maxTokens: process.env.GOOGLE_AI_MAX_TOKENS,
+      });
       app.use('/api/ai', authMiddleware, aiRoutes.default);
       console.log('AI routes mounted (GOOGLE_AI_API_KEY configured).');
     } else {
