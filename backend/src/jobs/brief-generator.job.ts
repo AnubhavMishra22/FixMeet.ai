@@ -124,7 +124,9 @@ export async function processBriefGeneration(): Promise<void> {
       }
     } catch (err) {
       console.error(`  ✗ Failed to generate brief for ${brief.invitee_name}:`, (err as Error).message);
-      await markFailed(brief.id).catch(() => {});
+      await markFailed(brief.id).catch((failErr) => {
+        console.error(`  ✗ Additionally, failed to mark brief ${brief.id} as failed:`, (failErr as Error).message);
+      });
     }
   }
 

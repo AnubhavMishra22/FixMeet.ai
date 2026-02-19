@@ -148,8 +148,8 @@ export async function markCompleted(
       status = 'completed',
       invitee_summary = ${result.inviteeSummary},
       company_summary = ${result.companySummary},
-      talking_points = ${JSON.stringify(result.talkingPoints)}::jsonb,
-      previous_meetings = ${JSON.stringify(previousMeetings)}::jsonb,
+      talking_points = ${sql.json(result.talkingPoints as readonly string[])},
+      previous_meetings = ${sql.json(previousMeetings as readonly { date: string; title: string }[])},
       generated_at = NOW()
     WHERE id = ${briefId}
   `;
