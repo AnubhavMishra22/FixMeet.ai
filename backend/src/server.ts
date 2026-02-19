@@ -2,6 +2,7 @@ import app, { mountRoutes } from './app.js';
 import { env } from './config/env.js';
 import { runMigrations } from './config/migrate.js';
 import { processReminders } from './jobs/reminder.job.js';
+import { processBriefGeneration } from './jobs/brief-generator.job.js';
 
 async function start() {
   // Run database migrations before starting the server
@@ -34,6 +35,23 @@ async function start() {
     }, 5000);
 
     console.log('Reminder job scheduled (every 15 min)');
+
+    // Run brief generation every hour
+    const BRIEF_INTERVAL = 60 * 60 * 1000; // 1 hour
+
+    setInterval(() => {
+      processBriefGeneration().catch((err) => {
+        console.error('Brief generator job error:', err);
+      });
+    }, BRIEF_INTERVAL);
+
+    setTimeout(() => {
+      processBriefGeneration().catch((err) => {
+        console.error('Initial brief generator job error:', err);
+      });
+    }, 10000);
+
+    console.log('Brief generator job scheduled (every 1 hour)');
   }
 
   // Graceful shutdown
