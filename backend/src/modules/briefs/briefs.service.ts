@@ -1,6 +1,6 @@
 import { sql } from '../../config/database.js';
 import { NotFoundError } from '../../utils/errors.js';
-import type { MeetingBriefRow, BriefWithBookingRow, MeetingBrief } from './briefs.types.js';
+import type { MeetingBriefRow, BriefWithBookingRow, MeetingBrief, MeetingBriefWithBooking } from './briefs.types.js';
 
 function rowToBrief(row: MeetingBriefRow): MeetingBrief {
   return {
@@ -32,7 +32,7 @@ export async function getBriefByBookingId(bookingId: string, userId: string): Pr
 }
 
 /** List all briefs for a user, joined with booking info */
-export async function listBriefs(userId: string) {
+export async function listBriefs(userId: string): Promise<MeetingBriefWithBooking[]> {
   const rows = await sql<BriefWithBookingRow[]>`
     SELECT
       mb.*,

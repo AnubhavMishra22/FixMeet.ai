@@ -39,3 +39,13 @@ export interface BriefWithBookingRow extends MeetingBriefRow {
   end_time: Date;
   event_type_title: string;
 }
+
+export interface MeetingBriefWithBooking extends MeetingBrief {
+  booking: {
+    inviteeName: string;
+    inviteeEmail: string;
+    startTime: Date;
+    endTime: Date;
+    eventTypeTitle: string;
+  };
+}

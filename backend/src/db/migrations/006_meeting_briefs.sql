@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS meeting_briefs (
     talking_points JSONB DEFAULT '[]',     -- AI suggested topics
 
     -- Status tracking
-    status VARCHAR(20) NOT NULL DEFAULT 'pending',  -- pending, generating, completed, failed
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'generating', 'completed', 'failed')),
 
     generated_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
