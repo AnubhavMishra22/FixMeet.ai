@@ -83,13 +83,13 @@ async function mountRoutes() {
     app.use('/api/briefs', authMiddleware, briefsRoutes.default);
 
     // AI routes - only mount if GOOGLE_AI_API_KEY is configured
-    if (process.env.GOOGLE_AI_API_KEY) {
+    if (env.GOOGLE_AI_API_KEY) {
       const { initializeAI } = await import('./modules/ai/ai.service.js');
       const aiRoutes = await import('./modules/ai/ai.routes.js');
       initializeAI({
-        apiKey: process.env.GOOGLE_AI_API_KEY,
-        modelName: process.env.GOOGLE_AI_MODEL_NAME,
-        maxTokens: process.env.GOOGLE_AI_MAX_TOKENS,
+        apiKey: env.GOOGLE_AI_API_KEY,
+        modelName: env.GOOGLE_AI_MODEL_NAME,
+        maxTokens: env.GOOGLE_AI_MAX_TOKENS,
       });
       app.use('/api/ai', authMiddleware, aiRoutes.default);
       console.log('AI routes mounted (GOOGLE_AI_API_KEY configured).');
