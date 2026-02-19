@@ -52,13 +52,17 @@ function isRateLimitError(error: unknown): boolean {
   return false;
 }
 
-export function initializeAI(apiKey: string): void {
+interface AIConfig {
+  apiKey: string;
+  modelName?: string;
+  maxTokens?: string;
+}
+
+export function initializeAI(config: AIConfig): void {
   model = new ChatGoogleGenerativeAI({
-    apiKey,
-    model: process.env.GOOGLE_AI_MODEL_NAME || 'gemini-2.5-flash',
-    maxOutputTokens: process.env.GOOGLE_AI_MAX_TOKENS
-      ? parseInt(process.env.GOOGLE_AI_MAX_TOKENS, 10)
-      : 1024,
+    apiKey: config.apiKey,
+    model: config.modelName || 'gemini-2.5-flash',
+    maxOutputTokens: config.maxTokens ? parseInt(config.maxTokens, 10) : 1024,
   });
 }
 
