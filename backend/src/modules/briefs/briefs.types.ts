@@ -11,6 +11,7 @@ export interface MeetingBrief {
   status: BriefStatus;
   attemptCount: number;
   generatedAt: Date | null;
+  sentAt: Date | null;
   createdAt: Date;
 }
 
@@ -31,6 +32,7 @@ export interface MeetingBriefRow {
   status: string;
   attempt_count: number;
   generated_at: Date | null;
+  sent_at: Date | null;
   created_at: Date;
 }
 

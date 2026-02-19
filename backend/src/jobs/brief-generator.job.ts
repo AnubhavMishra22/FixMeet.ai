@@ -6,6 +6,7 @@ import {
   markCompleted,
   markFailed,
   getPreviousMeetings,
+  sendBriefEmail,
 } from '../modules/briefs/briefs.service.js';
 import { searchPersonInfo } from '../modules/briefs/scraper.service.js';
 import { generateBrief } from '../modules/briefs/brief-generator.service.js';
@@ -15,7 +16,7 @@ import { generateBrief } from '../modules/briefs/brief-generator.service.js';
  *
  * Phase 1: Create pending brief records for upcoming bookings (20-28h window).
  * Phase 2: Process pending/failed briefs through the full pipeline:
- *   scrape → fetch previous meetings → AI generate → save to DB.
+ *   scrape → fetch previous meetings → AI generate → save to DB → send email.
  */
 export async function processBriefGeneration(): Promise<void> {
   const now = new Date();
@@ -98,6 +99,29 @@ export async function processBriefGeneration(): Promise<void> {
       // Step 4: Save to database
       await markCompleted(brief.id, result, previousMeetings);
       console.log(`  ✓ Brief generated for ${brief.invitee_name}`);
+
+      // Step 5: Send email to host
+      try {
+        const sent = await sendBriefEmail({
+          briefId: brief.id,
+          bookingId: brief.booking_id,
+          userId: brief.user_id,
+          inviteeName: brief.invitee_name,
+          inviteeEmail: brief.invitee_email,
+          eventTitle: brief.event_type_title,
+          startTime: brief.start_time,
+          endTime: brief.end_time,
+          inviteeSummary: result.inviteeSummary,
+          companySummary: result.companySummary,
+          talkingPoints: result.talkingPoints,
+        });
+        if (sent) {
+          console.log(`  📧 Brief email sent for ${brief.invitee_name}`);
+        }
+      } catch (emailErr) {
+        // Email failure shouldn't mark the brief as failed — content is already saved
+        console.error(`  ⚠ Brief email failed for ${brief.invitee_name}:`, (emailErr as Error).message);
+      }
     } catch (err) {
       console.error(`  ✗ Failed to generate brief for ${brief.invitee_name}:`, (err as Error).message);
       await markFailed(brief.id).catch(() => {});

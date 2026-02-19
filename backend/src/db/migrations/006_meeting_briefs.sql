@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS meeting_briefs (
     attempt_count INTEGER NOT NULL DEFAULT 0,
 
     generated_at TIMESTAMPTZ,
+    sent_at TIMESTAMPTZ,              -- When the brief email was sent
     created_at TIMESTAMPTZ DEFAULT NOW(),
 
     -- One brief per booking per user

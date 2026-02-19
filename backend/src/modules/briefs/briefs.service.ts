@@ -1,5 +1,8 @@
 import { sql } from '../../config/database.js';
+import { env } from '../../config/env.js';
 import { NotFoundError } from '../../utils/errors.js';
+import { sendEmail } from '../email/email.service.js';
+import { meetingBriefEmail } from '../email/templates/meeting-brief.template.js';
 import type { MeetingBriefRow, BriefWithBookingRow, MeetingBrief, MeetingBriefWithBooking, PreviousMeeting } from './briefs.types.js';
 import type { BriefGenerationResult } from './brief-generator.service.js';
 
@@ -15,6 +18,7 @@ function rowToBrief(row: MeetingBriefRow): MeetingBrief {
     status: row.status as MeetingBrief['status'],
     attemptCount: row.attempt_count,
     generatedAt: row.generated_at,
+    sentAt: row.sent_at,
     createdAt: row.created_at,
   };
 }
@@ -93,6 +97,8 @@ export interface PendingBriefRow {
   invitee_name: string;
   invitee_email: string;
   event_type_title: string;
+  start_time: Date;
+  end_time: Date;
 }
 
 const MAX_ATTEMPTS = 3;
@@ -107,6 +113,8 @@ export async function getPendingBriefs(): Promise<PendingBriefRow[]> {
       mb.attempt_count,
       b.invitee_name,
       b.invitee_email,
+      b.start_time,
+      b.end_time,
       et.title as event_type_title
     FROM meeting_briefs mb
     JOIN bookings b ON mb.booking_id = b.id
@@ -178,4 +186,111 @@ export async function getPreviousMeetings(
     date: r.start_time.toISOString().split('T')[0]!,
     title: r.title,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Email delivery
+// ---------------------------------------------------------------------------
+
+interface BriefEmailContext {
+  briefId: string;
+  bookingId: string;
+  userId: string;
+  inviteeName: string;
+  inviteeEmail: string;
+  eventTitle: string;
+  startTime: Date;
+  endTime: Date;
+  inviteeSummary: string;
+  companySummary: string;
+  talkingPoints: string[];
+}
+
+/** Mark brief email as sent */
+export async function markSent(briefId: string): Promise<void> {
+  await sql`
+    UPDATE meeting_briefs
+    SET sent_at = NOW()
+    WHERE id = ${briefId}
+  `;
+}
+
+/**
+ * Send meeting brief email to the host.
+ * Checks user preference and deduplicates (won't send if already sent).
+ * Returns true if email was sent, false if skipped.
+ */
+export async function sendBriefEmail(context: BriefEmailContext): Promise<boolean> {
+  // Check if already sent
+  const [brief] = await sql<{ sent_at: Date | null }[]>`
+    SELECT sent_at FROM meeting_briefs WHERE id = ${context.briefId}
+  `;
+  if (brief?.sent_at) {
+    console.log(`  Brief email already sent for ${context.inviteeName}, skipping`);
+    return false;
+  }
+
+  // Check user preference
+  const [user] = await sql<{ email: string; name: string; timezone: string; brief_emails_enabled: boolean }[]>`
+    SELECT email, name, timezone, COALESCE(brief_emails_enabled, true) as brief_emails_enabled
+    FROM users WHERE id = ${context.userId}
+  `;
+  if (!user) return false;
+
+  if (!user.brief_emails_enabled) {
+    console.log(`  User ${user.name} has brief emails disabled, skipping`);
+    return false;
+  }
+
+  // Extract company name from company summary (first sentence or null)
+  const companyName = extractCompanyName(context.inviteeEmail);
+
+  // Build and send email
+  const dashboardUrl = `${env.FRONTEND_URL}/dashboard/bookings/${context.bookingId}`;
+  const emailTemplate = meetingBriefEmail({
+    hostName: user.name,
+    inviteeName: context.inviteeName,
+    eventTitle: context.eventTitle,
+    startTime: context.startTime,
+    endTime: context.endTime,
+    timezone: user.timezone,
+    inviteeSummary: context.inviteeSummary,
+    companySummary: context.companySummary,
+    companyName,
+    talkingPoints: context.talkingPoints,
+    dashboardUrl,
+  });
+
+  const sent = await sendEmail({
+    to: user.email,
+    subject: emailTemplate.subject,
+    html: emailTemplate.html,
+    text: emailTemplate.text,
+  });
+
+  if (sent) {
+    await markSent(context.briefId);
+  }
+
+  return sent;
+}
+
+/** Extract a company name from an email domain (best-effort) */
+function extractCompanyName(email: string): string | null {
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain) return null;
+
+  const freeProviders = new Set([
+    'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
+    'live.com', 'aol.com', 'icloud.com', 'protonmail.com', 'proton.me',
+  ]);
+  if (freeProviders.has(domain)) return null;
+
+  // Use the domain name minus TLD as a rough company name
+  const parts = domain.split('.');
+  if (parts.length >= 2) {
+    const name = parts[parts.length - 2]!;
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  }
+  return null;
 }
