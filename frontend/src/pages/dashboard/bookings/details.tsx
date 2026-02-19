@@ -8,9 +8,10 @@ import {
   Calendar, User, Globe, Video,
   MapPin, Phone, ArrowLeft, X, FileText
 } from 'lucide-react';
-import api, { getBrief } from '../../../lib/api';
+import api, { getBrief, generateBriefForBooking } from '../../../lib/api';
 import { useToast } from '../../../stores/toast-store';
 import type { BookingWithDetails } from '../../../types';
+import { Loader2, Sparkles } from 'lucide-react';
 
 export default function BookingDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +21,7 @@ export default function BookingDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
   const [hasBrief, setHasBrief] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     fetchBooking();
@@ -59,6 +61,19 @@ export default function BookingDetailsPage() {
       toast({ title: 'Failed to cancel booking', variant: 'destructive' });
     } finally {
       setIsCancelling(false);
+    }
+  }
+
+  async function handleGenerateBrief() {
+    setIsGenerating(true);
+    try {
+      await generateBriefForBooking(id!);
+      setHasBrief(true);
+      toast({ title: 'Meeting brief generated!' });
+    } catch {
+      toast({ title: 'Failed to generate brief', variant: 'destructive' });
+    } finally {
+      setIsGenerating(false);
     }
   }
 
@@ -121,14 +136,34 @@ export default function BookingDetailsPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {hasBrief && (
+              {hasBrief ? (
                 <Link to={`/dashboard/briefs/${booking.id}`}>
                   <Button variant="outline" size="sm" className="text-purple-600 hover:bg-purple-50">
                     <FileText className="h-4 w-4 mr-1" />
                     View Meeting Brief
                   </Button>
                 </Link>
-              )}
+              ) : booking.status === 'confirmed' ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-purple-600 hover:bg-purple-50"
+                  onClick={handleGenerateBrief}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-1" />
+                      Generate Brief
+                    </>
+                  )}
+                </Button>
+              ) : null}
               {canCancel && (
                 <Button
                   variant="outline"

@@ -73,4 +73,14 @@ export async function getBrief(bookingId: string): Promise<MeetingBrief> {
   return data.data;
 }
 
+export async function generateBriefForBooking(bookingId: string): Promise<MeetingBrief> {
+  const { data } = await api.post(`/api/briefs/generate/${bookingId}`);
+  return data.data;
+}
+
+export async function regenerateBrief(bookingId: string): Promise<MeetingBrief> {
+  const { data } = await api.post(`/api/briefs/regenerate/${bookingId}`);
+  return data.data;
+}
+
 export default api;

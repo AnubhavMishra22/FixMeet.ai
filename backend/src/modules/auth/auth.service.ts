@@ -235,7 +235,7 @@ export async function updateProfile(
   }
 
   const updates: string[] = [];
-  const values: string[] = [];
+  const values: (string | boolean | number)[] = [];
 
   if (input.name !== undefined) {
     updates.push('name');
@@ -248,6 +248,18 @@ export async function updateProfile(
   if (input.timezone !== undefined) {
     updates.push('timezone');
     values.push(input.timezone);
+  }
+  if (input.briefsEnabled !== undefined) {
+    updates.push('briefs_enabled');
+    values.push(input.briefsEnabled);
+  }
+  if (input.briefEmailsEnabled !== undefined) {
+    updates.push('brief_emails_enabled');
+    values.push(input.briefEmailsEnabled);
+  }
+  if (input.briefGenerationHours !== undefined) {
+    updates.push('brief_generation_hours');
+    values.push(input.briefGenerationHours);
   }
 
   if (updates.length === 0) {

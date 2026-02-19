@@ -4,6 +4,9 @@ export interface User {
   name: string;
   username: string;
   timezone: string;
+  briefs_enabled: boolean;
+  brief_emails_enabled: boolean;
+  brief_generation_hours: number;
   created_at: Date;
   updated_at: Date;
 }

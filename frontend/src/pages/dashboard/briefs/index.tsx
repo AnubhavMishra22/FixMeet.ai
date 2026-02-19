@@ -4,15 +4,18 @@ import { format, isPast } from 'date-fns';
 import { Card, CardContent } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
-import { FileText, Calendar, Clock, User, Loader2 } from 'lucide-react';
-import { getBriefs } from '../../../lib/api';
+import { FileText, Calendar, Clock, User, Loader2, RefreshCw } from 'lucide-react';
+import { getBriefs, regenerateBrief } from '../../../lib/api';
+import { useToast } from '../../../stores/toast-store';
 import type { MeetingBriefWithBooking } from '../../../types';
 
 type Filter = 'upcoming' | 'past';
 
 export default function BriefsPage() {
+  const { toast } = useToast();
   const [briefs, setBriefs] = useState<MeetingBriefWithBooking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>('upcoming');
 
   useEffect(() => {
@@ -35,6 +38,19 @@ export default function BriefsPage() {
     const meetingInPast = isPast(new Date(brief.booking.startTime));
     return filter === 'upcoming' ? !meetingInPast : meetingInPast;
   });
+
+  async function handleRetry(bookingId: string) {
+    setRetryingId(bookingId);
+    try {
+      await regenerateBrief(bookingId);
+      toast({ title: 'Brief regenerated!' });
+      await fetchBriefs();
+    } catch {
+      toast({ title: 'Failed to regenerate brief', variant: 'destructive' });
+    } finally {
+      setRetryingId(null);
+    }
+  }
 
   function getStatusBadge(status: string) {
     switch (status) {
@@ -76,8 +92,22 @@ export default function BriefsPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="flex gap-4 animate-pulse">
+                  <div className="w-2 rounded-full min-h-[80px] bg-gray-200" />
+                  <div className="flex-1 space-y-3">
+                    <div className="h-5 bg-gray-200 rounded w-1/3" />
+                    <div className="h-4 bg-gray-100 rounded w-1/2" />
+                    <div className="h-4 bg-gray-100 rounded w-2/5" />
+                    <div className="h-4 bg-gray-100 rounded w-1/4" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       ) : filtered.length === 0 ? (
         <Card>
@@ -137,6 +167,26 @@ export default function BriefsPage() {
                       <Button variant="outline" size="sm" disabled>
                         <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                         Generating...
+                      </Button>
+                    ) : brief.status === 'failed' ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:bg-red-50"
+                        onClick={() => handleRetry(brief.bookingId)}
+                        disabled={retryingId === brief.bookingId}
+                      >
+                        {retryingId === brief.bookingId ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            Retrying...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-1" />
+                            Retry
+                          </>
+                        )}
                       </Button>
                     ) : null}
                   </div>

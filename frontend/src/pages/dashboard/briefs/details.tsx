@@ -14,8 +14,11 @@ import {
   History,
   Mail,
   CheckCircle2,
+  RefreshCw,
+  Loader2,
+  AlertTriangle,
 } from 'lucide-react';
-import { getBrief, getBriefs } from '../../../lib/api';
+import { getBrief, getBriefs, regenerateBrief } from '../../../lib/api';
 import { useToast } from '../../../stores/toast-store';
 import type { MeetingBrief, MeetingBriefWithBooking } from '../../../types';
 
@@ -26,6 +29,7 @@ export default function BriefDetailsPage() {
   const [brief, setBrief] = useState<MeetingBrief | null>(null);
   const [bookingInfo, setBookingInfo] = useState<MeetingBriefWithBooking['booking'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [checkedPoints, setCheckedPoints] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -49,6 +53,20 @@ export default function BriefDetailsPage() {
       navigate('/dashboard/briefs');
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleRegenerate() {
+    setIsRegenerating(true);
+    try {
+      await regenerateBrief(bookingId!);
+      setCheckedPoints(new Set());
+      await fetchBrief();
+      toast({ title: 'Brief regenerated successfully!' });
+    } catch {
+      toast({ title: 'Failed to regenerate brief', variant: 'destructive' });
+    } finally {
+      setIsRegenerating(false);
     }
   }
 
@@ -103,8 +121,33 @@ export default function BriefDetailsPage() {
                     Ready
                   </Badge>
                 )}
+                {brief.status === 'failed' && (
+                  <Badge variant="destructive">
+                    <AlertTriangle className="h-3 w-3 mr-1" />
+                    Failed
+                  </Badge>
+                )}
               </div>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerate}
+              disabled={isRegenerating}
+              className="text-purple-600 hover:bg-purple-50"
+            >
+              {isRegenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Regenerating...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Regenerate
+                </>
+              )}
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -140,6 +183,51 @@ export default function BriefDetailsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Failed state */}
+      {brief.status === 'failed' && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="py-6 text-center">
+            <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-3" />
+            <h3 className="font-medium text-red-800 mb-1">Brief generation failed</h3>
+            <p className="text-sm text-red-600 mb-4">
+              We couldn&apos;t generate a brief for this meeting. This can happen if limited information is available about the attendee.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerate}
+              disabled={isRegenerating}
+              className="text-red-600 hover:bg-red-100"
+            >
+              {isRegenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Retrying...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Retry Generation
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No info available message */}
+      {brief.status === 'completed' && !brief.inviteeSummary && !brief.companySummary && brief.talkingPoints.length === 0 && (
+        <Card>
+          <CardContent className="py-6 text-center">
+            <AlertTriangle className="h-8 w-8 text-yellow-400 mx-auto mb-3" />
+            <h3 className="font-medium mb-1">Limited information available</h3>
+            <p className="text-sm text-gray-500">
+              We couldn&apos;t find much information about this attendee. Try regenerating the brief later.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* About the Person */}
       {brief.inviteeSummary && (
