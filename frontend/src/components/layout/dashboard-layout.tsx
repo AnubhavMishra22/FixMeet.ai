@@ -41,7 +41,7 @@ export function DashboardLayout({ children }: Props) {
           {/* Logo */}
           <div className="p-6 border-b">
             <Link to="/dashboard" className="flex items-center gap-2">
-              <img src={LOGO_SMALL_PATH} alt="FixMeet" className="h-10 w-auto" />
+              <img src={LOGO_SMALL_PATH} alt="FixMeet logo" className="h-10 w-auto" />
             </Link>
           </div>
 
