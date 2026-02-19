@@ -12,8 +12,10 @@ CREATE TABLE IF NOT EXISTS meeting_briefs (
 
     -- Status tracking
     status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'generating', 'completed', 'failed')),
+    attempt_count INTEGER NOT NULL DEFAULT 0,
 
     generated_at TIMESTAMPTZ,
+    sent_at TIMESTAMPTZ,              -- When the brief email was sent
     created_at TIMESTAMPTZ DEFAULT NOW(),
 
     -- One brief per booking per user
