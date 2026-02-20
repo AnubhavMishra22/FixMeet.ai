@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
@@ -30,9 +30,11 @@ export default function BriefDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [checkedPoints, setCheckedPoints] = useState<Set<number>>(new Set());
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     fetchBrief();
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [bookingId]);
 
   async function fetchBrief() {
@@ -47,16 +49,43 @@ export default function BriefDetailsPage() {
     }
   }
 
+  function startPolling() {
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      try {
+        const data = await getBrief(bookingId!);
+        if (data.status === 'completed') {
+          setBrief(data);
+          setIsRegenerating(false);
+          if (pollRef.current) clearInterval(pollRef.current);
+          toast({ title: 'Brief regenerated successfully!' });
+        } else if (data.status === 'failed') {
+          setBrief(data);
+          setIsRegenerating(false);
+          if (pollRef.current) clearInterval(pollRef.current);
+          toast({ title: 'Brief regeneration failed', variant: 'destructive' });
+        }
+      } catch {
+        // Brief may still be processing, keep polling
+      }
+    }, 3000);
+  }
+
   async function handleRegenerate() {
     setIsRegenerating(true);
     try {
-      await regenerateBrief(bookingId!);
+      const data = await regenerateBrief(bookingId!);
       setCheckedPoints(new Set());
-      await fetchBrief();
-      toast({ title: 'Brief regenerated successfully!' });
+      setBrief(data);
+      if (data.status === 'completed') {
+        setIsRegenerating(false);
+        toast({ title: 'Brief regenerated successfully!' });
+      } else {
+        // Generation running in background — poll for completion
+        startPolling();
+      }
     } catch {
       toast({ title: 'Failed to regenerate brief', variant: 'destructive' });
-    } finally {
       setIsRegenerating(false);
     }
   }

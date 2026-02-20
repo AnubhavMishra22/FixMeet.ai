@@ -15,6 +15,19 @@ export interface UserWithPassword extends User {
   password_hash: string;
 }
 
+/** camelCase representation sent to the frontend */
+export interface UserResponse {
+  id: string;
+  email: string;
+  name: string;
+  username: string;
+  timezone: string;
+  briefsEnabled: boolean;
+  briefEmailsEnabled: boolean;
+  briefGenerationHours: number;
+  createdAt: Date;
+}
+
 export interface RefreshToken {
   id: string;
   user_id: string;
@@ -24,7 +37,7 @@ export interface RefreshToken {
 }
 
 export interface AuthResponse {
-  user: User;
+  user: UserResponse;
   accessToken: string;
 }
 

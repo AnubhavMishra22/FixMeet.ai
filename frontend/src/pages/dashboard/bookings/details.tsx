@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
@@ -22,23 +22,18 @@ export default function BookingDetailsPage() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [hasBrief, setHasBrief] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     fetchBooking();
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [id]);
 
   async function fetchBooking() {
     try {
       const { data } = await api.get(`/api/bookings/${id}`);
       setBooking(data.data.booking);
-
-      // Check if a meeting brief exists for this booking
-      try {
-        await getBrief(id!);
-        setHasBrief(true);
-      } catch {
-        setHasBrief(false);
-      }
+      setHasBrief(data.data.hasBrief ?? false);
     } catch {
       toast({ title: 'Failed to load booking', variant: 'destructive' });
       navigate('/dashboard/bookings');
@@ -64,15 +59,41 @@ export default function BookingDetailsPage() {
     }
   }
 
+  function startPolling() {
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      try {
+        const brief = await getBrief(id!);
+        if (brief.status === 'completed') {
+          setHasBrief(true);
+          setIsGenerating(false);
+          if (pollRef.current) clearInterval(pollRef.current);
+          toast({ title: 'Meeting brief is ready!' });
+        } else if (brief.status === 'failed') {
+          setIsGenerating(false);
+          if (pollRef.current) clearInterval(pollRef.current);
+          toast({ title: 'Brief generation failed', variant: 'destructive' });
+        }
+      } catch {
+        // Brief may not exist yet, keep polling
+      }
+    }, 3000);
+  }
+
   async function handleGenerateBrief() {
     setIsGenerating(true);
     try {
-      await generateBriefForBooking(id!);
-      setHasBrief(true);
-      toast({ title: 'Meeting brief generated!' });
+      const brief = await generateBriefForBooking(id!);
+      if (brief.status === 'completed') {
+        setHasBrief(true);
+        setIsGenerating(false);
+        toast({ title: 'Meeting brief is ready!' });
+      } else {
+        // Generation kicked off in background — poll for completion
+        startPolling();
+      }
     } catch {
       toast({ title: 'Failed to generate brief', variant: 'destructive' });
-    } finally {
       setIsGenerating(false);
     }
   }

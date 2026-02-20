@@ -43,7 +43,7 @@ export default function BriefsPage() {
     setRetryingId(bookingId);
     try {
       await regenerateBrief(bookingId);
-      toast({ title: 'Brief regenerated!' });
+      toast({ title: 'Brief generation started — this may take a moment' });
       await fetchBriefs();
     } catch {
       toast({ title: 'Failed to regenerate brief', variant: 'destructive' });

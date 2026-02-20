@@ -31,7 +31,7 @@ export async function getBrief(req: Request, res: Response): Promise<void> {
   });
 }
 
-/** POST /api/briefs/generate/:bookingId - Manually generate a brief */
+/** POST /api/briefs/generate/:bookingId - Manually trigger brief generation (async) */
 export async function generateBrief(req: Request, res: Response): Promise<void> {
   const userId = req.user?.userId;
   if (!userId) throw new UnauthorizedError();
@@ -39,15 +39,28 @@ export async function generateBrief(req: Request, res: Response): Promise<void> 
   const bookingId = req.params.bookingId;
   if (!bookingId) throw new AppError('Booking ID is required', 400, 'VALIDATION_ERROR');
 
-  const brief = await briefsService.generateBriefForBooking(bookingId, userId);
+  // Creates a pending record (or returns existing completed brief)
+  const brief = await briefsService.startBriefGeneration(bookingId, userId);
 
-  res.json({
+  // If already completed, return immediately
+  if (brief.status === 'completed') {
+    res.json({ success: true, data: brief });
+    return;
+  }
+
+  // Kick off generation in the background (don't await)
+  briefsService.runBriefPipeline(bookingId, userId).catch((err) => {
+    console.error(`Background brief generation failed for booking ${bookingId}:`, (err as Error).message);
+  });
+
+  // Return 202 Accepted with the pending/generating brief
+  res.status(202).json({
     success: true,
     data: brief,
   });
 }
 
-/** POST /api/briefs/regenerate/:bookingId - Reset and regenerate a brief */
+/** POST /api/briefs/regenerate/:bookingId - Reset and regenerate a brief (async) */
 export async function regenerateBrief(req: Request, res: Response): Promise<void> {
   const userId = req.user?.userId;
   if (!userId) throw new UnauthorizedError();
@@ -58,10 +71,16 @@ export async function regenerateBrief(req: Request, res: Response): Promise<void
   // Reset existing brief to pending state
   await briefsService.resetBriefForRegeneration(bookingId, userId);
 
-  // Run generation pipeline
-  const brief = await briefsService.generateBriefForBooking(bookingId, userId);
+  // Get the reset brief to return
+  const brief = await briefsService.getBriefByBookingId(bookingId, userId);
 
-  res.json({
+  // Kick off generation in the background (don't await)
+  briefsService.runBriefPipeline(bookingId, userId).catch((err) => {
+    console.error(`Background brief regeneration failed for booking ${bookingId}:`, (err as Error).message);
+  });
+
+  // Return 202 Accepted with the pending brief
+  res.status(202).json({
     success: true,
     data: brief,
   });

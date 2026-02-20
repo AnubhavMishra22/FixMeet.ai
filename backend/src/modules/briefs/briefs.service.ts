@@ -332,10 +332,10 @@ interface BookingInfoRow {
 }
 
 /**
- * Manually trigger brief generation for a specific booking.
- * Creates a pending record if it doesn't exist, then runs the full pipeline.
+ * Validate the booking and create a pending brief record (or return existing).
+ * Returns the brief with booking info immediately — does NOT run the pipeline.
  */
-export async function generateBriefForBooking(bookingId: string, userId: string): Promise<MeetingBriefWithBooking> {
+export async function startBriefGeneration(bookingId: string, userId: string): Promise<MeetingBriefWithBooking> {
   if (!env.GOOGLE_AI_API_KEY) {
     throw new AppError('AI is not configured on this server', 503, 'AI_NOT_CONFIGURED');
   }
@@ -358,15 +358,40 @@ export async function generateBriefForBooking(bookingId: string, userId: string)
   }
 
   // Create or get existing brief
-  const brief = await createPendingBrief(bookingId, userId);
+  await createPendingBrief(bookingId, userId);
 
-  // If already completed, return existing with booking info
-  if (brief.status === 'completed') {
-    return getBriefByBookingId(bookingId, userId);
-  }
+  return getBriefByBookingId(bookingId, userId);
+}
 
-  // Run the pipeline
-  await markGenerating(brief.id);
+/**
+ * Run the full brief generation pipeline (scraping, AI, save, email).
+ * Called in the background — does not need to return a response to the client.
+ */
+export async function runBriefPipeline(bookingId: string, userId: string): Promise<void> {
+  // Fetch booking info
+  const [booking] = await sql<BookingInfoRow[]>`
+    SELECT b.id, b.host_id, b.invitee_name, b.invitee_email,
+           b.start_time, b.end_time, b.status,
+           et.title as event_type_title
+    FROM bookings b
+    JOIN event_types et ON b.event_type_id = et.id
+    WHERE b.id = ${bookingId} AND b.host_id = ${userId}
+  `;
+
+  if (!booking) return;
+
+  // Get the brief record
+  const rows = await sql<MeetingBriefRow[]>`
+    SELECT * FROM meeting_briefs
+    WHERE booking_id = ${bookingId} AND user_id = ${userId}
+  `;
+  const briefRow = rows[0];
+  if (!briefRow) return;
+
+  // Skip if already completed
+  if (briefRow.status === 'completed') return;
+
+  await markGenerating(briefRow.id);
 
   try {
     const personInfo = await searchPersonInfo(booking.invitee_name, booking.invitee_email);
@@ -379,11 +404,11 @@ export async function generateBriefForBooking(bookingId: string, userId: string)
       previousMeetings,
     });
 
-    await markCompleted(brief.id, result, previousMeetings);
+    await markCompleted(briefRow.id, result, previousMeetings);
 
     // Send email (non-blocking)
     sendBriefEmail({
-      briefId: brief.id,
+      briefId: briefRow.id,
       bookingId,
       userId,
       inviteeName: booking.invitee_name,
@@ -397,15 +422,9 @@ export async function generateBriefForBooking(bookingId: string, userId: string)
     }).catch((err) => {
       console.error(`Brief email failed for ${booking.invitee_name}:`, (err as Error).message);
     });
-
-    return getBriefByBookingId(bookingId, userId);
   } catch (err) {
-    await markFailed(brief.id).catch(() => {});
-    throw new AppError(
-      `Brief generation failed: ${(err as Error).message}`,
-      500,
-      'GENERATION_FAILED',
-    );
+    await markFailed(briefRow.id).catch(() => {});
+    console.error(`Brief generation failed for booking ${bookingId}:`, (err as Error).message);
   }
 }
 

@@ -7,6 +7,7 @@ import type {
   CancelBookingInput,
 } from './bookings.schema.js';
 import { UnauthorizedError, BadRequestError } from '../../utils/errors.js';
+import { sql } from '../../config/database.js';
 
 /**
  * Get all bookings for the authenticated host
@@ -56,9 +57,17 @@ export async function getBooking(
     req.params.id
   );
 
+  // Check if a meeting brief exists for this booking
+  const briefRows = await sql<{ status: string }[]>`
+    SELECT status FROM meeting_briefs
+    WHERE booking_id = ${req.params.id} AND user_id = ${req.user.userId}
+    LIMIT 1
+  `;
+  const hasBrief = briefRows.length > 0 && briefRows[0]!.status === 'completed';
+
   res.status(200).json({
     success: true,
-    data: { booking },
+    data: { booking, hasBrief },
   });
 }
 
