@@ -89,8 +89,6 @@ async function healthCheck(): Promise<void> {
     }) as AIMessageChunk;
     const content = extractContent(result);
     console.log(`[AI] ✅ Health check passed in ${Date.now() - start}ms (response: "${content.substring(0, 50)}")`);
-  } catch (error) {
-    throw error;
   } finally {
     clearTimeout(timer);
   }
