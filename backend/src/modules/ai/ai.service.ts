@@ -60,7 +60,7 @@ interface AIConfig {
 }
 
 export function initializeAI(config: AIConfig): void {
-  const modelName = config.modelName || 'gemini-2.0-flash';
+  const modelName = config.modelName || 'gemini-2.5-flash-lite';
   console.log(`[AI] Initializing model: ${modelName}, maxTokens: ${config.maxTokens || '1024 (default)'}`);
 
   model = new ChatGoogleGenerativeAI({
