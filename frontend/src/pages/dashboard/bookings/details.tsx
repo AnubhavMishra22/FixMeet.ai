@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import {
   Calendar, User, Globe, Video,
-  MapPin, Phone, ArrowLeft, X
+  MapPin, Phone, ArrowLeft, X, FileText
 } from 'lucide-react';
-import api from '../../../lib/api';
+import api, { getBrief, generateBriefForBooking } from '../../../lib/api';
 import { useToast } from '../../../stores/toast-store';
 import type { BookingWithDetails } from '../../../types';
+import { Loader2, Sparkles } from 'lucide-react';
 
 export default function BookingDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,15 +20,20 @@ export default function BookingDetailsPage() {
   const [booking, setBooking] = useState<BookingWithDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [hasBrief, setHasBrief] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     fetchBooking();
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [id]);
 
   async function fetchBooking() {
     try {
       const { data } = await api.get(`/api/bookings/${id}`);
       setBooking(data.data.booking);
+      setHasBrief(data.data.hasBrief ?? false);
     } catch {
       toast({ title: 'Failed to load booking', variant: 'destructive' });
       navigate('/dashboard/bookings');
@@ -50,6 +56,45 @@ export default function BookingDetailsPage() {
       toast({ title: 'Failed to cancel booking', variant: 'destructive' });
     } finally {
       setIsCancelling(false);
+    }
+  }
+
+  function startPolling() {
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      try {
+        const brief = await getBrief(id!);
+        if (brief.status === 'completed') {
+          setHasBrief(true);
+          setIsGenerating(false);
+          if (pollRef.current) clearInterval(pollRef.current);
+          toast({ title: 'Meeting brief is ready!' });
+        } else if (brief.status === 'failed') {
+          setIsGenerating(false);
+          if (pollRef.current) clearInterval(pollRef.current);
+          toast({ title: 'Brief generation failed', variant: 'destructive' });
+        }
+      } catch {
+        // Brief may not exist yet, keep polling
+      }
+    }, 3000);
+  }
+
+  async function handleGenerateBrief() {
+    setIsGenerating(true);
+    try {
+      const brief = await generateBriefForBooking(id!);
+      if (brief.status === 'completed') {
+        setHasBrief(true);
+        setIsGenerating(false);
+        toast({ title: 'Meeting brief is ready!' });
+      } else {
+        // Generation kicked off in background — poll for completion
+        startPolling();
+      }
+    } catch {
+      toast({ title: 'Failed to generate brief', variant: 'destructive' });
+      setIsGenerating(false);
     }
   }
 
@@ -111,17 +156,47 @@ export default function BookingDetailsPage() {
                 )}
               </div>
             </div>
-            {canCancel && (
-              <Button
-                variant="outline"
-                className="text-red-600 hover:bg-red-50"
-                onClick={handleCancel}
-                disabled={isCancelling}
-              >
-                <X className="h-4 w-4 mr-1" />
-                {isCancelling ? 'Cancelling...' : 'Cancel'}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {hasBrief ? (
+                <Link to={`/dashboard/briefs/${booking.id}`}>
+                  <Button variant="outline" size="sm" className="text-purple-600 hover:bg-purple-50">
+                    <FileText className="h-4 w-4 mr-1" />
+                    View Meeting Brief
+                  </Button>
+                </Link>
+              ) : booking.status === 'confirmed' ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-purple-600 hover:bg-purple-50"
+                  onClick={handleGenerateBrief}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-1" />
+                      Generate Brief
+                    </>
+                  )}
+                </Button>
+              ) : null}
+              {canCancel && (
+                <Button
+                  variant="outline"
+                  className="text-red-600 hover:bg-red-50"
+                  onClick={handleCancel}
+                  disabled={isCancelling}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  {isCancelling ? 'Cancelling...' : 'Cancel'}
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">

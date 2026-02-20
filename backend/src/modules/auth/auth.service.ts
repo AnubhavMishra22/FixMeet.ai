@@ -11,8 +11,8 @@ import {
   NotFoundError,
 } from '../../utils/errors.js';
 import type {
-  User,
   UserWithPassword,
+  UserResponse,
   RefreshToken,
   AuthResponse,
   TokenResponse,
@@ -26,9 +26,18 @@ function generateUsername(email: string): string {
   return `${sanitized}${suffix}`;
 }
 
-function sanitizeUser(user: UserWithPassword): User {
-  const { password_hash: _, ...sanitized } = user;
-  return sanitized;
+function sanitizeUser(user: UserWithPassword) {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    username: user.username,
+    timezone: user.timezone,
+    briefsEnabled: user.briefs_enabled,
+    briefEmailsEnabled: user.brief_emails_enabled,
+    briefGenerationHours: user.brief_generation_hours,
+    createdAt: user.created_at,
+  };
 }
 
 export async function register(
@@ -207,7 +216,7 @@ export async function logout(refreshTokenValue: string): Promise<void> {
   `;
 }
 
-export async function getCurrentUser(userId: string): Promise<User> {
+export async function getCurrentUser(userId: string): Promise<UserResponse> {
   const users = await sql<UserWithPassword[]>`
     SELECT * FROM users WHERE id = ${userId}
   `;
@@ -223,7 +232,7 @@ export async function getCurrentUser(userId: string): Promise<User> {
 export async function updateProfile(
   userId: string,
   input: UpdateProfileInput
-): Promise<User> {
+): Promise<UserResponse> {
   // Check username uniqueness if changing
   if (input.username) {
     const existing = await sql<{ id: string }[]>`
@@ -235,7 +244,7 @@ export async function updateProfile(
   }
 
   const updates: string[] = [];
-  const values: string[] = [];
+  const values: (string | boolean | number)[] = [];
 
   if (input.name !== undefined) {
     updates.push('name');
@@ -248,6 +257,18 @@ export async function updateProfile(
   if (input.timezone !== undefined) {
     updates.push('timezone');
     values.push(input.timezone);
+  }
+  if (input.briefsEnabled !== undefined) {
+    updates.push('briefs_enabled');
+    values.push(input.briefsEnabled);
+  }
+  if (input.briefEmailsEnabled !== undefined) {
+    updates.push('brief_emails_enabled');
+    values.push(input.briefEmailsEnabled);
+  }
+  if (input.briefGenerationHours !== undefined) {
+    updates.push('brief_generation_hours');
+    values.push(input.briefGenerationHours);
   }
 
   if (updates.length === 0) {

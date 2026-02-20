@@ -14,28 +14,30 @@ import { generateBrief } from '../modules/briefs/brief-generator.service.js';
 /**
  * Brief generation job — runs every hour.
  *
- * Phase 1: Create pending brief records for upcoming bookings (20-28h window).
+ * Phase 1: Create pending brief records for upcoming bookings.
+ *   Uses each user's brief_generation_hours setting to determine the window.
+ *   Respects briefs_enabled preference.
  * Phase 2: Process pending/failed briefs through the full pipeline:
  *   scrape → fetch previous meetings → AI generate → save to DB → send email.
  */
 export async function processBriefGeneration(): Promise<void> {
-  const now = new Date();
   console.log('📋 Processing meeting briefs...');
 
   // -----------------------------------------------------------------------
   // Phase 1: Create pending records for upcoming bookings
+  // Respects per-user briefs_enabled and brief_generation_hours settings.
+  // Window: [now, now + brief_generation_hours] for each user.
   // -----------------------------------------------------------------------
-  const windowStart = new Date(now.getTime() + 20 * 60 * 60 * 1000);
-  const windowEnd = new Date(now.getTime() + 28 * 60 * 60 * 1000);
-
   try {
     const created = await sql<{ booking_id: string }[]>`
       INSERT INTO meeting_briefs (booking_id, user_id, status)
       SELECT b.id, b.host_id, 'pending'
       FROM bookings b
+      JOIN users u ON b.host_id = u.id
       WHERE b.status = 'confirmed'
-        AND b.start_time >= ${windowStart}
-        AND b.start_time < ${windowEnd}
+        AND COALESCE(u.briefs_enabled, true) = true
+        AND b.start_time >= NOW()
+        AND b.start_time < NOW() + (COALESCE(u.brief_generation_hours, 24) || ' hours')::interval
         AND NOT EXISTS (
           SELECT 1 FROM meeting_briefs mb
           WHERE mb.booking_id = b.id AND mb.user_id = b.host_id

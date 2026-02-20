@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
+import { FileText } from 'lucide-react';
 import { useAuthStore } from '../../../stores/auth-store';
 import { useToast } from '../../../stores/toast-store';
 import api from '../../../lib/api';
@@ -141,6 +142,19 @@ export default function SettingsPage() {
           <CalendarConnections />
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-purple-600" />
+            Meeting Briefs
+          </CardTitle>
+          <CardDescription>AI-generated preparation notes for your meetings</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BriefSettings />
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -242,6 +256,115 @@ function CalendarConnections() {
           Google Calendar integration is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in the backend.
         </p>
       )}
+    </div>
+  );
+}
+
+function BriefSettings() {
+  const { user, fetchUser } = useAuthStore();
+  const { toast } = useToast();
+  const [briefsEnabled, setBriefsEnabled] = useState(user?.briefsEnabled ?? true);
+  const [briefEmailsEnabled, setBriefEmailsEnabled] = useState(user?.briefEmailsEnabled ?? true);
+  const [briefGenerationHours, setBriefGenerationHours] = useState(user?.briefGenerationHours ?? 24);
+  const [isSaving, setIsSaving] = useState(false);
+
+  async function handleToggleBriefs(enabled: boolean) {
+    setBriefsEnabled(enabled);
+    await saveBriefSetting({ briefsEnabled: enabled });
+  }
+
+  async function handleToggleEmails(enabled: boolean) {
+    setBriefEmailsEnabled(enabled);
+    await saveBriefSetting({ briefEmailsEnabled: enabled });
+  }
+
+  async function handleHoursChange(hours: number) {
+    setBriefGenerationHours(hours);
+    await saveBriefSetting({ briefGenerationHours: hours });
+  }
+
+  async function saveBriefSetting(update: Record<string, boolean | number>) {
+    setIsSaving(true);
+    try {
+      await api.patch('/api/auth/me', update);
+      await fetchUser();
+      toast({ title: 'Brief settings updated' });
+    } catch {
+      toast({ title: 'Failed to update settings', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Enable/disable briefs */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-medium">Enable meeting briefs</p>
+          <p className="text-sm text-gray-500">Automatically generate preparation notes before meetings</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={briefsEnabled}
+          disabled={isSaving}
+          onClick={() => handleToggleBriefs(!briefsEnabled)}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            briefsEnabled ? 'bg-purple-600' : 'bg-gray-200'
+          } ${isSaving ? 'opacity-50' : ''}`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              briefsEnabled ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Email toggle */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-medium">Email briefs to me</p>
+          <p className="text-sm text-gray-500">Receive meeting briefs via email when they&apos;re ready</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={briefEmailsEnabled}
+          disabled={isSaving || !briefsEnabled}
+          onClick={() => handleToggleEmails(!briefEmailsEnabled)}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            briefEmailsEnabled && briefsEnabled ? 'bg-purple-600' : 'bg-gray-200'
+          } ${isSaving || !briefsEnabled ? 'opacity-50' : ''}`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              briefEmailsEnabled && briefsEnabled ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Generation timing */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-medium">Generate briefs</p>
+          <p className="text-sm text-gray-500">How far in advance to generate briefs</p>
+        </div>
+        <select
+          value={briefGenerationHours}
+          disabled={isSaving || !briefsEnabled}
+          onChange={(e) => handleHoursChange(Number(e.target.value))}
+          className={`h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ${
+            !briefsEnabled ? 'opacity-50' : ''
+          }`}
+        >
+          <option value={12}>12 hours before</option>
+          <option value={24}>24 hours before</option>
+          <option value={48}>48 hours before</option>
+        </select>
+      </div>
     </div>
   );
 }

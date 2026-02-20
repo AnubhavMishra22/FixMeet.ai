@@ -4,12 +4,28 @@ export interface User {
   name: string;
   username: string;
   timezone: string;
+  briefs_enabled: boolean;
+  brief_emails_enabled: boolean;
+  brief_generation_hours: number;
   created_at: Date;
   updated_at: Date;
 }
 
 export interface UserWithPassword extends User {
   password_hash: string;
+}
+
+/** camelCase representation sent to the frontend */
+export interface UserResponse {
+  id: string;
+  email: string;
+  name: string;
+  username: string;
+  timezone: string;
+  briefsEnabled: boolean;
+  briefEmailsEnabled: boolean;
+  briefGenerationHours: number;
+  createdAt: Date;
 }
 
 export interface RefreshToken {
@@ -21,7 +37,7 @@ export interface RefreshToken {
 }
 
 export interface AuthResponse {
-  user: User;
+  user: UserResponse;
   accessToken: string;
 }
 

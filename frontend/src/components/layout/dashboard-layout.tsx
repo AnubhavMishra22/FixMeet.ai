@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Link as LinkIcon,
   Sparkles,
+  FileText,
 } from 'lucide-react';
 
 const navigation = [
@@ -16,6 +17,7 @@ const navigation = [
   { name: 'Event Types', href: '/dashboard/event-types', icon: LinkIcon, badge: null },
   { name: 'Bookings', href: '/dashboard/bookings', icon: Calendar, badge: null },
   { name: 'AI Assistant', href: '/dashboard/ai', icon: Sparkles, badge: 'NEW' },
+  { name: 'Meeting Briefs', href: '/dashboard/briefs', icon: FileText, badge: 'NEW' },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings, badge: null },
 ];
 

@@ -1,8 +1,10 @@
 import { sql } from '../../config/database.js';
 import { env } from '../../config/env.js';
-import { NotFoundError } from '../../utils/errors.js';
+import { AppError, NotFoundError } from '../../utils/errors.js';
 import { sendEmail } from '../email/email.service.js';
 import { meetingBriefEmail } from '../email/templates/meeting-brief.template.js';
+import { searchPersonInfo } from './scraper.service.js';
+import { generateBrief } from './brief-generator.service.js';
 import type { MeetingBriefRow, BriefWithBookingRow, MeetingBrief, MeetingBriefWithBooking, PreviousMeeting } from './briefs.types.js';
 import type { BriefGenerationResult } from './brief-generator.service.js';
 
@@ -23,18 +25,37 @@ function rowToBrief(row: MeetingBriefRow): MeetingBrief {
   };
 }
 
-/** Get brief for a specific booking */
-export async function getBriefByBookingId(bookingId: string, userId: string): Promise<MeetingBrief> {
-  const rows = await sql<MeetingBriefRow[]>`
-    SELECT * FROM meeting_briefs
-    WHERE booking_id = ${bookingId} AND user_id = ${userId}
+/** Get brief for a specific booking, joined with booking info */
+export async function getBriefByBookingId(bookingId: string, userId: string): Promise<MeetingBriefWithBooking> {
+  const rows = await sql<BriefWithBookingRow[]>`
+    SELECT
+      mb.*,
+      b.invitee_name,
+      b.invitee_email,
+      b.start_time,
+      b.end_time,
+      et.title as event_type_title
+    FROM meeting_briefs mb
+    JOIN bookings b ON mb.booking_id = b.id
+    JOIN event_types et ON b.event_type_id = et.id
+    WHERE mb.booking_id = ${bookingId} AND mb.user_id = ${userId}
   `;
 
   if (rows.length === 0) {
     throw new NotFoundError('Meeting brief not found');
   }
 
-  return rowToBrief(rows[0]!);
+  const row = rows[0]!;
+  return {
+    ...rowToBrief(row),
+    booking: {
+      inviteeName: row.invitee_name,
+      inviteeEmail: row.invitee_email,
+      startTime: row.start_time,
+      endTime: row.end_time,
+      eventTypeTitle: row.event_type_title,
+    },
+  };
 }
 
 /** List all briefs for a user, joined with booking info */
@@ -293,4 +314,140 @@ function extractCompanyName(email: string): string | null {
     return name.charAt(0).toUpperCase() + name.slice(1);
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Manual generation & regeneration
+// ---------------------------------------------------------------------------
+
+interface BookingInfoRow {
+  id: string;
+  host_id: string;
+  invitee_name: string;
+  invitee_email: string;
+  start_time: Date;
+  end_time: Date;
+  status: string;
+  event_type_title: string;
+}
+
+/**
+ * Validate the booking and create a pending brief record (or return existing).
+ * Returns the brief with booking info immediately — does NOT run the pipeline.
+ */
+export async function startBriefGeneration(bookingId: string, userId: string): Promise<MeetingBriefWithBooking> {
+  if (!env.GOOGLE_AI_API_KEY) {
+    throw new AppError('AI is not configured on this server', 503, 'AI_NOT_CONFIGURED');
+  }
+
+  // Verify booking belongs to user and is confirmed
+  const [booking] = await sql<BookingInfoRow[]>`
+    SELECT b.id, b.host_id, b.invitee_name, b.invitee_email,
+           b.start_time, b.end_time, b.status,
+           et.title as event_type_title
+    FROM bookings b
+    JOIN event_types et ON b.event_type_id = et.id
+    WHERE b.id = ${bookingId} AND b.host_id = ${userId}
+  `;
+
+  if (!booking) {
+    throw new NotFoundError('Booking not found');
+  }
+  if (booking.status !== 'confirmed') {
+    throw new AppError('Can only generate briefs for confirmed bookings', 400, 'INVALID_STATUS');
+  }
+
+  // Create or get existing brief
+  await createPendingBrief(bookingId, userId);
+
+  return getBriefByBookingId(bookingId, userId);
+}
+
+/**
+ * Run the full brief generation pipeline (scraping, AI, save, email).
+ * Called in the background — does not need to return a response to the client.
+ */
+export async function runBriefPipeline(bookingId: string, userId: string): Promise<void> {
+  // Fetch booking info
+  const [booking] = await sql<BookingInfoRow[]>`
+    SELECT b.id, b.host_id, b.invitee_name, b.invitee_email,
+           b.start_time, b.end_time, b.status,
+           et.title as event_type_title
+    FROM bookings b
+    JOIN event_types et ON b.event_type_id = et.id
+    WHERE b.id = ${bookingId} AND b.host_id = ${userId}
+  `;
+
+  if (!booking) return;
+
+  // Get the brief record
+  const rows = await sql<MeetingBriefRow[]>`
+    SELECT * FROM meeting_briefs
+    WHERE booking_id = ${bookingId} AND user_id = ${userId}
+  `;
+  const briefRow = rows[0];
+  if (!briefRow) return;
+
+  // Skip if already completed
+  if (briefRow.status === 'completed') return;
+
+  await markGenerating(briefRow.id);
+
+  try {
+    const personInfo = await searchPersonInfo(booking.invitee_name, booking.invitee_email);
+    const previousMeetings = await getPreviousMeetings(userId, booking.invitee_email, bookingId);
+    const result = await generateBrief({
+      inviteeName: booking.invitee_name,
+      inviteeEmail: booking.invitee_email,
+      eventTitle: booking.event_type_title,
+      personInfo,
+      previousMeetings,
+    });
+
+    await markCompleted(briefRow.id, result, previousMeetings);
+
+    // Send email (non-blocking)
+    sendBriefEmail({
+      briefId: briefRow.id,
+      bookingId,
+      userId,
+      inviteeName: booking.invitee_name,
+      inviteeEmail: booking.invitee_email,
+      eventTitle: booking.event_type_title,
+      startTime: booking.start_time,
+      endTime: booking.end_time,
+      inviteeSummary: result.inviteeSummary,
+      companySummary: result.companySummary,
+      talkingPoints: result.talkingPoints,
+    }).catch((err) => {
+      console.error(`Brief email failed for ${booking.invitee_name}:`, (err as Error).message);
+    });
+  } catch (err) {
+    await markFailed(briefRow.id).catch(() => {});
+    console.error(`Brief generation failed for booking ${bookingId}:`, (err as Error).message);
+  }
+}
+
+/**
+ * Reset an existing brief to 'pending' so it can be regenerated.
+ * Clears all generated content and resets attempt count.
+ */
+export async function resetBriefForRegeneration(bookingId: string, userId: string): Promise<void> {
+  const result = await sql`
+    UPDATE meeting_briefs
+    SET
+      status = 'pending',
+      attempt_count = 0,
+      invitee_summary = NULL,
+      company_summary = NULL,
+      talking_points = '[]'::jsonb,
+      previous_meetings = '[]'::jsonb,
+      generated_at = NULL,
+      sent_at = NULL
+    WHERE booking_id = ${bookingId} AND user_id = ${userId}
+  `;
+
+  if (result.count === 0) {
+    throw new NotFoundError('Meeting brief not found');
+  }
 }

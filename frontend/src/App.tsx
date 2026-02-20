@@ -16,6 +16,8 @@ import BookingsPage from './pages/dashboard/bookings/index';
 import BookingDetailsPage from './pages/dashboard/bookings/details';
 import SettingsPage from './pages/dashboard/settings/index';
 import AIChatPage from './pages/dashboard/ai/index';
+import BriefsPage from './pages/dashboard/briefs/index';
+import BriefDetailsPage from './pages/dashboard/briefs/details';
 
 // Public pages
 import PublicBookingPage from './pages/booking/public-booking';
@@ -106,6 +108,26 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <AIChatPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/briefs"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <BriefsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/briefs/:bookingId"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <BriefDetailsPage />
               </DashboardLayout>
             </ProtectedRoute>
           }
