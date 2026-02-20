@@ -61,7 +61,7 @@ interface AIConfig {
 export function initializeAI(config: AIConfig): void {
   model = new ChatGoogleGenerativeAI({
     apiKey: config.apiKey,
-    model: config.modelName || 'gemini-2.5-flash',
+    model: config.modelName || 'gemini-2.0-flash',
     maxOutputTokens: config.maxTokens ? parseInt(config.maxTokens, 10) : 1024,
   });
 }
