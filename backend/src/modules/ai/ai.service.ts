@@ -5,6 +5,7 @@ import { buildSystemPrompt } from './prompts/system-prompt.js';
 import { getToolsForUser } from './tools/index.js';
 import { sql } from '../../config/database.js';
 import { RateLimitError, TimeoutError } from '../../utils/errors.js';
+import { DEFAULT_AI_MODEL } from '../../config/env.js';
 
 // Token bucket rate limiter — Gemini free tier: 10 RPM
 // Note: In-memory bucket works for single-instance deployment.
@@ -60,7 +61,7 @@ interface AIConfig {
 }
 
 export function initializeAI(config: AIConfig): void {
-  const modelName = config.modelName || 'gemini-2.5-flash-lite';
+  const modelName = config.modelName || DEFAULT_AI_MODEL;
   console.log(`[AI] Initializing model: ${modelName}, maxTokens: ${config.maxTokens || '1024 (default)'}`);
 
   model = new ChatGoogleGenerativeAI({

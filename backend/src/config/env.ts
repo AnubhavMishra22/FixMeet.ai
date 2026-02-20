@@ -33,3 +33,6 @@ if (!parsed.success) {
 export const env = parsed.data;
 
 export const isProd = env.NODE_ENV === 'production';
+
+/** Default AI model — used by both AI copilot and brief generator */
+export const DEFAULT_AI_MODEL = 'gemini-2.5-flash-lite';
