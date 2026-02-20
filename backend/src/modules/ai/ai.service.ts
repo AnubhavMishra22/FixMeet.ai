@@ -80,17 +80,18 @@ async function healthCheck(): Promise<void> {
   if (!model) return;
   console.log('[AI] Running startup health check...');
   const start = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15_000);
   try {
-    const result = await withTimeout(
-      model.invoke([new HumanMessage('Say "ok"')]) as Promise<AIMessageChunk>,
-      15_000,
-      'Health check',
-    );
+    const result = await model.invoke([new HumanMessage('Say "ok"')], {
+      signal: controller.signal,
+    }) as AIMessageChunk;
     const content = extractContent(result);
     console.log(`[AI] ✅ Health check passed in ${Date.now() - start}ms (response: "${content.substring(0, 50)}")`);
   } catch (error) {
-    // Re-throw so caller can log it
     throw error;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -131,35 +132,34 @@ function extractContent(response: AIMessageChunk): string {
   return JSON.stringify(response.content);
 }
 
-/** Wrap a promise with a timeout */
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
-  let timer: ReturnType<typeof setTimeout>;
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
-  });
-  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
-}
-
-/** Invoke the model with retry logic for rate limits */
+/** Invoke the model with retry logic, per-call timeout via AbortController */
 async function invokeWithRetry(
   boundModel: ReturnType<ChatGoogleGenerativeAI['bindTools']>,
   messages: BaseMessage[],
   roundLabel: string = 'invoke',
 ): Promise<AIMessageChunk> {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), INVOKE_TIMEOUT_MS);
     try {
       console.log(`[AI] ${roundLabel} attempt ${attempt}/${MAX_ATTEMPTS} — calling Gemini...`);
       const start = Date.now();
-      const result = await withTimeout(
-        boundModel.invoke(messages) as Promise<AIMessageChunk>,
-        INVOKE_TIMEOUT_MS,
-        `Gemini ${roundLabel}`,
-      );
+      const result = await boundModel.invoke(messages, {
+        signal: controller.signal,
+      }) as AIMessageChunk;
       console.log(`[AI] ${roundLabel} attempt ${attempt} completed in ${Date.now() - start}ms`);
       return result;
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : String(error);
-      console.error(`[AI] ${roundLabel} attempt ${attempt} failed: ${errMsg}`);
+      const isAbort = error instanceof Error && error.name === 'AbortError';
+      console.error(`[AI] ${roundLabel} attempt ${attempt} failed: ${isAbort ? `timed out after ${INVOKE_TIMEOUT_MS}ms` : errMsg}`);
+      if (isAbort && attempt < MAX_ATTEMPTS) {
+        console.log(`[AI] Retrying after timeout...`);
+        continue;
+      }
+      if (isAbort) {
+        throw new TimeoutError();
+      }
       if (isRateLimitError(error) && attempt < MAX_ATTEMPTS) {
         console.log(`[AI] Rate limited, retrying in ${RETRY_DELAY_MS}ms...`);
         await sleep(RETRY_DELAY_MS);
@@ -169,6 +169,8 @@ async function invokeWithRetry(
         throw new RateLimitError();
       }
       throw error;
+    } finally {
+      clearTimeout(timer);
     }
   }
   throw new Error('AI request failed after max retries');
@@ -285,7 +287,7 @@ async function chatInternal(
 
       // Execute the tool — catch errors so AI can explain the issue
       try {
-        console.log(`[AI] Executing tool "${toolCall.name}" with args:`, JSON.stringify(toolCall.args));
+        console.log(`[AI] Executing tool "${toolCall.name}" with keys: [${Object.keys(toolCall.args ?? {}).join(', ')}]`);
         const toolStart = Date.now();
         const result = await tool.invoke(toolCall.args);
         console.log(`[AI] Tool "${toolCall.name}" completed in ${Date.now() - toolStart}ms`);
