@@ -1,6 +1,6 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { HumanMessage } from '@langchain/core/messages';
-import { env } from '../../config/env.js';
+import { env, DEFAULT_AI_MODEL } from '../../config/env.js';
 import type { PersonInfo } from './scraper.types.js';
 import type { PreviousMeeting } from './briefs.types.js';
 
@@ -29,7 +29,7 @@ function createModel(): ChatGoogleGenerativeAI | null {
 
   return new ChatGoogleGenerativeAI({
     apiKey: env.GOOGLE_AI_API_KEY,
-    model: env.GOOGLE_AI_MODEL_NAME || 'gemini-2.5-flash',
+    model: env.GOOGLE_AI_MODEL_NAME || DEFAULT_AI_MODEL,
     maxOutputTokens: env.GOOGLE_AI_MAX_TOKENS ? parseInt(env.GOOGLE_AI_MAX_TOKENS, 10) : 1024,
     temperature: 0.7,
   });

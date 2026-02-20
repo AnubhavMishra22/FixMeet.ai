@@ -288,7 +288,7 @@ To enable the AI scheduling assistant:
 3. Add it to `GOOGLE_AI_API_KEY` in your backend `.env`
 4. Restart the backend — you should see "AI routes mounted" in the console
 
-The AI copilot can check availability, create bookings, list meetings, and cancel bookings through natural-language conversation. Free tier allows ~20 requests/day on `gemini-2.5-flash` (use `gemini-2.0-flash` for higher limits).
+The AI copilot can check availability, create bookings, list meetings, and cancel bookings through natural-language conversation. Default model is `gemini-2.5-flash-lite` (free tier friendly).
 
 ---
 
@@ -441,7 +441,7 @@ npm run lint         # Run ESLint
 | `GOOGLE_CLIENT_SECRET` | No | — | Google OAuth Client Secret |
 | `GOOGLE_REDIRECT_URI` | No | — | Google OAuth redirect URI |
 | `GOOGLE_AI_API_KEY` | No | — | Gemini API key (enables AI copilot) |
-| `GOOGLE_AI_MODEL_NAME` | No | `gemini-2.5-flash` | Gemini model name |
+| `GOOGLE_AI_MODEL_NAME` | No | `gemini-2.5-flash-lite` | Gemini model name |
 | `GOOGLE_AI_MAX_TOKENS` | No | `1024` | Max output tokens for AI responses |
 
 ### Frontend

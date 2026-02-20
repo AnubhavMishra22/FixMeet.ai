@@ -16,7 +16,7 @@ FixMeet.ai is a Calendly competitor — a scheduling/booking platform where user
 - **Password**: bcryptjs
 - **Email**: Resend (graceful fallback to console.log in dev)
 - **Calendar**: Google Calendar API via `googleapis`
-- **AI**: LangChain + Google Gemini (gemini-2.5-flash) with DynamicStructuredTool
+- **AI**: LangChain + Google Gemini (gemini-2.5-flash-lite) with DynamicStructuredTool
 - **Dates/Timezone**: date-fns + date-fns-tz (all stored UTC)
 - **Security**: Helmet, CORS, httpOnly cookies, cancel tokens
 
@@ -303,7 +303,7 @@ GOOGLE_REDIRECT_URI=http://localhost:3001/api/calendars/google/callback
 
 # Optional — enables AI copilot
 GOOGLE_AI_API_KEY=AIza...
-GOOGLE_AI_MODEL_NAME=gemini-2.5-flash   # default
+GOOGLE_AI_MODEL_NAME=gemini-2.5-flash-lite   # default
 GOOGLE_AI_MAX_TOKENS=1024               # default
 ```
 
