@@ -7,7 +7,7 @@ import { Badge } from '../../../components/ui/badge';
 import { FileText, Calendar, Clock, User, Loader2, RefreshCw } from 'lucide-react';
 import { getBriefs, regenerateBrief } from '../../../lib/api';
 import { useToast } from '../../../stores/toast-store';
-import type { MeetingBriefWithBooking } from '../../../types';
+import type { MeetingBriefWithBooking, BriefStatus } from '../../../types';
 
 type Filter = 'upcoming' | 'past';
 
@@ -28,7 +28,7 @@ export default function BriefsPage() {
       const data = await getBriefs();
       setBriefs(data);
     } catch {
-      console.error('Failed to fetch briefs');
+      toast({ title: 'Failed to load briefs', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +52,7 @@ export default function BriefsPage() {
     }
   }
 
-  function getStatusBadge(status: string) {
+  function getStatusBadge(status: BriefStatus) {
     switch (status) {
       case 'completed':
         return <Badge className="bg-green-100 text-green-800">Ready</Badge>;

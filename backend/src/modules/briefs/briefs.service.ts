@@ -25,18 +25,37 @@ function rowToBrief(row: MeetingBriefRow): MeetingBrief {
   };
 }
 
-/** Get brief for a specific booking */
-export async function getBriefByBookingId(bookingId: string, userId: string): Promise<MeetingBrief> {
-  const rows = await sql<MeetingBriefRow[]>`
-    SELECT * FROM meeting_briefs
-    WHERE booking_id = ${bookingId} AND user_id = ${userId}
+/** Get brief for a specific booking, joined with booking info */
+export async function getBriefByBookingId(bookingId: string, userId: string): Promise<MeetingBriefWithBooking> {
+  const rows = await sql<BriefWithBookingRow[]>`
+    SELECT
+      mb.*,
+      b.invitee_name,
+      b.invitee_email,
+      b.start_time,
+      b.end_time,
+      et.title as event_type_title
+    FROM meeting_briefs mb
+    JOIN bookings b ON mb.booking_id = b.id
+    JOIN event_types et ON b.event_type_id = et.id
+    WHERE mb.booking_id = ${bookingId} AND mb.user_id = ${userId}
   `;
 
   if (rows.length === 0) {
     throw new NotFoundError('Meeting brief not found');
   }
 
-  return rowToBrief(rows[0]!);
+  const row = rows[0]!;
+  return {
+    ...rowToBrief(row),
+    booking: {
+      inviteeName: row.invitee_name,
+      inviteeEmail: row.invitee_email,
+      startTime: row.start_time,
+      endTime: row.end_time,
+      eventTypeTitle: row.event_type_title,
+    },
+  };
 }
 
 /** List all briefs for a user, joined with booking info */
@@ -316,7 +335,7 @@ interface BookingInfoRow {
  * Manually trigger brief generation for a specific booking.
  * Creates a pending record if it doesn't exist, then runs the full pipeline.
  */
-export async function generateBriefForBooking(bookingId: string, userId: string): Promise<MeetingBrief> {
+export async function generateBriefForBooking(bookingId: string, userId: string): Promise<MeetingBriefWithBooking> {
   if (!env.GOOGLE_AI_API_KEY) {
     throw new AppError('AI is not configured on this server', 503, 'AI_NOT_CONFIGURED');
   }
@@ -341,9 +360,9 @@ export async function generateBriefForBooking(bookingId: string, userId: string)
   // Create or get existing brief
   const brief = await createPendingBrief(bookingId, userId);
 
-  // If already completed, return existing
+  // If already completed, return existing with booking info
   if (brief.status === 'completed') {
-    return brief;
+    return getBriefByBookingId(bookingId, userId);
   }
 
   // Run the pipeline

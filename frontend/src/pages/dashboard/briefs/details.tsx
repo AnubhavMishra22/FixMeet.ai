@@ -18,16 +18,15 @@ import {
   Loader2,
   AlertTriangle,
 } from 'lucide-react';
-import { getBrief, getBriefs, regenerateBrief } from '../../../lib/api';
+import { getBrief, regenerateBrief } from '../../../lib/api';
 import { useToast } from '../../../stores/toast-store';
-import type { MeetingBrief, MeetingBriefWithBooking } from '../../../types';
+import type { MeetingBriefWithBooking } from '../../../types';
 
 export default function BriefDetailsPage() {
   const { bookingId } = useParams<{ bookingId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [brief, setBrief] = useState<MeetingBrief | null>(null);
-  const [bookingInfo, setBookingInfo] = useState<MeetingBriefWithBooking['booking'] | null>(null);
+  const [brief, setBrief] = useState<MeetingBriefWithBooking | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [checkedPoints, setCheckedPoints] = useState<Set<number>>(new Set());
@@ -38,16 +37,8 @@ export default function BriefDetailsPage() {
 
   async function fetchBrief() {
     try {
-      // Fetch the brief details
-      const briefData = await getBrief(bookingId!);
-      setBrief(briefData);
-
-      // Fetch booking info from list (includes joined booking data)
-      const allBriefs = await getBriefs();
-      const match = allBriefs.find((b) => b.bookingId === bookingId);
-      if (match) {
-        setBookingInfo(match.booking);
-      }
+      const data = await getBrief(bookingId!);
+      setBrief(data);
     } catch {
       toast({ title: 'Failed to load meeting brief', variant: 'destructive' });
       navigate('/dashboard/briefs');
@@ -111,7 +102,7 @@ export default function BriefDetailsPage() {
           <div className="flex items-start justify-between">
             <div>
               <CardTitle className="text-xl">
-                {bookingInfo?.eventTypeTitle || 'Meeting Brief'}
+                {brief.booking.eventTypeTitle || 'Meeting Brief'}
               </CardTitle>
               <div className="flex items-center gap-2 mt-2">
                 <Badge className="bg-purple-100 text-purple-800">Meeting Brief</Badge>
@@ -151,36 +142,34 @@ export default function BriefDetailsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {bookingInfo && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <User className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Attendee</p>
-                  <p className="font-medium">{bookingInfo.inviteeName}</p>
-                  <p className="text-xs text-gray-500">{bookingInfo.inviteeEmail}</p>
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center">
+                <User className="h-4 w-4 text-primary" />
               </div>
-
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Calendar className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Date & Time</p>
-                  <p className="font-medium">
-                    {format(new Date(bookingInfo.startTime), 'EEEE, MMMM d, yyyy')}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {format(new Date(bookingInfo.startTime), 'h:mm a')} –{' '}
-                    {format(new Date(bookingInfo.endTime), 'h:mm a')}
-                  </p>
-                </div>
+              <div>
+                <p className="text-sm text-gray-500">Attendee</p>
+                <p className="font-medium">{brief.booking.inviteeName}</p>
+                <p className="text-xs text-gray-500">{brief.booking.inviteeEmail}</p>
               </div>
             </div>
-          )}
+
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center">
+                <Calendar className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Date & Time</p>
+                <p className="font-medium">
+                  {format(new Date(brief.booking.startTime), 'EEEE, MMMM d, yyyy')}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {format(new Date(brief.booking.startTime), 'h:mm a')} –{' '}
+                  {format(new Date(brief.booking.endTime), 'h:mm a')}
+                </p>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -235,7 +224,7 @@ export default function BriefDetailsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <User className="h-5 w-5 text-purple-600" />
-              About {bookingInfo?.inviteeName || 'the Attendee'}
+              About {brief.booking.inviteeName || 'the Attendee'}
             </CardTitle>
           </CardHeader>
           <CardContent>
