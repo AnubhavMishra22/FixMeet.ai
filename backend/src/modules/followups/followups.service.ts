@@ -75,10 +75,11 @@ export async function getFollowupById(
     JOIN event_types et ON b.event_type_id = et.id
     WHERE mf.id = ${id} AND mf.user_id = ${userId}
   `;
-  if (rows.length === 0) {
+  const row = rows[0];
+  if (!row) {
     throw new AppError('Followup not found', 404, 'NOT_FOUND');
   }
-  return mapRowWithBooking(rows[0]);
+  return mapRowWithBooking(row);
 }
 
 /** Update a draft followup (subject, body, action_items) */
@@ -91,10 +92,11 @@ export async function updateFollowup(
   const existing = await sql<MeetingFollowupRow[]>`
     SELECT * FROM meeting_followups WHERE id = ${id} AND user_id = ${userId}
   `;
-  if (existing.length === 0) {
+  const found = existing[0];
+  if (!found) {
     throw new AppError('Followup not found', 404, 'NOT_FOUND');
   }
-  if (existing[0].status === 'sent') {
+  if (found.status === 'sent') {
     throw new AppError('Cannot edit a sent followup', 400, 'VALIDATION_ERROR');
   }
 
@@ -107,7 +109,9 @@ export async function updateFollowup(
     WHERE id = ${id} AND user_id = ${userId}
     RETURNING *
   `;
-  return mapRow(rows[0]);
+  const updated = rows[0];
+  if (!updated) throw new AppError('Failed to update followup', 500, 'INTERNAL_ERROR');
+  return mapRow(updated);
 }
 
 /** Mark followup as sent */
@@ -115,13 +119,14 @@ export async function markSent(id: string, userId: string): Promise<MeetingFollo
   const existing = await sql<MeetingFollowupRow[]>`
     SELECT * FROM meeting_followups WHERE id = ${id} AND user_id = ${userId}
   `;
-  if (existing.length === 0) {
+  const found = existing[0];
+  if (!found) {
     throw new AppError('Followup not found', 404, 'NOT_FOUND');
   }
-  if (existing[0].status === 'sent') {
+  if (found.status === 'sent') {
     throw new AppError('Followup already sent', 400, 'VALIDATION_ERROR');
   }
-  if (!existing[0].subject || !existing[0].body) {
+  if (!found.subject || !found.body) {
     throw new AppError('Cannot send followup without subject and body', 400, 'VALIDATION_ERROR');
   }
 
@@ -131,7 +136,9 @@ export async function markSent(id: string, userId: string): Promise<MeetingFollo
     WHERE id = ${id} AND user_id = ${userId}
     RETURNING *
   `;
-  return mapRow(rows[0]);
+  const updated = rows[0];
+  if (!updated) throw new AppError('Failed to mark followup as sent', 500, 'INTERNAL_ERROR');
+  return mapRow(updated);
 }
 
 /** Create a draft followup for a booking (used by the job) */
@@ -145,13 +152,16 @@ export async function createDraftFollowup(
     ON CONFLICT (booking_id, user_id) DO NOTHING
     RETURNING *
   `;
-  if (rows.length === 0) {
+  const inserted = rows[0];
+  if (!inserted) {
     // Already exists — return existing
-    const existing = await sql<MeetingFollowupRow[]>`
+    const existingRows = await sql<MeetingFollowupRow[]>`
       SELECT * FROM meeting_followups
       WHERE booking_id = ${bookingId} AND user_id = ${userId}
     `;
-    return mapRow(existing[0]);
+    const existing = existingRows[0];
+    if (!existing) throw new AppError('Followup not found', 404, 'NOT_FOUND');
+    return mapRow(existing);
   }
-  return mapRow(rows[0]);
+  return mapRow(inserted);
 }

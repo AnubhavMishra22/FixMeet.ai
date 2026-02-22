@@ -111,8 +111,8 @@ export async function processFollowupGeneration(): Promise<void> {
         LIMIT 1
       `;
 
-      if (briefRows.length > 0) {
-        const brief = briefRows[0];
+      const brief = briefRows[0];
+      if (brief) {
         const parts: string[] = [];
         if (brief.invitee_summary) parts.push(`About attendee: ${brief.invitee_summary}`);
         if (brief.company_summary) parts.push(`About company: ${brief.company_summary}`);

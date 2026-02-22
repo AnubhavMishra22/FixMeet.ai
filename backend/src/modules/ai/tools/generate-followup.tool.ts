@@ -100,15 +100,15 @@ export function createGenerateFollowupTool(userId: string, userTimezone: string)
           WHERE booking_id = ${booking.id} AND user_id = ${userId}
         `;
 
-        if (existingRows.length > 0 && existingRows[0].subject) {
-          const existing = existingRows[0];
-          const statusLabel = existing.status === 'sent' ? '(already sent)' : '(draft)';
+        const existingFollowup = existingRows[0];
+        if (existingFollowup?.subject) {
+          const statusLabel = existingFollowup.status === 'sent' ? '(already sent)' : '(draft)';
           return [
             `A follow-up already exists for this meeting ${statusLabel}:`,
             ``,
-            `**Subject:** ${existing.subject}`,
+            `**Subject:** ${existingFollowup.subject}`,
             ``,
-            existing.body ?? '',
+            existingFollowup.body ?? '',
             ``,
             `You can view and edit it in the Follow-ups section of your dashboard.`,
           ].join('\n');
@@ -123,8 +123,8 @@ export function createGenerateFollowupTool(userId: string, userTimezone: string)
           LIMIT 1
         `;
 
-        if (briefRows.length > 0) {
-          const brief = briefRows[0];
+        const brief = briefRows[0];
+        if (brief) {
           const parts: string[] = [];
           if (brief.invitee_summary) parts.push(`About attendee: ${brief.invitee_summary}`);
           if (brief.company_summary) parts.push(`About company: ${brief.company_summary}`);
