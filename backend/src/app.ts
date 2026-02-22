@@ -65,6 +65,7 @@ async function mountRoutes() {
       calendarsRoutes,
       publicRoutes,
       briefsRoutes,
+      followupsRoutes,
     ] = await Promise.all([
       import('./middleware/auth.middleware.js'),
       import('./modules/auth/auth.routes.js'),
@@ -73,6 +74,7 @@ async function mountRoutes() {
       import('./modules/calendars/calendars.routes.js'),
       import('./modules/public/public.routes.js'),
       import('./modules/briefs/briefs.routes.js'),
+      import('./modules/followups/followups.routes.js'),
     ]);
 
     app.use('/api/auth', authRoutes.default);
@@ -81,6 +83,7 @@ async function mountRoutes() {
     app.use('/api/calendars', calendarsRoutes.default);
     app.use('/api/public', publicRoutes.default);
     app.use('/api/briefs', authMiddleware, briefsRoutes.default);
+    app.use('/api/followups', authMiddleware, followupsRoutes.default);
 
     // AI routes - only mount if GOOGLE_AI_API_KEY is configured
     if (env.GOOGLE_AI_API_KEY) {
