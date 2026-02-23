@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS meeting_followups (
     action_items JSONB DEFAULT '[]',
 
     -- Status tracking
-    status VARCHAR(20) DEFAULT 'draft',
+    status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'skipped')),
     sent_at TIMESTAMPTZ,
 
     created_at TIMESTAMPTZ DEFAULT NOW(),

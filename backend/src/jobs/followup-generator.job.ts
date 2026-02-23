@@ -6,6 +6,7 @@ interface PendingFollowupRow {
   id: string;
   booking_id: string;
   user_id: string;
+  user_timezone: string;
   invitee_name: string;
   invitee_email: string;
   invitee_notes: string | null;
@@ -74,6 +75,7 @@ export async function processFollowupGeneration(): Promise<void> {
       mf.id,
       mf.booking_id,
       mf.user_id,
+      u.timezone AS user_timezone,
       b.invitee_name,
       b.invitee_email,
       b.invitee_notes,
@@ -83,6 +85,7 @@ export async function processFollowupGeneration(): Promise<void> {
     FROM meeting_followups mf
     JOIN bookings b ON mf.booking_id = b.id
     JOIN event_types et ON b.event_type_id = et.id
+    JOIN users u ON mf.user_id = u.id
     WHERE mf.status = 'draft'
       AND mf.subject IS NULL
       AND mf.body IS NULL
@@ -129,6 +132,7 @@ export async function processFollowupGeneration(): Promise<void> {
         inviteeName: row.invitee_name,
         startTime: row.start_time,
         endTime: row.end_time,
+        timezone: row.user_timezone,
         meetingBrief,
         inviteeNotes: row.invitee_notes,
       });

@@ -140,28 +140,20 @@ export function createGenerateFollowupTool(userId: string, userTimezone: string)
           inviteeName: booking.invitee_name,
           startTime: booking.start_time,
           endTime: booking.end_time,
+          timezone: userTimezone,
           meetingBrief,
           inviteeNotes: booking.invitee_notes,
         });
 
-        // Save to database (create or update existing empty draft)
-        if (existingRows.length > 0) {
-          await sql`
-            UPDATE meeting_followups
-            SET subject = ${result.subject}, body = ${result.body},
-                action_items = ${sql.json(result.actionItems)}
-            WHERE booking_id = ${booking.id} AND user_id = ${userId}
-          `;
-        } else {
-          await sql`
-            INSERT INTO meeting_followups (booking_id, user_id, subject, body, action_items, status)
-            VALUES (${booking.id}, ${userId}, ${result.subject}, ${result.body},
-                    ${sql.json(result.actionItems)}, 'draft')
-            ON CONFLICT (booking_id, user_id) DO UPDATE SET
-              subject = ${result.subject}, body = ${result.body},
-              action_items = ${sql.json(result.actionItems)}
-          `;
-        }
+        // Save to database (upsert — handles both new and existing drafts)
+        await sql`
+          INSERT INTO meeting_followups (booking_id, user_id, subject, body, action_items, status)
+          VALUES (${booking.id}, ${userId}, ${result.subject}, ${result.body},
+                  ${sql.json(result.actionItems)}, 'draft')
+          ON CONFLICT (booking_id, user_id) DO UPDATE SET
+            subject = ${result.subject}, body = ${result.body},
+            action_items = ${sql.json(result.actionItems)}
+        `;
 
         const startZoned = toZonedTime(booking.start_time, userTimezone);
         const dateStr = format(startZoned, 'EEE, MMM d');

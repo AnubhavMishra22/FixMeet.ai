@@ -41,10 +41,11 @@ function buildPrompt(params: {
   inviteeName: string;
   startTime: Date;
   endTime: Date;
+  timezone?: string;
   meetingBrief?: string | null;
   inviteeNotes?: string | null;
 }): string {
-  const { eventTitle, inviteeName, startTime, endTime, meetingBrief, inviteeNotes } = params;
+  const { eventTitle, inviteeName, startTime, endTime, timezone, meetingBrief, inviteeNotes } = params;
 
   const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
   const dateStr = startTime.toLocaleDateString('en-US', {
@@ -52,6 +53,7 @@ function buildPrompt(params: {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    ...(timezone ? { timeZone: timezone } : {}),
   });
 
   const briefSection = meetingBrief
@@ -125,6 +127,7 @@ export async function generateFollowup(params: {
   inviteeName: string;
   startTime: Date;
   endTime: Date;
+  timezone?: string;
   meetingBrief?: string | null;
   inviteeNotes?: string | null;
 }): Promise<FollowupGenerationResult> {
@@ -144,7 +147,13 @@ export async function generateFollowup(params: {
     typeof response.content === 'string'
       ? response.content
       : Array.isArray(response.content)
-        ? response.content.map((c) => (typeof c === 'string' ? c : '')).join('')
+        ? response.content
+            .map((c) => {
+              if (typeof c === 'string') return c;
+              if (c && typeof c === 'object' && 'text' in c) return String(c.text);
+              return '';
+            })
+            .join('')
         : '';
 
   if (!content) {
