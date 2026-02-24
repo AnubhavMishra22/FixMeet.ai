@@ -164,6 +164,16 @@ export function DashboardLayout({ children }: Props) {
     navigate('/login');
   };
 
+  /** Logo row + footer — unchanged when adjusting nav inset. */
+  const sidebarPadX = showLabels
+    ? 'pl-1 pr-2 sm:pl-2 sm:pr-3 md:pl-3 md:pr-4'
+    : 'px-2 sm:px-3 md:px-4';
+
+  /** Nav only: more left padding than the logo row so list items sit further right. */
+  const sidebarNavPadX = showLabels
+    ? 'pl-5 pr-2 sm:pl-6 sm:pr-3 md:pl-7 md:pr-4'
+    : 'px-2 sm:px-3 md:px-4';
+
   return (
     <div>
       {/* Sidebar — light blue, width controlled by drag */}
@@ -173,23 +183,26 @@ export function DashboardLayout({ children }: Props) {
       >
         <div className="flex h-full min-h-0 flex-col">
           {/* Logo — wordmark + label in one row; tight padding so nav sits directly under the border. */}
-          <div className="min-w-0 shrink-0 border-b border-cyan-200 px-2 py-2 sm:px-3 md:px-4">
+          <div className={`min-w-0 shrink-0 border-b border-cyan-200 py-2 ${sidebarPadX}`}>
             <Link
               to="/dashboard"
               title={APP_NAME}
               className={`flex min-w-0 items-center outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-100 ${
-                showLabels ? 'flex-row flex-nowrap justify-start gap-2' : 'justify-center'
+                showLabels ? 'flex-row flex-nowrap justify-start gap-1.5' : 'justify-center'
               }`}
             >
               {showLabels ? (
                 <>
-                  <img
-                    src={LOGO_PATH}
-                    alt=""
-                    aria-hidden
-                    className="h-10 w-auto max-h-11 max-w-[min(100%,11rem)] shrink-0 object-contain object-left md:h-11 md:max-h-12"
-                  />
-                  <span className="min-w-0 flex-1 truncate text-xl font-bold leading-none text-primary-wordmark">
+                  {/* Box width ~intrinsic mark only — extra width reads as gap before the label. */}
+                  <div className="relative h-10 w-[3rem] max-w-[min(100%,3.25rem)] shrink-0 overflow-hidden md:h-11 md:w-[3.25rem] md:max-w-[min(100%,3.5rem)]">
+                    <img
+                      src={LOGO_PATH}
+                      alt=""
+                      aria-hidden
+                      className="absolute left-0 top-0 h-[158%] w-auto max-w-[min(100%,3.5rem)] object-cover object-left object-top"
+                    />
+                  </div>
+                  <span className="-ml-0.5 shrink-0 translate-y-1 text-[1.375rem] font-bold leading-none text-primary-wordmark md:-ml-1">
                     {APP_NAME}
                   </span>
                 </>
@@ -205,7 +218,7 @@ export function DashboardLayout({ children }: Props) {
 
           {/* Navigation */}
           <nav
-            className="scrollbar-none flex min-h-0 flex-1 flex-col space-y-1 overflow-y-auto overflow-x-hidden px-2 pb-2 pt-1.5 md:px-3 md:pb-3 md:pt-2"
+            className={`scrollbar-none flex min-h-0 flex-1 flex-col space-y-1 overflow-y-auto overflow-x-hidden pb-2 pt-1.5 md:pb-3 md:pt-2 ${sidebarNavPadX}`}
             aria-label="Main navigation"
           >
             {navigation.map((item) => {
@@ -218,8 +231,10 @@ export function DashboardLayout({ children }: Props) {
                   title={navA11yLabel}
                   aria-label={navA11yLabel}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`flex items-center rounded-md px-2 py-2 transition-colors md:px-3 ${
-                    showLabels ? 'justify-start gap-3' : 'justify-center gap-0'
+                  className={`flex items-center rounded-md py-2 transition-colors ${
+                    showLabels
+                      ? 'justify-start gap-3 pl-0 pr-2 md:pr-3'
+                      : 'justify-center gap-0 px-2 md:px-3'
                   } ${
                     isActive
                       ? 'bg-primary/10 text-primary'
@@ -246,7 +261,7 @@ export function DashboardLayout({ children }: Props) {
           </nav>
 
           {/* User section */}
-          <div className="border-t border-cyan-200 p-2 md:p-4">
+          <div className={`border-t border-cyan-200 py-2 md:py-4 ${sidebarPadX}`}>
             <div
               className={`mb-2 flex items-center gap-3 md:mb-3 ${showLabels ? 'justify-start' : 'justify-center'}`}
             >
