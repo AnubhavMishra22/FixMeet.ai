@@ -172,25 +172,29 @@ export function DashboardLayout({ children }: Props) {
         style={{ width: sidebarWidth }}
       >
         <div className="flex h-full min-h-0 flex-col">
-          {/* Logo — full wordmark when expanded (same rules as login); icon-only when rail is narrow. */}
+          {/* Logo — wordmark + label when expanded; larger icon when rail is narrow. */}
           <div className="min-w-0 border-b border-cyan-200 px-2 py-3 sm:px-3 sm:py-4 md:px-6 md:py-6">
             <Link
               to="/dashboard"
               className={`flex min-w-0 items-center outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-100 ${
-                showLabels ? 'justify-start' : 'justify-center'
+                showLabels ? 'justify-start gap-2' : 'justify-center'
               }`}
             >
               {showLabels ? (
-                <img
-                  src={LOGO_PATH}
-                  alt="FixMeet logo"
-                  className="h-10 w-auto max-w-full shrink-0 object-contain md:h-11"
-                />
+                <>
+                  <img
+                    src={LOGO_PATH}
+                    alt=""
+                    aria-hidden
+                    className="h-12 w-auto max-w-[min(100%,14rem)] shrink-0 object-contain md:h-14"
+                  />
+                  <span className="truncate text-xl font-bold text-primary-wordmark">FixMeet</span>
+                </>
               ) : (
                 <img
                   src={LOGO_SMALL_PATH}
                   alt="FixMeet logo"
-                  className="h-8 w-8 shrink-0 object-contain"
+                  className="h-10 w-10 shrink-0 object-contain md:h-11 md:w-11"
                 />
               )}
             </Link>
