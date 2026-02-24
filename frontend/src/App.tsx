@@ -29,10 +29,28 @@ import DemoPage from './pages/dashboard/demo/index';
 import PublicBookingPage from './pages/booking/public-booking';
 import BookingManagePage from './pages/booking/booking-manage';
 
+function DevDashboardShellPreview() {
+  return (
+    <DashboardLayout>
+      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <h1 className="text-xl font-semibold text-slate-900">Dashboard (frontend only)</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          No backend required. Use the sidebar and resize handle; data and auth API calls are not available here.
+        </p>
+      </div>
+    </DashboardLayout>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Local UI preview — no API, no login (dev only) */}
+        {import.meta.env.DEV && (
+          <Route path="/dev/dashboard-preview" element={<DevDashboardShellPreview />} />
+        )}
+
         {/* Auth routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
