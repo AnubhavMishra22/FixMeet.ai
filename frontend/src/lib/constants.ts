@@ -5,8 +5,9 @@ export const LOGO_PATH =
   import.meta.env.DEV
     ? `/logo-transparent.png?t=${Date.now()}`
     : '/logo-transparent.png';
-// Icon-only SVG for navbar (inherently transparent, scales cleanly)
-export const LOGO_SMALL_PATH = '/logo-icon.svg';
+// Icon-only SVG for navbar — same dev cache-bust as LOGO_PATH when the file changes
+export const LOGO_SMALL_PATH =
+  import.meta.env.DEV ? `/logo-icon.svg?t=${Date.now()}` : '/logo-icon.svg';
 
 export const BOOKING_STATUS = {
   confirmed: { label: 'Confirmed', color: 'bg-green-100 text-green-800' },
