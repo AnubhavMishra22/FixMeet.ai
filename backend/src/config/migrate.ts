@@ -7,18 +7,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Resolve the migrations directory, always pointing to the `src` directory.
+ * Resolve the migrations directory relative to this file's location.
  *
- * This works for both development (running from `src`) and production (running
- * from `dist`) because the file's location relative to the `backend` root is
- * consistent: `backend/{src|dist}/config/migrate.ts`.
- *
- * TypeScript doesn't copy .sql files to dist/, so we always read from src/.
+ * Works from both `src/config/` (dev) and `dist/config/` (prod) because the
+ * build step copies .sql files to `dist/db/migrations/`.
  */
 function getMigrationsDir(): string {
-  // From `backend/src/config` or `backend/dist/config`, go up two levels to `backend`.
-  const backendRoot = path.resolve(__dirname, '..', '..');
-  return path.join(backendRoot, 'src', 'db', 'migrations');
+  // From `{src|dist}/config`, go up one level to `{src|dist}`, then into `db/migrations`
+  return path.resolve(__dirname, '..', 'db', 'migrations');
 }
 
 /**
@@ -44,21 +40,24 @@ export async function runMigrations(retries = 3): Promise<void> {
   const allFiles = await readdir(migrationsDir);
   const files = allFiles.filter(f => f.endsWith('.sql')).sort();
 
-  console.log(`Running ${files.length} database migrations...`);
+  let applied = 0;
+  let skipped = 0;
 
   for (const file of files) {
     try {
       const content = await readFile(path.join(migrationsDir, file), 'utf-8');
       await sql.unsafe(content);
-      console.log(`  Migration ${file}: OK`);
+      applied++;
     } catch (error) {
-      // Use PostgreSQL error codes instead of brittle string matching
-      // 42P07: duplicate_table, 42710: duplicate_object (e.g. index)
       const pgError = error as { code?: string; message?: string };
-      const alreadyExistsCodes = ['42P07', '42710'];
+      const alreadyExistsCodes = [
+        '42P07', // duplicate_table
+        '42710', // duplicate_object (e.g. index)
+        '42701', // duplicate_column
+      ];
 
       if (pgError.code && alreadyExistsCodes.includes(pgError.code)) {
-        console.log(`  Migration ${file}: skipped (already exists)`);
+        skipped++;
       } else {
         const message = error instanceof Error ? error.message : String(error);
         throw new Error(`Migration ${file} failed: ${message}`);
@@ -66,5 +65,5 @@ export async function runMigrations(retries = 3): Promise<void> {
     }
   }
 
-  console.log('Database migrations complete');
+  console.log(`Migrations: ${applied} applied, ${skipped} skipped (${files.length} total)`);
 }

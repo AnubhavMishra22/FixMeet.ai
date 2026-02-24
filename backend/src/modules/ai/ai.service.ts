@@ -5,6 +5,7 @@ import { buildSystemPrompt } from './prompts/system-prompt.js';
 import { getToolsForUser } from './tools/index.js';
 import { sql } from '../../config/database.js';
 import { RateLimitError, TimeoutError } from '../../utils/errors.js';
+import { DEFAULT_AI_MODEL } from '../../config/env.js';
 
 // Token bucket rate limiter — Gemini free tier: 10 RPM
 // Note: In-memory bucket works for single-instance deployment.
@@ -37,6 +38,7 @@ const MAX_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 4000;
 const MAX_TOOL_ROUNDS = 3;
 const CHAT_TIMEOUT_MS = 60_000; // 60 second max for entire chat request
+const INVOKE_TIMEOUT_MS = 30_000; // 30 second max for a single Gemini API call
 
 let model: ChatGoogleGenerativeAI | null = null;
 
@@ -52,14 +54,45 @@ function isRateLimitError(error: unknown): boolean {
   return false;
 }
 
-export function initializeAI(apiKey: string): void {
+interface AIConfig {
+  apiKey: string;
+  modelName?: string;
+  maxTokens?: string;
+}
+
+export function initializeAI(config: AIConfig): void {
+  const modelName = config.modelName || DEFAULT_AI_MODEL;
+  console.log(`[AI] Initializing model: ${modelName}, maxTokens: ${config.maxTokens || '1024 (default)'}`);
+
   model = new ChatGoogleGenerativeAI({
-    apiKey,
-    model: process.env.GOOGLE_AI_MODEL_NAME || 'gemini-2.5-flash',
-    maxOutputTokens: process.env.GOOGLE_AI_MAX_TOKENS
-      ? parseInt(process.env.GOOGLE_AI_MAX_TOKENS, 10)
-      : 1024,
+    apiKey: config.apiKey,
+    model: modelName,
+    maxOutputTokens: config.maxTokens ? parseInt(config.maxTokens, 10) : 1024,
   });
+
+  // Fire-and-forget health check — validates API key on startup
+  healthCheck().catch((err) => {
+    console.error(`[AI] ⚠️  Startup health check FAILED: ${(err as Error).message}`);
+    console.error('[AI] ⚠️  AI chat will likely fail. Check GOOGLE_AI_API_KEY.');
+  });
+}
+
+/** Quick ping to verify the Gemini API key works */
+async function healthCheck(): Promise<void> {
+  if (!model) return;
+  console.log('[AI] Running startup health check...');
+  const start = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const result = await model.invoke([new HumanMessage('Say "ok"')], {
+      signal: controller.signal,
+    }) as AIMessageChunk;
+    const content = extractContent(result);
+    console.log(`[AI] ✅ Health check passed in ${Date.now() - start}ms (response: "${content.substring(0, 50)}")`);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export function isInitialized(): boolean {
@@ -99,16 +132,36 @@ function extractContent(response: AIMessageChunk): string {
   return JSON.stringify(response.content);
 }
 
-/** Invoke the model with retry logic for rate limits */
+/** Invoke the model with retry logic, per-call timeout via AbortController */
 async function invokeWithRetry(
   boundModel: ReturnType<ChatGoogleGenerativeAI['bindTools']>,
   messages: BaseMessage[],
+  roundLabel: string = 'invoke',
 ): Promise<AIMessageChunk> {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), INVOKE_TIMEOUT_MS);
     try {
-      return await boundModel.invoke(messages) as AIMessageChunk;
+      console.log(`[AI] ${roundLabel} attempt ${attempt}/${MAX_ATTEMPTS} — calling Gemini...`);
+      const start = Date.now();
+      const result = await boundModel.invoke(messages, {
+        signal: controller.signal,
+      }) as AIMessageChunk;
+      console.log(`[AI] ${roundLabel} attempt ${attempt} completed in ${Date.now() - start}ms`);
+      return result;
     } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const isAbort = error instanceof Error && error.name === 'AbortError';
+      console.error(`[AI] ${roundLabel} attempt ${attempt} failed: ${isAbort ? `timed out after ${INVOKE_TIMEOUT_MS}ms` : errMsg}`);
+      if (isAbort && attempt < MAX_ATTEMPTS) {
+        console.log(`[AI] Retrying after timeout...`);
+        continue;
+      }
+      if (isAbort) {
+        throw new TimeoutError();
+      }
       if (isRateLimitError(error) && attempt < MAX_ATTEMPTS) {
+        console.log(`[AI] Rate limited, retrying in ${RETRY_DELAY_MS}ms...`);
         await sleep(RETRY_DELAY_MS);
         continue;
       }
@@ -116,6 +169,8 @@ async function invokeWithRetry(
         throw new RateLimitError();
       }
       throw error;
+    } finally {
+      clearTimeout(timer);
     }
   }
   throw new Error('AI request failed after max retries');
@@ -148,8 +203,12 @@ async function chatInternal(
   conversationHistory: ConversationMessage[],
   userId: string,
 ): Promise<string> {
+  const chatStart = Date.now();
+
   // Fetch user info for personalized system prompt
+  console.log(`[AI] Fetching user context for ${userId}...`);
   const userContext = await getUserContext(userId);
+  console.log(`[AI] User context fetched in ${Date.now() - chatStart}ms: ${userContext.userName} (${userContext.userTimezone})`);
 
   const now = new Date();
   const currentDateTime = now.toLocaleString('en-US', {
@@ -171,6 +230,7 @@ async function chatInternal(
   // Build tools for this user
   const tools = getToolsForUser(userId, userContext.userTimezone);
   const toolMap = new Map(tools.map((t) => [t.name, t]));
+  console.log(`[AI] Tools loaded: ${tools.map(t => t.name).join(', ')}`);
 
   // Bind tools to the model
   const boundModel = model!.bindTools(tools);
@@ -187,6 +247,7 @@ async function chatInternal(
   }
 
   messages.push(new HumanMessage(message));
+  console.log(`[AI] Message history: ${messages.length} messages (${conversationHistory.length} history + system + user). Starting agent loop...`);
 
   // Agent loop: invoke model → handle tool calls → repeat until text response
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
@@ -195,17 +256,20 @@ async function chatInternal(
       throw new RateLimitError();
     }
 
-    const response = await invokeWithRetry(boundModel, messages);
+    const response = await invokeWithRetry(boundModel, messages, `round-${round}`);
 
     // Check if the AI wants to call any tools
     const toolCalls = response.tool_calls ?? [];
 
     if (toolCalls.length === 0) {
       // No tool calls — return the final text response
-      return extractContent(response);
+      const content = extractContent(response);
+      console.log(`[AI] Final response in ${Date.now() - chatStart}ms (${content.length} chars)`);
+      return content;
     }
 
     // AI wants to use tools — add its message then execute each tool
+    console.log(`[AI] Round ${round}: ${toolCalls.length} tool call(s): ${toolCalls.map(tc => tc.name).join(', ')}`);
     messages.push(response);
 
     for (const toolCall of toolCalls) {
@@ -223,7 +287,10 @@ async function chatInternal(
 
       // Execute the tool — catch errors so AI can explain the issue
       try {
+        console.log(`[AI] Executing tool "${toolCall.name}" with keys: [${Object.keys(toolCall.args ?? {}).join(', ')}]`);
+        const toolStart = Date.now();
         const result = await tool.invoke(toolCall.args);
+        console.log(`[AI] Tool "${toolCall.name}" completed in ${Date.now() - toolStart}ms`);
         messages.push(
           new ToolMessage({
             tool_call_id: toolCall.id ?? toolCall.name,
@@ -232,7 +299,7 @@ async function chatInternal(
         );
       } catch (toolError) {
         const errorMsg = toolError instanceof Error ? toolError.message : 'Unknown tool error';
-        console.error(`Tool "${toolCall.name}" execution error:`, toolError);
+        console.error(`[AI] Tool "${toolCall.name}" execution error:`, toolError);
         messages.push(
           new ToolMessage({
             tool_call_id: toolCall.id ?? toolCall.name,
@@ -246,9 +313,12 @@ async function chatInternal(
   }
 
   // Exhausted tool rounds, do one final call
+  console.log(`[AI] Exhausted ${MAX_TOOL_ROUNDS} tool rounds, doing final call...`);
   if (!consumeToken()) {
     throw new RateLimitError();
   }
-  const finalResponse = await invokeWithRetry(boundModel, messages);
-  return extractContent(finalResponse);
+  const finalResponse = await invokeWithRetry(boundModel, messages, 'final');
+  const content = extractContent(finalResponse);
+  console.log(`[AI] Final response (after tool rounds) in ${Date.now() - chatStart}ms (${content.length} chars)`);
+  return content;
 }

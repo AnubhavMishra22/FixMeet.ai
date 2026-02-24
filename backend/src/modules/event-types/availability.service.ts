@@ -403,17 +403,17 @@ function getRangeDays(eventType: EventType | EventTypeRow): number | null {
 }
 
 function getRangeStart(eventType: EventType | EventTypeRow): string | null {
-  if ('rangeStart' in eventType) {
-    return eventType.rangeStart;
-  }
-  return eventType.range_start;
+  const val = 'rangeStart' in eventType ? eventType.rangeStart : eventType.range_start;
+  if (val == null) return null;
+  if (typeof val === 'string') return val;
+  return format(val as Date, 'yyyy-MM-dd');
 }
 
 function getRangeEnd(eventType: EventType | EventTypeRow): string | null {
-  if ('rangeEnd' in eventType) {
-    return eventType.rangeEnd;
-  }
-  return eventType.range_end;
+  const val = 'rangeEnd' in eventType ? eventType.rangeEnd : eventType.range_end;
+  if (val == null) return null;
+  if (typeof val === 'string') return val;
+  return format(val as Date, 'yyyy-MM-dd');
 }
 
 // Export helper to get host ID from event type

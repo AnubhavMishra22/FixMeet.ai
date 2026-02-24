@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as aiService from './ai.service.js';
 import type { ChatInput } from './ai.schema.js';
 import { UnauthorizedError, TimeoutError } from '../../utils/errors.js';
+import { assertPlanAtLeast } from '../billing/entitlements.service.js';
 
 export async function chat(
   req: Request<object, object, ChatInput>,
@@ -12,16 +13,23 @@ export async function chat(
     throw new UnauthorizedError('Authentication required');
   }
 
+  await assertPlanAtLeast(userId, 'pro');
+
   const { message, conversationHistory } = req.body;
+
+  console.log(`AI chat request from user ${userId}: "${message.substring(0, 50)}..."`);
+  const startTime = Date.now();
 
   try {
     const response = await aiService.chat(message, conversationHistory, userId);
 
+    console.log(`AI chat response in ${Date.now() - startTime}ms`);
     res.json({
       success: true,
       data: { response },
     });
   } catch (error) {
+    console.error(`AI chat error after ${Date.now() - startTime}ms:`, (error as Error).message);
     // Let AppError subclasses (RateLimitError etc.) bubble up to error middleware
     if (error instanceof TimeoutError) {
       res.status(504).json({

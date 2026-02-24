@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { parseISO } from 'date-fns';
+import { parseISO, format } from 'date-fns';
 import { NotFoundError, BadRequestError } from '../../utils/errors.js';
 import * as eventTypesService from '../event-types/event-types.service.js';
 import { calculateAvailableSlots } from '../event-types/availability.service.js';
@@ -29,7 +29,12 @@ export async function getPublicEventType(
 
   const { eventType, user } = result;
 
-  // Return only public-safe fields
+  // Return only public-safe fields (include range for calendar limits)
+  const toDateStr = (v: string | Date | null | undefined): string | null => {
+    if (v == null) return null;
+    if (typeof v === 'string') return v;
+    return format(v as Date, 'yyyy-MM-dd');
+  };
   const publicEventType: PublicEventType = {
     id: eventType.id,
     slug: eventType.slug,
@@ -39,6 +44,10 @@ export async function getPublicEventType(
     locationType: eventType.location_type,
     color: eventType.color,
     questions: eventType.questions,
+    rangeType: eventType.range_type as 'rolling' | 'range' | 'indefinite',
+    rangeDays: eventType.range_days,
+    rangeStart: toDateStr(eventType.range_start),
+    rangeEnd: toDateStr(eventType.range_end),
   };
 
   const host: PublicHost = {
@@ -207,6 +216,7 @@ export async function getBookingByToken(
       },
       host: {
         name: booking.host.name,
+        username: booking.host.username,
         email: booking.host.email,
         timezone: booking.host.timezone,
       },

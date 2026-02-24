@@ -1,8 +1,8 @@
-# FixMeet.ai
+# FixMeet.app
 
-A modern, open-source scheduling and booking platform — a self-hostable alternative to Calendly. Create event types, share public booking pages, and manage appointments with Google Calendar integration and email notifications.
+A modern, open-source scheduling and booking platform — a self-hostable alternative to Calendly. Create event types, share public booking pages, and manage appointments with Google Calendar integration, email notifications, and an AI copilot for natural-language scheduling.
 
-**Live at [fixmeet.vercel.app](https://fixmeet.vercel.app)**
+**Live at [fixmeet.app](https://fixmeet.app)**
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)
 ![Node.js](https://img.shields.io/badge/Node.js-20+-green?logo=node.js)
@@ -22,6 +22,7 @@ A modern, open-source scheduling and booking platform — a self-hostable altern
 - **Automated Reminders** — Background job sends 24-hour and 1-hour reminders before meetings
 - **Self-Service Cancellation** — Invitees can cancel their own bookings via a unique cancel token link
 - **Timezone Aware** — All times stored in UTC, converted at boundaries; invitees see slots in their local timezone
+- **AI Copilot** — Natural-language scheduling assistant powered by Google Gemini. Check availability, book meetings, list upcoming appointments, and cancel bookings — all through conversation
 - **Secure Auth** — JWT access tokens (in-memory, not localStorage) + httpOnly refresh tokens with rotation
 
 ---
@@ -42,6 +43,7 @@ A modern, open-source scheduling and booking platform — a self-hostable altern
 | **Resend** | Transactional emails |
 | **googleapis** | Google Calendar API |
 | **date-fns / date-fns-tz** | Date manipulation & timezone handling |
+| **LangChain + Gemini** | AI copilot with tool-calling agent loop |
 | **Helmet** | Security headers |
 
 ### Frontend
@@ -63,7 +65,7 @@ A modern, open-source scheduling and booking platform — a self-hostable altern
 ## Project Structure
 
 ```
-FixMeet.ai/
+FixMeet.app/
 ├── backend/
 │   ├── src/
 │   │   ├── config/          # Database connection, env validation
@@ -74,7 +76,8 @@ FixMeet.ai/
 │   │   │   ├── bookings/    # Create, cancel, reschedule
 │   │   │   ├── public/      # Public booking endpoints (no auth)
 │   │   │   ├── calendars/   # Google Calendar OAuth & sync
-│   │   │   └── email/       # Resend integration + templates
+│   │   │   ├── email/       # Resend integration + templates
+│   │   │   └── ai/          # AI Copilot (LangChain + Gemini, 4 tools)
 │   │   ├── db/
 │   │   │   ├── migrate.ts           # Migration runner
 │   │   │   └── migrations/          # 5 SQL migration files
@@ -90,10 +93,11 @@ FixMeet.ai/
 │   │   ├── components/
 │   │   │   ├── ui/          # Button, Card, Input, Label, etc.
 │   │   │   ├── layout/      # Dashboard sidebar & navigation
+│   │   │   ├── ai/          # Chat message bubbles & input
 │   │   │   └── auth/        # Protected route component
 │   │   ├── pages/
 │   │   │   ├── auth/        # Login, Register
-│   │   │   ├── dashboard/   # Home, Event Types, Bookings, Settings
+│   │   │   ├── dashboard/   # Home, Event Types, Bookings, AI Chat, Settings
 │   │   │   └── booking/     # Public booking widget
 │   │   ├── lib/             # API client, constants, utilities
 │   │   ├── stores/          # Zustand stores (auth, toast)
@@ -179,12 +183,15 @@ FRONTEND_URL=http://localhost:5173
 
 # Email (Optional - falls back to console.log in dev)
 RESEND_API_KEY=
-EMAIL_FROM=FixMeet <notifications@fixmeet.ai>
+EMAIL_FROM=FixMeet <notifications@fixmeet.app>
 
 # Google Calendar (Optional)
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=http://localhost:3001/api/calendars/google/callback
+
+# AI Copilot (Optional - get key from https://aistudio.google.com/apikey)
+GOOGLE_AI_API_KEY=
 ```
 
 Run database migrations:
@@ -272,13 +279,40 @@ To enable real email delivery:
 
 Without an API key, emails are logged to the console in development — useful for testing the booking flow.
 
+### AI Copilot (Gemini)
+
+To enable the AI scheduling assistant:
+
+1. Go to [Google AI Studio](https://aistudio.google.com/apikey)
+2. Create an API key
+3. Add it to `GOOGLE_AI_API_KEY` in your backend `.env`
+4. Restart the backend — you should see "AI routes mounted" in the console
+
+The AI copilot can check availability, create bookings, list meetings, and cancel bookings through natural-language conversation. Default model is `gemini-2.5-flash-lite` (free tier friendly).
+
+### Stripe billing (test mode)
+
+Use this to demo Checkout, webhooks, and the Customer Portal without charging real cards.
+
+1. **Backend environment** — In `backend/.env`, set:
+   - `STRIPE_SECRET_KEY` (test key from the [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys))
+   - `STRIPE_PRICE_ID_PRO` and `STRIPE_PRICE_ID_MAX` (recurring Prices on two Products)
+   - `STRIPE_WEBHOOK_SECRET` (from the Stripe CLI or Dashboard webhook endpoint)
+   - `FRONTEND_URL` (e.g. `http://localhost:5173`) so return URLs are correct
+2. **Forward webhooks locally** — With the Stripe CLI:  
+   `stripe listen --forward-to localhost:3001/api/stripe/webhook`  
+   Copy the printed signing secret into `STRIPE_WEBHOOK_SECRET` and restart the backend.
+3. **Optional showcase** — Set `BILLING_SHOWCASE_MODE=true` so paid-tier API rules stay relaxed while webhooks still update plan fields in the database (good for portfolio demos).
+4. **In the app** — Log in, open **Plans & pricing** or **Settings → Plan & billing**, choose **Upgrade to Pro/Max (test)**, and complete Checkout with Stripe’s test card `4242 4242 4242 4242` (any future expiry, any CVC). You are redirected back to Settings; after the webhook runs, **Current plan** should show Pro or Max. Use **Manage billing** to open the Customer Portal (invoices, cancel, payment method).
+5. **Honest copy** — When showcase mode is on, the UI explains that Pro/Max navigation stays open for the demo; production would enforce those tiers.
+
 ---
 
 ## Deployment
 
-<!-- TODO: Add deployment instructions for production environments -->
-
-*Deployment guide coming soon. This section will cover production setup, environment configuration, and hosting options.*
+- **Backend**: DigitalOcean Droplet (deployed via GitHub Actions on push to `main`). See [`.github/workflows/deploy-droplet.yml`](.github/workflows/deploy-droplet.yml). Requires secrets: `DROPLET_HOST`, `DROPLET_USER`, `DROPLET_SSH_KEY` (see [setup instructions](docs/DROPLET-DEPLOYMENT-AND-LOGS.md)).
+- **Frontend**: Vercel (deploys from `main`).
+- **API**: [api.fixmeet.app](https://api.fixmeet.app)
 
 ---
 
@@ -323,6 +357,14 @@ Without an API key, emails are logged to the console in development — useful f
 | `GET` | `/api/calendars/google/connect` | Bearer | Get Google OAuth URL |
 | `GET` | `/api/calendars/google/callback` | No | OAuth callback handler |
 | `DELETE` | `/api/calendars/:id` | Bearer | Disconnect calendar |
+
+### AI Copilot
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/ai/chat` | Bearer | Send message to AI copilot |
+
+> AI routes are only mounted if `GOOGLE_AI_API_KEY` is set. Rate limited to 10 RPM with 60s timeout.
 
 ### Public (No Auth)
 
@@ -370,6 +412,7 @@ The database consists of **7 tables** managed through 5 sequential migrations:
 | `/dashboard/event-types/:id` | Edit Event Type | Yes |
 | `/dashboard/bookings` | Bookings List | Yes |
 | `/dashboard/bookings/:id` | Booking Details | Yes |
+| `/dashboard/ai` | AI Copilot Chat | Yes |
 | `/dashboard/settings` | Settings (Profile + Calendars) | Yes |
 | `/:username/:slug` | Public Booking Page | No |
 
@@ -413,6 +456,9 @@ npm run lint         # Run ESLint
 | `GOOGLE_CLIENT_ID` | No | — | Google OAuth Client ID |
 | `GOOGLE_CLIENT_SECRET` | No | — | Google OAuth Client Secret |
 | `GOOGLE_REDIRECT_URI` | No | — | Google OAuth redirect URI |
+| `GOOGLE_AI_API_KEY` | No | — | Gemini API key (enables AI copilot) |
+| `GOOGLE_AI_MODEL_NAME` | No | `gemini-2.5-flash-lite` | Gemini model name |
+| `GOOGLE_AI_MAX_TOKENS` | No | `1024` | Max output tokens for AI responses |
 
 ### Frontend
 
@@ -435,6 +481,8 @@ npm run lint         # Run ESLint
 | **Zustand over Redux** | Lightweight, minimal boilerplate, perfect for this project's scope |
 | **setInterval reminders** | Simple background job; no Redis/BullMQ dependency needed at this scale |
 | **Zod validation** | Shared schema validation approach for both backend and frontend |
+| **LangChain agent loop** | Tool-calling pattern with max 3 rounds; AI picks tools, executes, then summarizes |
+| **AI routes conditional** | Only mounted if `GOOGLE_AI_API_KEY` is set; app works normally without it |
 
 ---
 

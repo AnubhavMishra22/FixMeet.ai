@@ -5,6 +5,7 @@ import { useToast } from '../../../stores/toast-store';
 import api from '../../../lib/api';
 import { Bot, Sparkles, Trash2, RotateCcw } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
+import { ShowcaseTierBanner } from '../../../components/billing/showcase-tier-banner';
 
 const SESSION_STORAGE_KEY = 'fixmeet-ai-chat';
 
@@ -163,6 +164,10 @@ export default function AIChatPage() {
             Clear
           </Button>
         )}
+      </div>
+
+      <div className="px-6 pt-3 shrink-0">
+        <ShowcaseTierBanner tier="pro" />
       </div>
 
       {/* Messages area */}
