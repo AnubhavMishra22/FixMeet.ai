@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
-import { APP_NAME, LOGO_PATH, LOGO_SMALL_PATH } from '../../lib/constants';
+import { APP_NAME, LOGO_SMALL_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -182,7 +182,7 @@ export function DashboardLayout({ children }: Props) {
         style={{ width: sidebarWidth }}
       >
         <div className="flex h-full min-h-0 flex-col">
-          {/* Logo — wordmark + label in one row; tight padding so nav sits directly under the border. */}
+          {/* Logo — SVG icon + label when expanded; icon only when rail is narrow (same asset as nav-style mark). */}
           <div className={`min-w-0 shrink-0 border-b border-cyan-200 py-2 ${sidebarPadX}`}>
             <Link
               to="/dashboard"
@@ -193,15 +193,12 @@ export function DashboardLayout({ children }: Props) {
             >
               {showLabels ? (
                 <>
-                  {/* Box width ~intrinsic mark only — extra width reads as gap before the label. */}
-                  <div className="relative h-10 w-[3rem] max-w-[min(100%,3.25rem)] shrink-0 overflow-hidden md:h-11 md:w-[3.25rem] md:max-w-[min(100%,3.5rem)]">
-                    <img
-                      src={LOGO_PATH}
-                      alt=""
-                      aria-hidden
-                      className="absolute left-0 top-0 h-[158%] w-auto max-w-[min(100%,3.5rem)] object-cover object-left object-top"
-                    />
-                  </div>
+                  <img
+                    src={LOGO_SMALL_PATH}
+                    alt=""
+                    aria-hidden
+                    className="h-10 w-10 shrink-0 object-contain md:h-11 md:w-11"
+                  />
                   <span className="-ml-0.5 shrink-0 translate-y-1 text-[1.375rem] font-bold leading-none text-primary-wordmark md:-ml-1">
                     {APP_NAME}
                   </span>
