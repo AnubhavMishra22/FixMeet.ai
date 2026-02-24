@@ -172,12 +172,12 @@ export function DashboardLayout({ children }: Props) {
         style={{ width: sidebarWidth }}
       >
         <div className="flex h-full min-h-0 flex-col">
-          {/* Logo — wordmark + label when expanded; larger icon when rail is narrow. */}
-          <div className="min-w-0 border-b border-cyan-200 px-2 py-3 sm:px-3 sm:py-4 md:px-6 md:py-6">
+          {/* Logo — wordmark + label in one row; tight padding so nav sits directly under the border. */}
+          <div className="min-w-0 shrink-0 border-b border-cyan-200 px-2 py-2 sm:px-3 md:px-4">
             <Link
               to="/dashboard"
               className={`flex min-w-0 items-center outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-100 ${
-                showLabels ? 'justify-start gap-2' : 'justify-center'
+                showLabels ? 'flex-row flex-nowrap justify-start gap-2' : 'justify-center'
               }`}
             >
               {showLabels ? (
@@ -186,9 +186,11 @@ export function DashboardLayout({ children }: Props) {
                     src={LOGO_PATH}
                     alt=""
                     aria-hidden
-                    className="h-12 w-auto max-w-[min(100%,14rem)] shrink-0 object-contain md:h-14"
+                    className="h-10 w-auto max-h-11 max-w-[min(100%,11rem)] shrink-0 object-contain object-left md:h-11 md:max-h-12"
                   />
-                  <span className="truncate text-xl font-bold text-primary-wordmark">FixMeet</span>
+                  <span className="shrink-0 truncate text-xl font-bold leading-none text-primary-wordmark">
+                    FixMeet
+                  </span>
                 </>
               ) : (
                 <img
@@ -202,7 +204,7 @@ export function DashboardLayout({ children }: Props) {
 
           {/* Navigation */}
           <nav
-            className="scrollbar-none flex min-h-0 flex-1 flex-col space-y-1 overflow-y-auto overflow-x-hidden p-2 md:p-4"
+            className="scrollbar-none flex min-h-0 flex-1 flex-col space-y-1 overflow-y-auto overflow-x-hidden px-2 pb-2 pt-1.5 md:px-3 md:pb-3 md:pt-2"
             aria-label="Main navigation"
           >
             {navigation.map((item) => {
