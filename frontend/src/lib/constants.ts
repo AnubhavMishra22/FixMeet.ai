@@ -1,7 +1,10 @@
 export const APP_NAME = 'FixMeet';
 
-// Logo (transparent PNG) for auth pages
-export const LOGO_PATH = '/logo-transparent.png';
+// Logo (transparent PNG) for auth pages — dev cache-bust so replaced files show after refresh
+export const LOGO_PATH =
+  import.meta.env.DEV
+    ? `/logo-transparent.png?t=${Date.now()}`
+    : '/logo-transparent.png';
 // Icon-only SVG for navbar (inherently transparent, scales cleanly)
 export const LOGO_SMALL_PATH = '/logo-icon.svg';
 
