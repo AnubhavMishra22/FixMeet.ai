@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FixMeet sidebar brand — layout mock</title>
+    <style>
+      :root {
+        --bg: #cffafe;
+        --border: #a5f3fc;
+        --rail: 256px;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #f0f9ff;
+        padding: 1.5rem;
+      }
+      h1 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 1rem;
+      }
+      .note {
+        font-size: 0.875rem;
+        color: #0e7490;
+        max-width: 40rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+      }
+      .panel {
+        width: var(--rail);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        overflow: hidden;
+      }
+      .row {
+        border-bottom: 1px solid var(--border);
+        padding: 0.5rem 0.75rem;
+      }
+      .row.expanded img {
+        height: 2.5rem;
+        width: auto;
+        max-width: 100%;
+        display: block;
+        object-fit: contain;
+        object-position: left center;
+      }
+      @media (min-width: 768px) {
+        .row.expanded img {
+          height: 2.5rem;
+        }
+      }
+      .row.collapsed {
+        display: flex;
+        justify-content: center;
+        padding: 0.5rem;
+      }
+      .row.collapsed img {
+        width: 2.5rem;
+        height: 2.5rem;
+        object-fit: contain;
+      }
+      @media (min-width: 768px) {
+        .row.collapsed img {
+          width: 2.75rem;
+          height: 2.75rem;
+        }
+      }
+      .label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #155e75;
+        margin-bottom: 0.35rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Sidebar brand row (reference mock)</h1>
+    <p class="note">
+      Matches <code>dashboard-layout.tsx</code>: expanded = single
+      <code>logo-transparent.png</code> wordmark (same family as login); collapsed = <code>logo-icon.svg</code> only.
+      Open this file while <code>npm run dev</code> is running:
+      <a href="/brand-sidebar-mock.html">/brand-sidebar-mock.html</a>
+    </p>
+
+    <p class="label">Expanded (labels visible)</p>
+    <div class="panel">
+      <div class="row expanded">
+        <img src="/logo-transparent.png" alt="" />
+      </div>
+      <div style="padding: 0.5rem 0.75rem; font-size: 0.875rem; color: #164e63">Dashboard …</div>
+    </div>
+
+    <p class="label" style="margin-top: 1.5rem">Collapsed (icon rail)</p>
+    <div class="panel" style="width: 56px">
+      <div class="row collapsed">
+        <img src="/logo-icon.svg" alt="" width="40" height="40" />
+      </div>
+    </div>
+  </body>
+</html>

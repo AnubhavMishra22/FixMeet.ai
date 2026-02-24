@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
-import { APP_NAME, LOGO_SMALL_PATH } from '../../lib/constants';
+import { APP_NAME, LOGO_PATH, LOGO_SMALL_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -182,32 +182,28 @@ export function DashboardLayout({ children }: Props) {
         style={{ width: sidebarWidth }}
       >
         <div className="flex h-full min-h-0 flex-col">
-          {/* Logo — compact SVG + label when expanded; larger icon when rail is icon-only. */}
+          {/* Logo — full PNG wordmark when expanded (same asset family as login); SVG when rail is icon-only. */}
           <div className={`min-w-0 shrink-0 border-b border-cyan-200 py-2 ${sidebarPadX}`}>
             <Link
               to="/dashboard"
               title={APP_NAME}
+              aria-label={APP_NAME}
               className={`flex min-w-0 items-center outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-100 ${
-                showLabels ? 'flex-row flex-nowrap justify-start gap-1.5' : 'justify-center'
+                showLabels ? 'justify-start' : 'justify-center'
               }`}
             >
               {showLabels ? (
-                <>
-                  {/* Icon smaller than collapsed rail so it pairs with the wordmark (h-10 looked huge vs ~1.375rem text). */}
-                  <img
-                    src={LOGO_SMALL_PATH}
-                    alt=""
-                    aria-hidden
-                    className="h-7 w-7 shrink-0 object-contain md:h-8 md:w-8"
-                  />
-                  <span className="-ml-0.5 shrink-0 text-[1.375rem] font-bold leading-none text-primary-wordmark md:-ml-1">
-                    {APP_NAME}
-                  </span>
-                </>
+                <img
+                  src={LOGO_PATH}
+                  alt=""
+                  aria-hidden
+                  className="h-9 w-auto max-w-full shrink-0 object-contain object-left md:h-10"
+                />
               ) : (
                 <img
                   src={LOGO_SMALL_PATH}
-                  alt="FixMeet logo"
+                  alt=""
+                  aria-hidden
                   className="h-10 w-10 shrink-0 object-contain md:h-11 md:w-11"
                 />
               )}
