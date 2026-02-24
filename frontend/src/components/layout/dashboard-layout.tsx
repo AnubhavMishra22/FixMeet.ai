@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
-import { LOGO_PATH, LOGO_SMALL_PATH } from '../../lib/constants';
+import { APP_NAME, LOGO_PATH, LOGO_SMALL_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -176,6 +176,7 @@ export function DashboardLayout({ children }: Props) {
           <div className="min-w-0 shrink-0 border-b border-cyan-200 px-2 py-2 sm:px-3 md:px-4">
             <Link
               to="/dashboard"
+              title={APP_NAME}
               className={`flex min-w-0 items-center outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-100 ${
                 showLabels ? 'flex-row flex-nowrap justify-start gap-2' : 'justify-center'
               }`}
@@ -188,8 +189,8 @@ export function DashboardLayout({ children }: Props) {
                     aria-hidden
                     className="h-10 w-auto max-h-11 max-w-[min(100%,11rem)] shrink-0 object-contain object-left md:h-11 md:max-h-12"
                   />
-                  <span className="shrink-0 truncate text-xl font-bold leading-none text-primary-wordmark">
-                    FixMeet
+                  <span className="min-w-0 flex-1 truncate text-xl font-bold leading-none text-primary-wordmark">
+                    {APP_NAME}
                   </span>
                 </>
               ) : (
