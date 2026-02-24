@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
-import { LOGO_PATH } from '../../lib/constants';
+import { LOGO_PATH, LOGO_SMALL_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -172,7 +172,7 @@ export function DashboardLayout({ children }: Props) {
         style={{ width: sidebarWidth }}
       >
         <div className="flex h-full min-h-0 flex-col">
-          {/* Logo — same asset and rules as login (h-* w-auto, wordmark only in the PNG). */}
+          {/* Logo — full wordmark when expanded (same rules as login); icon-only when rail is narrow. */}
           <div className="min-w-0 border-b border-cyan-200 px-2 py-3 sm:px-3 sm:py-4 md:px-6 md:py-6">
             <Link
               to="/dashboard"
@@ -180,11 +180,19 @@ export function DashboardLayout({ children }: Props) {
                 showLabels ? 'justify-start' : 'justify-center'
               }`}
             >
-              <img
-                src={LOGO_PATH}
-                alt="FixMeet logo"
-                className="h-10 w-auto max-w-full shrink-0 object-contain md:h-11"
-              />
+              {showLabels ? (
+                <img
+                  src={LOGO_PATH}
+                  alt="FixMeet logo"
+                  className="h-10 w-auto max-w-full shrink-0 object-contain md:h-11"
+                />
+              ) : (
+                <img
+                  src={LOGO_SMALL_PATH}
+                  alt="FixMeet logo"
+                  className="h-8 w-8 shrink-0 object-contain"
+                />
+              )}
             </Link>
           </div>
 
