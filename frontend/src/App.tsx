@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/auth/protected-route';
 import { DashboardLayout } from './components/layout/dashboard-layout';
@@ -29,18 +30,7 @@ import DemoPage from './pages/dashboard/demo/index';
 import PublicBookingPage from './pages/booking/public-booking';
 import BookingManagePage from './pages/booking/booking-manage';
 
-function DevDashboardShellPreview() {
-  return (
-    <DashboardLayout>
-      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold text-slate-900">Dashboard (frontend only)</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          No backend required. Use the sidebar and resize handle; data and auth API calls are not available here.
-        </p>
-      </div>
-    </DashboardLayout>
-  );
-}
+const DevDashboardPreviewPage = lazy(() => import('./pages/dev/dashboard-preview'));
 
 function App() {
   return (
@@ -48,7 +38,20 @@ function App() {
       <Routes>
         {/* Local UI preview — no API, no login (dev only) */}
         {import.meta.env.DEV && (
-          <Route path="/dev/dashboard-preview" element={<DevDashboardShellPreview />} />
+          <Route
+            path="/dev/dashboard-preview"
+            element={
+              <Suspense
+                fallback={
+                  <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                  </div>
+                }
+              >
+                <DevDashboardPreviewPage />
+              </Suspense>
+            }
+          />
         )}
 
         {/* Auth routes */}
