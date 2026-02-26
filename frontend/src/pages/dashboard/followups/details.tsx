@@ -66,7 +66,7 @@ export default function FollowupDetailsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [id, navigate, toast]);
+  }, [id, navigate, toast, setIsLoading, setFollowup, setSubject, setBody, setActionItems, setHasUnsavedChanges]);
 
   useEffect(() => {
     fetchFollowup();
@@ -92,7 +92,7 @@ export default function FollowupDetailsPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [id, subject, body, actionItems, toast]);
+  }, [id, subject, body, actionItems, toast, setIsSaving, setHasUnsavedChanges]);
 
   const handleSend = useCallback(async () => {
     if (!id) return;
@@ -117,7 +117,7 @@ export default function FollowupDetailsPage() {
       setIsSending(false);
       setShowSendConfirm(false);
     }
-  }, [id, hasUnsavedChanges, subject, body, actionItems, toast, navigate]);
+  }, [id, hasUnsavedChanges, subject, body, actionItems, toast, navigate, setIsSending, setShowSendConfirm]);
 
   const handleSkip = useCallback(async () => {
     if (!id) return;
@@ -131,7 +131,7 @@ export default function FollowupDetailsPage() {
     } finally {
       setIsSkipping(false);
     }
-  }, [id, toast, navigate]);
+  }, [id, toast, navigate, setIsSkipping]);
 
   function addActionItem() {
     if (newActionItem.trim()) {
@@ -320,7 +320,7 @@ export default function FollowupDetailsPage() {
                 onChange={(e) => setNewActionItem(e.target.value)}
                 placeholder="Add an action item..."
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
                     e.preventDefault();
                     addActionItem();
                   }

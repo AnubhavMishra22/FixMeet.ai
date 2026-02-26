@@ -10,7 +10,6 @@ import { followupEmail } from './templates/followup.template.js';
 import type { BookingEmailData } from './email.types.js';
 import type { BookingWithDetails } from '../bookings/bookings.types.js';
 import type { MeetingFollowupWithBooking } from '../followups/followups.types.js';
-import { sql } from '../../config/database.js';
 import { env } from '../../config/env.js';
 
 function buildEmailData(
@@ -143,26 +142,20 @@ export async function sendReminderEmail(
  */
 export async function sendFollowupEmail(
   followup: MeetingFollowupWithBooking,
-  userId: string,
+  hostName: string,
+  hostTimezone: string,
 ): Promise<void> {
   if (!followup.subject || !followup.body) {
     throw new Error('Cannot send followup without subject and body');
   }
 
-  // Get host name for the email
-  const userRows = await sql<{ name: string; timezone: string }[]>`
-    SELECT name, timezone FROM users WHERE id = ${userId}
-  `;
-  const user = userRows[0];
-  if (!user) throw new Error('User not found');
-
   const email = followupEmail({
-    hostName: user.name,
+    hostName,
     inviteeName: followup.booking.inviteeName,
     inviteeEmail: followup.booking.inviteeEmail,
     eventTitle: followup.booking.eventTypeTitle,
     startTime: followup.booking.startTime,
-    timezone: user.timezone,
+    timezone: hostTimezone,
     subject: followup.subject,
     body: followup.body,
     actionItems: followup.actionItems,

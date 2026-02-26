@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as followupsService from './followups.service.js';
 import { AppError, UnauthorizedError } from '../../utils/errors.js';
 import { sendFollowupEmail } from '../email/notification.service.js';
+import { sql } from '../../config/database.js';
 
 /** GET /api/followups - List all followups for the authenticated user */
 export async function listFollowups(req: Request, res: Response): Promise<void> {
@@ -55,8 +56,15 @@ export async function sendFollowup(req: Request, res: Response): Promise<void> {
   // Get the full followup with booking info for the email
   const fullFollowup = await followupsService.getFollowupById(id, userId);
 
+  // Get host details for the email
+  const userRows = await sql<{ name: string; timezone: string }[]>`
+    SELECT name, timezone FROM users WHERE id = ${userId}
+  `;
+  const user = userRows[0];
+  if (!user) throw new AppError('User not found', 404, 'NOT_FOUND');
+
   // Send the actual email
-  await sendFollowupEmail(fullFollowup, userId);
+  await sendFollowupEmail(fullFollowup, user.name, user.timezone);
 
   // Mark as sent in database
   const followup = await followupsService.markSent(id, userId);

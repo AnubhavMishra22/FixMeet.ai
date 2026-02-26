@@ -27,7 +27,7 @@ export default function FollowupsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, setIsLoading, setFollowups]);
 
   useEffect(() => {
     fetchFollowups();
