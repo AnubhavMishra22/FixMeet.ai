@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   Send,
   SkipForward,
-  RefreshCw,
   Calendar,
   User,
   Clock,
