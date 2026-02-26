@@ -3,6 +3,7 @@ import { env } from './config/env.js';
 import { runMigrations } from './config/migrate.js';
 import { processReminders } from './jobs/reminder.job.js';
 import { processBriefGeneration } from './jobs/brief-generator.job.js';
+import { processFollowupGeneration } from './jobs/followup-generator.job.js';
 
 async function start() {
   // Run database migrations before starting the server
@@ -52,6 +53,23 @@ async function start() {
     }, 10000);
 
     console.log('Brief generator job scheduled (every 1 hour)');
+
+    // Run followup generation every 30 minutes
+    const FOLLOWUP_INTERVAL = 30 * 60 * 1000; // 30 minutes
+
+    setInterval(() => {
+      processFollowupGeneration().catch((err) => {
+        console.error('Followup generator job error:', err);
+      });
+    }, FOLLOWUP_INTERVAL);
+
+    setTimeout(() => {
+      processFollowupGeneration().catch((err) => {
+        console.error('Initial followup generator job error:', err);
+      });
+    }, 15000);
+
+    console.log('Followup generator job scheduled (every 30 min)');
   }
 
   // Graceful shutdown
