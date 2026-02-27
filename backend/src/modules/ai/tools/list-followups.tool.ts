@@ -80,9 +80,8 @@ export function createListFollowupsTool(userId: string, userTimezone: string) {
 
         return lines.join('\n');
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
         console.error('list_pending_followups tool error:', error);
-        return `Sorry, I couldn't retrieve your follow-ups: ${message}`;
+        return `Sorry, I couldn't retrieve your follow-ups due to an internal error.`;
       }
     },
   });

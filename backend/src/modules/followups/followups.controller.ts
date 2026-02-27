@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import * as followupsService from './followups.service.js';
 import { AppError, UnauthorizedError } from '../../utils/errors.js';
 import { sendFollowupEmail } from '../email/notification.service.js';
@@ -107,7 +108,7 @@ export async function generateFollowupForBooking(req: Request, res: Response): P
   const { bookingId } = req.params;
   if (!bookingId) throw new AppError('Booking ID is required', 400, 'VALIDATION_ERROR');
 
-  const { meetingNotes } = req.body as { meetingNotes?: string };
+  const { meetingNotes } = z.object({ meetingNotes: z.string().optional() }).parse(req.body);
 
   // Validate booking exists and belongs to user
   interface BookingRow {
@@ -143,7 +144,7 @@ export async function generateFollowupForBooking(req: Request, res: Response): P
   }
 
   // Create draft record
-  await followupsService.createDraftFollowup(bookingId, userId);
+  const draft = await followupsService.createDraftFollowup(bookingId, userId);
 
   // Get user preferences
   const userRows = await sql<{ timezone: string; followup_tone: string }[]>`
@@ -186,13 +187,8 @@ export async function generateFollowupForBooking(req: Request, res: Response): P
     tone: user.followup_tone as 'formal' | 'friendly' | 'casual',
   });
 
-  // Save generated content
-  const draftRows = await sql<{ id: string }[]>`
-    SELECT id FROM meeting_followups
-    WHERE booking_id = ${bookingId} AND user_id = ${userId}
-  `;
-  const draftId = draftRows[0]?.id;
-  if (!draftId) throw new AppError('Failed to find draft followup', 500, 'INTERNAL_ERROR');
+  // Save generated content using draft ID from createDraftFollowup
+  const draftId = draft.id;
 
   await sql`
     UPDATE meeting_followups

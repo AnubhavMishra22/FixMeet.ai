@@ -7,6 +7,7 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { FileText, MailCheck } from 'lucide-react';
+import { Switch } from '../../../components/ui/switch';
 import { useAuthStore } from '../../../stores/auth-store';
 import { useToast } from '../../../stores/toast-store';
 import api from '../../../lib/api';
@@ -317,22 +318,11 @@ function BriefSettings() {
           <p className="font-medium">Enable meeting briefs</p>
           <p className="text-sm text-gray-500">Automatically generate preparation notes before meetings</p>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={briefsEnabled}
+        <Switch
+          checked={briefsEnabled}
+          onCheckedChange={handleToggleBriefs}
           disabled={isSaving}
-          onClick={() => handleToggleBriefs(!briefsEnabled)}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            briefsEnabled ? 'bg-purple-600' : 'bg-gray-200'
-          } ${isSaving ? 'opacity-50' : ''}`}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              briefsEnabled ? 'translate-x-6' : 'translate-x-1'
-            }`}
-          />
-        </button>
+        />
       </div>
 
       {/* Email toggle */}
@@ -341,22 +331,11 @@ function BriefSettings() {
           <p className="font-medium">Email briefs to me</p>
           <p className="text-sm text-gray-500">Receive meeting briefs via email when they&apos;re ready</p>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={briefEmailsEnabled}
+        <Switch
+          checked={briefEmailsEnabled && briefsEnabled}
+          onCheckedChange={handleToggleEmails}
           disabled={isSaving || !briefsEnabled}
-          onClick={() => handleToggleEmails(!briefEmailsEnabled)}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            briefEmailsEnabled && briefsEnabled ? 'bg-purple-600' : 'bg-gray-200'
-          } ${isSaving || !briefsEnabled ? 'opacity-50' : ''}`}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              briefEmailsEnabled && briefsEnabled ? 'translate-x-6' : 'translate-x-1'
-            }`}
-          />
-        </button>
+        />
       </div>
 
       {/* Generation timing */}
@@ -420,22 +399,11 @@ function FollowupSettings() {
           <p className="font-medium">Auto-generate follow-ups</p>
           <p className="text-sm text-gray-500">Automatically create follow-up email drafts after meetings</p>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={followupsEnabled}
+        <Switch
+          checked={followupsEnabled}
+          onCheckedChange={handleToggleFollowups}
           disabled={isSaving}
-          onClick={() => handleToggleFollowups(!followupsEnabled)}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            followupsEnabled ? 'bg-purple-600' : 'bg-gray-200'
-          } ${isSaving ? 'opacity-50' : ''}`}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              followupsEnabled ? 'translate-x-6' : 'translate-x-1'
-            }`}
-          />
-        </button>
+        />
       </div>
 
       {/* Tone selector */}
