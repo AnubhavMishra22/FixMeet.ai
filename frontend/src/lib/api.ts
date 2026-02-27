@@ -115,4 +115,19 @@ export async function skipFollowup(id: string): Promise<MeetingFollowup> {
   return data.data;
 }
 
+export async function generateFollowupForBooking(
+  bookingId: string,
+  meetingNotes?: string,
+): Promise<MeetingFollowupWithBooking> {
+  const { data } = await api.post(`/api/followups/generate/${bookingId}`, { meetingNotes });
+  return data.data;
+}
+
+export async function getFollowupByBookingId(
+  bookingId: string,
+): Promise<MeetingFollowupWithBooking | null> {
+  const { data } = await api.get(`/api/followups/by-booking/${bookingId}`);
+  return data.data;
+}
+
 export default api;

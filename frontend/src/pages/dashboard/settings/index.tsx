@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { FileText } from 'lucide-react';
+import { FileText, MailCheck } from 'lucide-react';
 import { useAuthStore } from '../../../stores/auth-store';
 import { useToast } from '../../../stores/toast-store';
 import api from '../../../lib/api';
@@ -153,6 +153,19 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <BriefSettings />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MailCheck className="h-5 w-5 text-purple-600" />
+            Follow-up Emails
+          </CardTitle>
+          <CardDescription>AI-generated follow-up emails after your meetings</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FollowupSettings />
         </CardContent>
       </Card>
     </div>
@@ -363,6 +376,85 @@ function BriefSettings() {
           <option value={12}>12 hours before</option>
           <option value={24}>24 hours before</option>
           <option value={48}>48 hours before</option>
+        </select>
+      </div>
+    </div>
+  );
+}
+
+function FollowupSettings() {
+  const { user, fetchUser } = useAuthStore();
+  const { toast } = useToast();
+  const [followupsEnabled, setFollowupsEnabled] = useState(user?.followupsEnabled ?? true);
+  const [followupTone, setFollowupTone] = useState(user?.followupTone ?? 'friendly');
+  const [isSaving, setIsSaving] = useState(false);
+
+  async function handleToggleFollowups(enabled: boolean) {
+    setFollowupsEnabled(enabled);
+    await saveFollowupSetting({ followupsEnabled: enabled });
+  }
+
+  async function handleToneChange(tone: string) {
+    setFollowupTone(tone as 'formal' | 'friendly' | 'casual');
+    await saveFollowupSetting({ followupTone: tone });
+  }
+
+  async function saveFollowupSetting(update: Record<string, boolean | string>) {
+    setIsSaving(true);
+    try {
+      await api.patch('/api/auth/me', update);
+      await fetchUser();
+      toast({ title: 'Follow-up settings updated' });
+    } catch {
+      toast({ title: 'Failed to update settings', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Enable/disable followups */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-medium">Auto-generate follow-ups</p>
+          <p className="text-sm text-gray-500">Automatically create follow-up email drafts after meetings</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={followupsEnabled}
+          disabled={isSaving}
+          onClick={() => handleToggleFollowups(!followupsEnabled)}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            followupsEnabled ? 'bg-purple-600' : 'bg-gray-200'
+          } ${isSaving ? 'opacity-50' : ''}`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              followupsEnabled ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Tone selector */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-medium">Follow-up tone</p>
+          <p className="text-sm text-gray-500">Set the writing style for generated follow-ups</p>
+        </div>
+        <select
+          value={followupTone}
+          disabled={isSaving || !followupsEnabled}
+          onChange={(e) => handleToneChange(e.target.value)}
+          className={`h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ${
+            !followupsEnabled ? 'opacity-50' : ''
+          }`}
+        >
+          <option value="formal">Formal</option>
+          <option value="friendly">Friendly</option>
+          <option value="casual">Casual</option>
         </select>
       </div>
     </div>

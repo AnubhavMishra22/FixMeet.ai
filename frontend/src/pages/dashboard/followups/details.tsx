@@ -50,6 +50,21 @@ export default function FollowupDetailsPage() {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Cmd/Ctrl+Enter keyboard shortcut to trigger send
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !e.isComposing) {
+        e.preventDefault();
+        // Only trigger if we have a draft with subject and body
+        if (followup?.status === 'draft' && subject && body && !isSending && !showSendConfirm) {
+          setShowSendConfirm(true);
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [followup?.status, subject, body, isSending, showSendConfirm]);
+
   const fetchFollowup = useCallback(async () => {
     if (!id) return;
     setIsLoading(true);
@@ -412,22 +427,44 @@ export default function FollowupDetailsPage() {
                     )}
                   </Button>
                 </div>
-                <Button
-                  onClick={() => {
-                    if (!subject || !body) {
-                      toast({
-                        title: 'Please add a subject and body before sending',
-                        variant: 'destructive',
-                      });
-                      return;
-                    }
-                    setShowSendConfirm(true);
-                  }}
-                  disabled={!subject || !body}
-                >
-                  <Send className="h-4 w-4 mr-1" />
-                  Send Follow-up
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleSend}
+                    disabled={!subject || !body || isSending}
+                  >
+                    {isSending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-1" />
+                        Send as-is
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (!subject || !body) {
+                        toast({
+                          title: 'Please add a subject and body before sending',
+                          variant: 'destructive',
+                        });
+                        return;
+                      }
+                      setShowSendConfirm(true);
+                    }}
+                    disabled={!subject || !body}
+                  >
+                    <Send className="h-4 w-4 mr-1" />
+                    Send Follow-up
+                  </Button>
+                  <span className="text-xs text-gray-400 hidden sm:inline">
+                    {navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
+                  </span>
+                </div>
               </div>
             )}
           </CardContent>

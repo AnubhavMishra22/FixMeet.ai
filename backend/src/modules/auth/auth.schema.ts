@@ -33,6 +33,8 @@ export const updateProfileSchema = z.object({
   briefsEnabled: z.boolean().optional(),
   briefEmailsEnabled: z.boolean().optional(),
   briefGenerationHours: z.number().int().min(1).max(72).optional(),
+  followupsEnabled: z.boolean().optional(),
+  followupTone: z.enum(['formal', 'friendly', 'casual']).optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

@@ -7,6 +7,8 @@ export interface User {
   briefsEnabled: boolean;
   briefEmailsEnabled: boolean;
   briefGenerationHours: number;
+  followupsEnabled: boolean;
+  followupTone: 'formal' | 'friendly' | 'casual';
   createdAt: string;
 }
 

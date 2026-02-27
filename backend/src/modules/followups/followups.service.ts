@@ -168,6 +168,28 @@ export async function skipFollowup(id: string, userId: string): Promise<MeetingF
   return mapRow(updated);
 }
 
+/** Get a followup by booking ID (returns null if not found) */
+export async function getFollowupByBookingId(
+  bookingId: string,
+  userId: string,
+): Promise<MeetingFollowupWithBooking | null> {
+  const rows = await sql<FollowupWithBookingRow[]>`
+    SELECT
+      mf.*,
+      b.invitee_name,
+      b.invitee_email,
+      b.start_time,
+      b.end_time,
+      et.title AS event_type_title
+    FROM meeting_followups mf
+    JOIN bookings b ON mf.booking_id = b.id
+    JOIN event_types et ON b.event_type_id = et.id
+    WHERE mf.booking_id = ${bookingId} AND mf.user_id = ${userId}
+  `;
+  const row = rows[0];
+  return row ? mapRowWithBooking(row) : null;
+}
+
 /** Create a draft followup for a booking (used by the job) */
 export async function createDraftFollowup(
   bookingId: string,

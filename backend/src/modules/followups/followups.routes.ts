@@ -8,6 +8,12 @@ const router = Router();
 // List all followups for the user
 router.get('/', followupsController.listFollowups);
 
+// Get followup by booking ID (must be before /:id)
+router.get('/by-booking/:bookingId', followupsController.getFollowupByBooking);
+
+// Generate a followup for a booking (must be before /:id)
+router.post('/generate/:bookingId', followupsController.generateFollowupForBooking);
+
 // Get a single followup
 router.get('/:id', followupsController.getFollowup);
 

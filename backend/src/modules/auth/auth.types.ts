@@ -7,6 +7,8 @@ export interface User {
   briefs_enabled: boolean;
   brief_emails_enabled: boolean;
   brief_generation_hours: number;
+  followups_enabled: boolean;
+  followup_tone: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -25,6 +27,8 @@ export interface UserResponse {
   briefsEnabled: boolean;
   briefEmailsEnabled: boolean;
   briefGenerationHours: number;
+  followupsEnabled: boolean;
+  followupTone: string;
   createdAt: Date;
 }
 

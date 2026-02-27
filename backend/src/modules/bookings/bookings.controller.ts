@@ -65,9 +65,17 @@ export async function getBooking(
   `;
   const hasBrief = briefRows.length > 0 && briefRows[0]!.status === 'completed';
 
+  // Check if a follow-up exists for this booking
+  const followupRows = await sql<{ id: string; status: string }[]>`
+    SELECT id, status FROM meeting_followups
+    WHERE booking_id = ${req.params.id} AND user_id = ${req.user.userId}
+    LIMIT 1
+  `;
+  const followup = followupRows[0] ? { id: followupRows[0].id, status: followupRows[0].status } : null;
+
   res.status(200).json({
     success: true,
-    data: { booking, hasBrief },
+    data: { booking, hasBrief, followup },
   });
 }
 

@@ -7,6 +7,7 @@ interface PendingFollowupRow {
   booking_id: string;
   user_id: string;
   user_timezone: string;
+  followup_tone: string;
   invitee_name: string;
   invitee_email: string;
   invitee_notes: string | null;
@@ -37,9 +38,11 @@ export async function processFollowupGeneration(): Promise<void> {
       INSERT INTO meeting_followups (booking_id, user_id, status)
       SELECT b.id, b.host_id, 'draft'
       FROM bookings b
+      JOIN users u ON b.host_id = u.id
       WHERE b.status = 'confirmed'
         AND b.end_time < NOW() - INTERVAL '30 minutes'
         AND b.end_time > NOW() - INTERVAL '90 minutes'
+        AND u.followups_enabled = true
         AND NOT EXISTS (
           SELECT 1 FROM meeting_followups mf
           WHERE mf.booking_id = b.id AND mf.user_id = b.host_id
@@ -76,6 +79,7 @@ export async function processFollowupGeneration(): Promise<void> {
       mf.booking_id,
       mf.user_id,
       u.timezone AS user_timezone,
+      u.followup_tone,
       b.invitee_name,
       b.invitee_email,
       b.invitee_notes,
@@ -135,6 +139,7 @@ export async function processFollowupGeneration(): Promise<void> {
         timezone: row.user_timezone,
         meetingBrief,
         inviteeNotes: row.invitee_notes,
+        tone: row.followup_tone as 'formal' | 'friendly' | 'casual',
       });
 
       // Save generated content to database
