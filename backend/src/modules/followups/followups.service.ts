@@ -141,6 +141,33 @@ export async function markSent(id: string, userId: string): Promise<MeetingFollo
   return mapRow(updated);
 }
 
+/** Mark followup as skipped */
+export async function skipFollowup(id: string, userId: string): Promise<MeetingFollowup> {
+  const existing = await sql<MeetingFollowupRow[]>`
+    SELECT * FROM meeting_followups WHERE id = ${id} AND user_id = ${userId}
+  `;
+  const found = existing[0];
+  if (!found) {
+    throw new AppError('Followup not found', 404, 'NOT_FOUND');
+  }
+  if (found.status === 'sent') {
+    throw new AppError('Cannot skip an already sent followup', 400, 'VALIDATION_ERROR');
+  }
+  if (found.status === 'skipped') {
+    throw new AppError('Followup already skipped', 400, 'VALIDATION_ERROR');
+  }
+
+  const rows = await sql<MeetingFollowupRow[]>`
+    UPDATE meeting_followups
+    SET status = 'skipped'
+    WHERE id = ${id} AND user_id = ${userId}
+    RETURNING *
+  `;
+  const updated = rows[0];
+  if (!updated) throw new AppError('Failed to skip followup', 500, 'INTERNAL_ERROR');
+  return mapRow(updated);
+}
+
 /** Create a draft followup for a booking (used by the job) */
 export async function createDraftFollowup(
   bookingId: string,

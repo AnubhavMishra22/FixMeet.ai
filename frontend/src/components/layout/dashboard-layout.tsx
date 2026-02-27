@@ -10,6 +10,7 @@ import {
   Link as LinkIcon,
   Sparkles,
   FileText,
+  MailCheck,
 } from 'lucide-react';
 
 const navigation = [
@@ -18,6 +19,7 @@ const navigation = [
   { name: 'Bookings', href: '/dashboard/bookings', icon: Calendar, badge: null },
   { name: 'AI Assistant', href: '/dashboard/ai', icon: Sparkles, badge: 'NEW' },
   { name: 'Meeting Briefs', href: '/dashboard/briefs', icon: FileText, badge: 'NEW' },
+  { name: 'Follow-ups', href: '/dashboard/followups', icon: MailCheck, badge: 'NEW' },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings, badge: null },
 ];
 

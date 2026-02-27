@@ -61,7 +61,7 @@ api.interceptors.response.use(
 // ---------------------------------------------------------------------------
 // Meeting Briefs
 // ---------------------------------------------------------------------------
-import type { MeetingBriefWithBooking } from '../types';
+import type { MeetingBriefWithBooking, MeetingFollowupWithBooking, MeetingFollowup } from '../types';
 
 export async function getBriefs(): Promise<MeetingBriefWithBooking[]> {
   const { data } = await api.get('/api/briefs');
@@ -80,6 +80,38 @@ export async function generateBriefForBooking(bookingId: string): Promise<Meetin
 
 export async function regenerateBrief(bookingId: string): Promise<MeetingBriefWithBooking> {
   const { data } = await api.post(`/api/briefs/regenerate/${bookingId}`);
+  return data.data;
+}
+
+// ---------------------------------------------------------------------------
+// Follow-ups
+// ---------------------------------------------------------------------------
+
+export async function getFollowups(): Promise<MeetingFollowupWithBooking[]> {
+  const { data } = await api.get('/api/followups');
+  return data.data;
+}
+
+export async function getFollowup(id: string): Promise<MeetingFollowupWithBooking> {
+  const { data } = await api.get(`/api/followups/${id}`);
+  return data.data;
+}
+
+export async function updateFollowup(
+  id: string,
+  updates: { subject?: string; body?: string; actionItems?: string[] },
+): Promise<MeetingFollowup> {
+  const { data } = await api.patch(`/api/followups/${id}`, updates);
+  return data.data;
+}
+
+export async function sendFollowup(id: string): Promise<MeetingFollowup> {
+  const { data } = await api.post(`/api/followups/${id}/send`);
+  return data.data;
+}
+
+export async function skipFollowup(id: string): Promise<MeetingFollowup> {
+  const { data } = await api.post(`/api/followups/${id}/skip`);
   return data.data;
 }
 
