@@ -36,6 +36,8 @@ function sanitizeUser(user: UserWithPassword) {
     briefsEnabled: user.briefs_enabled,
     briefEmailsEnabled: user.brief_emails_enabled,
     briefGenerationHours: user.brief_generation_hours,
+    followupsEnabled: user.followups_enabled,
+    followupTone: user.followup_tone,
     createdAt: user.created_at,
   };
 }
@@ -269,6 +271,14 @@ export async function updateProfile(
   if (input.briefGenerationHours !== undefined) {
     updates.push('brief_generation_hours');
     values.push(input.briefGenerationHours);
+  }
+  if (input.followupsEnabled !== undefined) {
+    updates.push('followups_enabled');
+    values.push(input.followupsEnabled);
+  }
+  if (input.followupTone !== undefined) {
+    updates.push('followup_tone');
+    values.push(input.followupTone);
   }
 
   if (updates.length === 0) {

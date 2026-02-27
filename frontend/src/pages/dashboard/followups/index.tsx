@@ -4,8 +4,8 @@ import { format } from 'date-fns';
 import { Card, CardContent } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
-import { MailCheck, Calendar, Clock, User, Send, SkipForward } from 'lucide-react';
-import { getFollowups } from '../../../lib/api';
+import { MailCheck, Calendar, Clock, User, Send, SkipForward, Loader2 } from 'lucide-react';
+import { getFollowups, sendFollowup as sendFollowupApi } from '../../../lib/api';
 import { useToast } from '../../../stores/toast-store';
 import type { MeetingFollowupWithBooking, FollowupStatus } from '../../../types';
 
@@ -16,6 +16,8 @@ export default function FollowupsPage() {
   const [followups, setFollowups] = useState<MeetingFollowupWithBooking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>('all');
+  const [isBulkSending, setIsBulkSending] = useState(false);
+  const [bulkSendProgress, setBulkSendProgress] = useState({ current: 0, total: 0 });
 
   const fetchFollowups = useCallback(async () => {
     setIsLoading(true);
@@ -84,19 +86,76 @@ export default function FollowupsPage() {
   }
 
   const draftCount = followups.filter((f) => f.status === 'draft').length;
+  const sendableDrafts = followups.filter(
+    (f) => f.status === 'draft' && f.subject && f.body,
+  );
+
+  const handleBulkSend = useCallback(async () => {
+    if (sendableDrafts.length === 0) return;
+    setIsBulkSending(true);
+    setBulkSendProgress({ current: 0, total: sendableDrafts.length });
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < sendableDrafts.length; i++) {
+      setBulkSendProgress({ current: i + 1, total: sendableDrafts.length });
+      try {
+        await sendFollowupApi(sendableDrafts[i].id);
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setIsBulkSending(false);
+    setBulkSendProgress({ current: 0, total: 0 });
+
+    if (failCount === 0) {
+      toast({ title: `${successCount} follow-up${successCount > 1 ? 's' : ''} sent!` });
+    } else {
+      toast({
+        title: `Sent ${successCount}, failed ${failCount}`,
+        variant: 'destructive',
+      });
+    }
+
+    fetchFollowups();
+  }, [sendableDrafts, toast, fetchFollowups]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Follow-ups</h1>
-        <p className="text-gray-600">
-          AI-generated follow-up emails after your meetings
-          {draftCount > 0 && (
-            <span className="ml-2 text-primary font-medium">
-              ({draftCount} draft{draftCount > 1 ? 's' : ''} to review)
-            </span>
-          )}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Follow-ups</h1>
+          <p className="text-gray-600">
+            AI-generated follow-up emails after your meetings
+            {draftCount > 0 && (
+              <span className="ml-2 text-primary font-medium">
+                ({draftCount} draft{draftCount > 1 ? 's' : ''} to review)
+              </span>
+            )}
+          </p>
+        </div>
+        {sendableDrafts.length > 1 && (
+          <Button
+            onClick={handleBulkSend}
+            disabled={isBulkSending}
+            size="sm"
+          >
+            {isBulkSending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                Sending {bulkSendProgress.current}/{bulkSendProgress.total}...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4 mr-1" />
+                Send All Drafts ({sendableDrafts.length})
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       <div className="flex gap-2">
@@ -134,12 +193,39 @@ export default function FollowupsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <MailCheck className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="font-medium mb-2">No follow-ups found</h3>
-            <p className="text-gray-500">
-              {filter === 'all'
-                ? 'Follow-ups are generated automatically after your meetings end.'
-                : `No ${filter} follow-ups.`}
-            </p>
+            {filter === 'all' && (
+              <>
+                <h3 className="font-medium mb-2">No follow-ups yet</h3>
+                <p className="text-gray-500">
+                  Follow-ups are generated automatically after your meetings end.
+                  You can also generate them manually from a booking&apos;s detail page.
+                </p>
+              </>
+            )}
+            {filter === 'draft' && (
+              <>
+                <h3 className="font-medium mb-2">No drafts pending</h3>
+                <p className="text-gray-500">
+                  All caught up! You have no follow-up drafts waiting to be reviewed.
+                </p>
+              </>
+            )}
+            {filter === 'sent' && (
+              <>
+                <h3 className="font-medium mb-2">No sent follow-ups</h3>
+                <p className="text-gray-500">
+                  Follow-ups you send will appear here. Review your drafts and hit send!
+                </p>
+              </>
+            )}
+            {filter === 'skipped' && (
+              <>
+                <h3 className="font-medium mb-2">No skipped follow-ups</h3>
+                <p className="text-gray-500">
+                  Follow-ups you skip will appear here for reference.
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       ) : (

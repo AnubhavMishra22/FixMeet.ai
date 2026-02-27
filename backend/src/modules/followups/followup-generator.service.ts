@@ -44,8 +44,9 @@ function buildPrompt(params: {
   timezone?: string;
   meetingBrief?: string | null;
   inviteeNotes?: string | null;
+  tone?: 'formal' | 'friendly' | 'casual';
 }): string {
-  const { eventTitle, inviteeName, startTime, endTime, timezone, meetingBrief, inviteeNotes } = params;
+  const { eventTitle, inviteeName, startTime, endTime, timezone, meetingBrief, inviteeNotes, tone } = params;
 
   const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
   const dateStr = startTime.toLocaleDateString('en-US', {
@@ -64,7 +65,14 @@ function buildPrompt(params: {
     ? `\nUser notes:\n${inviteeNotes}`
     : '';
 
-  return `Generate a professional follow-up email after a meeting.
+  const toneMap: Record<string, string> = {
+    formal: 'Use a professional and formal tone. Address the attendee formally.',
+    friendly: 'Use a warm and friendly tone. Be personable but professional.',
+    casual: 'Use a casual and conversational tone. Keep it relaxed and approachable.',
+  };
+  const toneInstruction = toneMap[tone ?? 'friendly'] ?? toneMap.friendly;
+
+  return `Generate a follow-up email after a meeting.
 
 Meeting details:
 - Title: ${eventTitle}
@@ -74,9 +82,11 @@ Meeting details:
 ${briefSection}
 ${notesSection}
 
+Tone: ${toneInstruction}
+
 Generate:
 1. Email subject line
-2. Professional follow-up email body that:
+2. Follow-up email body that:
    - Thanks them for their time
    - References the meeting topic
    - Lists any action items (make reasonable assumptions based on the meeting type)
@@ -130,6 +140,7 @@ export async function generateFollowup(params: {
   timezone?: string;
   meetingBrief?: string | null;
   inviteeNotes?: string | null;
+  tone?: 'formal' | 'friendly' | 'casual';
 }): Promise<FollowupGenerationResult> {
   const model = createModel();
   if (!model) {
