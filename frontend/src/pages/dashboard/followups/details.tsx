@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
@@ -50,19 +50,7 @@ export default function FollowupDetailsPage() {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    if (id) fetchFollowup();
-  }, [id]);
-
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
-    }
-  }, [body]);
-
-  async function fetchFollowup() {
+  const fetchFollowup = useCallback(async () => {
     if (!id) return;
     setIsLoading(true);
     try {
@@ -78,9 +66,21 @@ export default function FollowupDetailsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [id, navigate, toast]);
 
-  async function handleSave() {
+  useEffect(() => {
+    fetchFollowup();
+  }, [fetchFollowup]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [body]);
+
+  const handleSave = useCallback(async () => {
     if (!id) return;
     setIsSaving(true);
     try {
@@ -92,9 +92,9 @@ export default function FollowupDetailsPage() {
     } finally {
       setIsSaving(false);
     }
-  }
+  }, [id, subject, body, actionItems, toast]);
 
-  async function handleSend() {
+  const handleSend = useCallback(async () => {
     if (!id) return;
     // Save first if there are unsaved changes
     if (hasUnsavedChanges) {
@@ -117,9 +117,9 @@ export default function FollowupDetailsPage() {
       setIsSending(false);
       setShowSendConfirm(false);
     }
-  }
+  }, [id, hasUnsavedChanges, subject, body, actionItems, toast, navigate]);
 
-  async function handleSkip() {
+  const handleSkip = useCallback(async () => {
     if (!id) return;
     setIsSkipping(true);
     try {
@@ -131,7 +131,7 @@ export default function FollowupDetailsPage() {
     } finally {
       setIsSkipping(false);
     }
-  }
+  }, [id, toast, navigate]);
 
   function addActionItem() {
     if (newActionItem.trim()) {

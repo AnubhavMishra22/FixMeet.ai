@@ -17,18 +17,28 @@ function formatDateTime(date: Date, timezone: string): string {
   return formatInTimeZone(date, timezone, "EEEE, MMMM d, yyyy 'at' h:mm a zzz");
 }
 
+/** Escape user-provided content to prevent XSS in HTML emails */
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export function followupEmail(data: FollowupEmailData): EmailTemplate {
   const formattedTime = formatDateTime(data.startTime, data.timezone);
 
-  // Convert body line breaks to <br> for HTML
-  const htmlBody = data.body.replace(/\n/g, '<br>');
+  // Escape then convert body line breaks to <br> for HTML
+  const htmlBody = escapeHtml(data.body).replace(/\n/g, '<br>');
 
   const actionItemsHtml = data.actionItems.length > 0
     ? `
       <div style="margin-top: 16px;">
         <span class="label">Action Items</span>
         <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #111;">
-          ${data.actionItems.map((item) => `<li style="margin: 4px 0;">${item}</li>`).join('')}
+          ${data.actionItems.map((item) => `<li style="margin: 4px 0;">${escapeHtml(item)}</li>`).join('')}
         </ul>
       </div>
     `
@@ -63,14 +73,14 @@ export function followupEmail(data: FollowupEmailData): EmailTemplate {
       <body>
         <div class="container">
           <div class="header">
-            <h1>📨 Follow-up from ${data.hostName}</h1>
+            <h1>📨 Follow-up from ${escapeHtml(data.hostName)}</h1>
           </div>
           <div class="content">
-            <p>Hi ${data.inviteeName},</p>
+            <p>Hi ${escapeHtml(data.inviteeName)},</p>
 
             <div class="detail">
               <span class="label">Regarding</span>
-              <span class="value">${data.eventTitle}</span>
+              <span class="value">${escapeHtml(data.eventTitle)}</span>
             </div>
             <div class="detail">
               <span class="label">Meeting Date</span>
@@ -84,7 +94,7 @@ export function followupEmail(data: FollowupEmailData): EmailTemplate {
             ${actionItemsHtml}
 
             <div class="footer">
-              <p>This email was sent by ${data.hostName} via FixMeet.ai</p>
+              <p>This email was sent by ${escapeHtml(data.hostName)} via FixMeet.ai</p>
             </div>
           </div>
         </div>

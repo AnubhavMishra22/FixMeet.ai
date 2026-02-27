@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Card, CardContent } from '../../../components/ui/card';
@@ -17,11 +17,7 @@ export default function FollowupsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>('all');
 
-  useEffect(() => {
-    fetchFollowups();
-  }, []);
-
-  async function fetchFollowups() {
+  const fetchFollowups = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await getFollowups();
@@ -31,7 +27,11 @@ export default function FollowupsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchFollowups();
+  }, [fetchFollowups]);
 
   const filtered = filter === 'all'
     ? followups
