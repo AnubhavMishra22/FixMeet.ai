@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { UnauthorizedError } from '../../utils/errors.js';
-import { sql } from '../../config/database.js';
 import * as insightsService from './insights.service.js';
 import type { DateRange } from './insights.types.js';
 
@@ -30,14 +29,7 @@ export async function getByDay(req: Request, res: Response): Promise<void> {
 export async function getByHour(req: Request, res: Response): Promise<void> {
   if (!req.user) throw new UnauthorizedError();
   const range = parseRange(req.query);
-
-  // Fetch user timezone for hour extraction
-  const userRows = await sql<{ timezone: string }[]>`
-    SELECT timezone FROM users WHERE id = ${req.user.userId}
-  `;
-  const userTimezone = userRows[0]?.timezone ?? 'UTC';
-
-  const data = await insightsService.getMeetingsByHour(req.user.userId, range, userTimezone);
+  const data = await insightsService.getMeetingsByHour(req.user.userId, range);
   res.status(200).json({ success: true, data });
 }
 

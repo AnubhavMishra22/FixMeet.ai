@@ -10,7 +10,6 @@ import type {
   MeetingsByType,
   TypeCountRow,
   MeetingTrends,
-  WeekCountRow,
   NoShowStats,
   NoShowRow,
 } from './insights.types.js';
@@ -84,22 +83,30 @@ export async function getMeetingsByDay(
   const rangeStart = getDateRangeStart(range);
 
   const rows = await sql<DayCountRow[]>`
+    WITH all_days AS (
+      SELECT generate_series(0, 6) AS dow
+    ),
+    day_counts AS (
+      SELECT
+        EXTRACT(DOW FROM b.start_time)::int AS dow,
+        COUNT(*)::text AS count
+      FROM bookings b
+      WHERE b.host_id = ${userId}
+        AND b.status IN ('confirmed', 'completed')
+        ${dateFilter(rangeStart)}
+      GROUP BY dow
+    )
     SELECT
-      EXTRACT(DOW FROM b.start_time)::text AS dow,
-      COUNT(*)::text AS count
-    FROM bookings b
-    WHERE b.host_id = ${userId}
-      AND b.status IN ('confirmed', 'completed')
-      ${dateFilter(rangeStart)}
-    GROUP BY dow
-    ORDER BY dow
+      a.dow::text,
+      COALESCE(d.count, '0') AS count
+    FROM all_days a
+    LEFT JOIN day_counts d ON a.dow = d.dow
+    ORDER BY a.dow
   `;
 
-  // Build full 7-day array (fill missing days with 0)
-  const countMap = new Map(rows.map((r) => [parseInt(r.dow, 10), parseInt(r.count, 10)]));
-  const days = DAY_NAMES.map((day, i) => ({
-    day,
-    count: countMap.get(i) ?? 0,
+  const days = rows.map((r) => ({
+    day: DAY_NAMES[parseInt(r.dow, 10)]!,
+    count: parseInt(r.count, 10),
   }));
 
   let busiestDay: string | null = null;
@@ -117,9 +124,14 @@ export async function getMeetingsByDay(
 export async function getMeetingsByHour(
   userId: string,
   range: DateRange,
-  userTimezone: string,
 ): Promise<MeetingsByHour> {
   const rangeStart = getDateRangeStart(range);
+
+  // Fetch user timezone for hour extraction
+  const userRows = await sql<{ timezone: string }[]>`
+    SELECT timezone FROM users WHERE id = ${userId}
+  `;
+  const userTimezone = userRows[0]?.timezone ?? 'UTC';
 
   const rows = await sql<HourCountRow[]>`
     SELECT
@@ -185,36 +197,47 @@ export async function getMeetingsByType(
 }
 
 export async function getMeetingTrends(userId: string): Promise<MeetingTrends> {
-  // Current period: last 12 weeks
-  const currentRows = await sql<WeekCountRow[]>`
+  // Single query: weekly breakdown + both period totals
+  const rows = await sql<{
+    weeks: { week: string; count: string }[] | null;
+    current_period_count: string;
+    previous_period_count: string;
+  }[]>`
     SELECT
-      DATE_TRUNC('week', b.start_time) AS week,
-      COUNT(*)::text AS count
-    FROM bookings b
-    WHERE b.host_id = ${userId}
-      AND b.status IN ('confirmed', 'completed')
-      AND b.start_time >= NOW() - INTERVAL '12 weeks'
-    GROUP BY week
-    ORDER BY week
-  `;
-
-  // Previous period: weeks 13-24 ago
-  const previousRows = await sql<{ count: string }[]>`
-    SELECT COUNT(*)::text AS count
+      (
+        SELECT json_agg(t)
+        FROM (
+          SELECT
+            DATE_TRUNC('week', b2.start_time) AS week,
+            COUNT(*)::text AS count
+          FROM bookings b2
+          WHERE b2.host_id = ${userId}
+            AND b2.status IN ('confirmed', 'completed')
+            AND b2.start_time >= NOW() - INTERVAL '12 weeks'
+          GROUP BY week
+          ORDER BY week
+        ) t
+      ) AS weeks,
+      COUNT(*) FILTER (
+        WHERE b.start_time >= NOW() - INTERVAL '12 weeks'
+      )::text AS current_period_count,
+      COUNT(*) FILTER (
+        WHERE b.start_time >= NOW() - INTERVAL '24 weeks' AND b.start_time < NOW() - INTERVAL '12 weeks'
+      )::text AS previous_period_count
     FROM bookings b
     WHERE b.host_id = ${userId}
       AND b.status IN ('confirmed', 'completed')
       AND b.start_time >= NOW() - INTERVAL '24 weeks'
-      AND b.start_time < NOW() - INTERVAL '12 weeks'
   `;
 
-  const weeks = currentRows.map((r) => ({
-    week: r.week.toISOString().slice(0, 10),
+  const row = rows[0]!;
+  const weeks = (row.weeks ?? []).map((r) => ({
+    week: r.week.slice(0, 10),
     count: parseInt(r.count, 10),
   }));
 
-  const currentPeriodCount = weeks.reduce((sum, w) => sum + w.count, 0);
-  const previousPeriodCount = parseInt(previousRows[0]?.count ?? '0', 10);
+  const currentPeriodCount = parseInt(row.current_period_count, 10);
+  const previousPeriodCount = parseInt(row.previous_period_count, 10);
 
   let changePercent: number | null = null;
   if (previousPeriodCount > 0) {
