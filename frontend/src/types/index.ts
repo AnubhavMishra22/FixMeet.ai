@@ -168,3 +168,72 @@ export interface MeetingFollowupWithBooking extends MeetingFollowup {
     eventTypeTitle: string;
   };
 }
+
+// ── Insights ────────────────────────────────────────────────────────────
+
+export type DateRange = '7d' | '30d' | '90d' | '365d' | 'all';
+
+export interface MeetingStats {
+  totalMeetings: number;
+  totalHours: number;
+  avgDurationMinutes: number;
+  byStatus: {
+    confirmed: number;
+    completed: number;
+    cancelled: number;
+    noShow: number;
+    rescheduled: number;
+  };
+}
+
+export interface MeetingsByDay {
+  days: { day: string; count: number }[];
+  busiestDay: string | null;
+}
+
+export interface MeetingsByHour {
+  hours: { hour: number; count: number }[];
+  peakHour: number | null;
+}
+
+export interface MeetingsByType {
+  types: {
+    eventTypeId: string;
+    title: string;
+    color: string;
+    count: number;
+    totalMinutes: number;
+  }[];
+}
+
+export interface MeetingTrends {
+  weeks: { week: string; count: number }[];
+  currentPeriodCount: number;
+  previousPeriodCount: number;
+  changePercent: number | null;
+}
+
+export interface NoShowStats {
+  totalCompleted: number;
+  totalCancelled: number;
+  totalNoShow: number;
+  cancellationRate: number;
+  noShowRate: number;
+}
+
+export type InsightType = 'optimization' | 'warning' | 'positive' | 'suggestion';
+export type InsightPriority = 'high' | 'medium' | 'low';
+
+export interface AIInsight {
+  title: string;
+  description: string;
+  type: InsightType;
+  priority: InsightPriority;
+}
+
+export interface AIInsightsResponse {
+  insights: AIInsight[];
+  generatedAt: string;
+  expiresAt: string;
+  cached: boolean;
+}

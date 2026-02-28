@@ -20,6 +20,7 @@ import BriefsPage from './pages/dashboard/briefs/index';
 import BriefDetailsPage from './pages/dashboard/briefs/details';
 import FollowupsPage from './pages/dashboard/followups/index';
 import FollowupDetailsPage from './pages/dashboard/followups/details';
+import InsightsPage from './pages/dashboard/insights/index';
 
 // Public pages
 import PublicBookingPage from './pages/booking/public-booking';
@@ -151,6 +152,17 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <FollowupDetailsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/insights"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <InsightsPage />
               </DashboardLayout>
             </ProtectedRoute>
           }
