@@ -111,3 +111,30 @@ export interface NoShowRow {
   cancelled: string;
   no_show: string;
 }
+
+// ── AI Insights ──────────────────────────────────────────────────────
+export type InsightType = 'optimization' | 'warning' | 'positive' | 'suggestion';
+export type InsightPriority = 'high' | 'medium' | 'low';
+
+export interface AIInsight {
+  title: string;
+  description: string;
+  type: InsightType;
+  priority: InsightPriority;
+}
+
+export interface AIInsightsResponse {
+  insights: AIInsight[];
+  generatedAt: string;
+  expiresAt: string;
+  cached: boolean;
+}
+
+export interface InsightsCacheRow {
+  id: string;
+  user_id: string;
+  insights: AIInsight[];
+  stats_snapshot: Record<string, unknown>;
+  generated_at: Date;
+  expires_at: Date;
+}
