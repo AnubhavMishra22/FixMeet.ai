@@ -35,7 +35,7 @@ function createModel(): ChatGoogleGenerativeAI | null {
   return new ChatGoogleGenerativeAI({
     apiKey: env.GOOGLE_AI_API_KEY,
     model: env.GOOGLE_AI_MODEL_NAME || DEFAULT_AI_MODEL,
-    maxOutputTokens: env.GOOGLE_AI_MAX_TOKENS ? parseInt(env.GOOGLE_AI_MAX_TOKENS, 10) : 1024,
+    maxOutputTokens: env.GOOGLE_AI_MAX_TOKENS ? Number.parseInt(env.GOOGLE_AI_MAX_TOKENS, 10) || 1024 : 1024,
     temperature: 0.7,
   });
 }
@@ -224,18 +224,20 @@ export async function getAIInsights(userId: string): Promise<AIInsightsResponse>
   const prompt = buildPrompt(snapshot);
   const response = await model.invoke([new HumanMessage(prompt)]);
 
-  const content =
-    typeof response.content === 'string'
-      ? response.content
-      : Array.isArray(response.content)
-        ? response.content
-            .map((c) => {
-              if (typeof c === 'string') return c;
-              if (c && typeof c === 'object' && 'text' in c) return String(c.text);
-              return '';
-            })
-            .join('')
-        : '';
+  let content: string;
+  if (typeof response.content === 'string') {
+    content = response.content;
+  } else if (Array.isArray(response.content)) {
+    content = response.content
+      .map((c) => {
+        if (typeof c === 'string') return c;
+        if (c && typeof c === 'object' && 'text' in c) return String(c.text);
+        return '';
+      })
+      .join('');
+  } else {
+    content = '';
+  }
 
   if (!content) {
     throw new Error('Empty response from AI model');
