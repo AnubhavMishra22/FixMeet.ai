@@ -60,12 +60,11 @@ export default function InsightsPage() {
     async function fetchData() {
       setIsLoading(true);
       try {
-        const [s, d, h, t, tr, n] = await Promise.all([
+        const [s, d, h, t, n] = await Promise.all([
           getInsightsStats(range),
           getInsightsByDay(range),
           getInsightsByHour(range),
           getInsightsByType(range),
-          getInsightsTrends(),
           getInsightsNoShows(range),
         ]);
 
@@ -74,7 +73,6 @@ export default function InsightsPage() {
           setByDay(d);
           setByHour(h);
           setByType(t);
-          setTrends(tr);
           setNoShows(n);
         }
       } catch (e) {
@@ -91,8 +89,11 @@ export default function InsightsPage() {
     return () => { cancelled = true; };
   }, [range]);
 
-  // Fetch AI insights (once on mount)
+  // Fetch trends + AI insights once on mount (not range-dependent)
   useEffect(() => {
+    getInsightsTrends()
+      .then(setTrends)
+      .catch((e) => console.error('Failed to fetch trends:', e));
     fetchAIInsights();
   }, []);
 

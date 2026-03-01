@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Calendar, Clock, XCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import type { MeetingStats, MeetingTrends, NoShowStats } from '../../types';
 
+const CANCELLATION_RATE_WARNING_THRESHOLD = 20;
+
 interface StatsCardsProps {
   stats: MeetingStats;
   noShows: NoShowStats;
@@ -66,12 +68,12 @@ export function StatsCards({ stats, noShows, trends }: StatsCardsProps) {
             Cancellation Rate
           </CardTitle>
           <XCircle
-            className={`h-4 w-4 ${noShows.cancellationRate > 20 ? 'text-red-500' : 'text-gray-400'}`}
+            className={`h-4 w-4 ${noShows.cancellationRate > CANCELLATION_RATE_WARNING_THRESHOLD ? 'text-red-500' : 'text-gray-400'}`}
           />
         </CardHeader>
         <CardContent>
           <div
-            className={`text-2xl font-bold ${noShows.cancellationRate > 20 ? 'text-red-600' : ''}`}
+            className={`text-2xl font-bold ${noShows.cancellationRate > CANCELLATION_RATE_WARNING_THRESHOLD ? 'text-red-600' : ''}`}
           >
             {noShows.cancellationRate.toFixed(1)}%
           </div>

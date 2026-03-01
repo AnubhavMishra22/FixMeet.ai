@@ -70,8 +70,8 @@ export function MeetingsTrendChart({ data }: MeetingsTrendChartProps) {
                 />
                 <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                 <Tooltip
-                  formatter={(value: number) => [value, 'Meetings']}
-                  labelFormatter={(label: string) => `Week of ${formatWeekLabel(label)}`}
+                  formatter={(value) => [value ?? 0, 'Meetings']}
+                  labelFormatter={(label) => `Week of ${formatWeekLabel(String(label))}`}
                 />
                 <Line
                   type="monotone"

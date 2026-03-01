@@ -50,9 +50,9 @@ export function MeetingTypesChart({ data }: MeetingTypesChartProps) {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number, name: string) => [
-                    `${value} meetings`,
-                    name,
+                  formatter={(value, name) => [
+                    `${value ?? 0} meetings`,
+                    String(name),
                   ]}
                 />
                 {/* Center label */}

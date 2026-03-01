@@ -67,8 +67,8 @@ export function MeetingsByHourChart({ data }: MeetingsByHourChartProps) {
               />
               <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
               <Tooltip
-                formatter={(value: number) => [value, 'Meetings']}
-                labelFormatter={(hour: number) => formatHourFull(hour)}
+                formatter={(value) => [value ?? 0, 'Meetings']}
+                labelFormatter={(label) => formatHourFull(Number(label))}
               />
               <Bar dataKey="count" radius={[3, 3, 0, 0]}>
                 {fullHours.map((entry, index) => (

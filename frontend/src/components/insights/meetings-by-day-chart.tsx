@@ -44,8 +44,8 @@ export function MeetingsByDayChart({ data }: MeetingsByDayChartProps) {
               />
               <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
               <Tooltip
-                formatter={(value: number) => [value, 'Meetings']}
-                labelFormatter={(label: string) => label}
+                formatter={(value) => [value ?? 0, 'Meetings']}
+                labelFormatter={(label) => String(label)}
               />
               <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                 {data.days.map((entry, index) => (
