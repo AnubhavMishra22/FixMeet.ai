@@ -61,7 +61,19 @@ api.interceptors.response.use(
 // ---------------------------------------------------------------------------
 // Meeting Briefs
 // ---------------------------------------------------------------------------
-import type { MeetingBriefWithBooking, MeetingFollowupWithBooking, MeetingFollowup } from '../types';
+import type {
+  MeetingBriefWithBooking,
+  MeetingFollowupWithBooking,
+  MeetingFollowup,
+  DateRange,
+  MeetingStats,
+  MeetingsByDay,
+  MeetingsByHour,
+  MeetingsByType,
+  MeetingTrends,
+  NoShowStats,
+  AIInsightsResponse,
+} from '../types';
 
 export async function getBriefs(): Promise<MeetingBriefWithBooking[]> {
   const { data } = await api.get('/api/briefs');
@@ -127,6 +139,45 @@ export async function getFollowupByBookingId(
   bookingId: string,
 ): Promise<MeetingFollowupWithBooking | null> {
   const { data } = await api.get(`/api/followups/by-booking/${bookingId}`);
+  return data.data;
+}
+
+// ---------------------------------------------------------------------------
+// Insights
+// ---------------------------------------------------------------------------
+
+export async function getInsightsStats(range: DateRange): Promise<MeetingStats> {
+  const { data } = await api.get('/api/insights/stats', { params: { range } });
+  return data.data;
+}
+
+export async function getInsightsByDay(range: DateRange): Promise<MeetingsByDay> {
+  const { data } = await api.get('/api/insights/by-day', { params: { range } });
+  return data.data;
+}
+
+export async function getInsightsByHour(range: DateRange): Promise<MeetingsByHour> {
+  const { data } = await api.get('/api/insights/by-hour', { params: { range } });
+  return data.data;
+}
+
+export async function getInsightsByType(range: DateRange): Promise<MeetingsByType> {
+  const { data } = await api.get('/api/insights/by-type', { params: { range } });
+  return data.data;
+}
+
+export async function getInsightsTrends(): Promise<MeetingTrends> {
+  const { data } = await api.get('/api/insights/trends');
+  return data.data;
+}
+
+export async function getInsightsNoShows(range: DateRange): Promise<NoShowStats> {
+  const { data } = await api.get('/api/insights/no-shows', { params: { range } });
+  return data.data;
+}
+
+export async function getAIInsights(): Promise<AIInsightsResponse> {
+  const { data } = await api.get('/api/insights/ai');
   return data.data;
 }
 
