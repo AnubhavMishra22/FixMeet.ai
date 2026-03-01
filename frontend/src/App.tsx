@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { ProtectedRoute } from './components/auth/protected-route';
 import { DashboardLayout } from './components/layout/dashboard-layout';
 import { Toaster } from './components/ui/toaster';
@@ -177,6 +178,7 @@ function App() {
       </Routes>
 
       <Toaster />
+      <Analytics />
     </BrowserRouter>
   );
 }
