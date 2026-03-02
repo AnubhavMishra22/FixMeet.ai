@@ -50,9 +50,9 @@ export async function runMigrations(retries = 3): Promise<void> {
       applied++;
     } catch (error) {
       // Use PostgreSQL error codes instead of brittle string matching
-      // 42P07: duplicate_table, 42710: duplicate_object (e.g. index)
+      // 42P07: duplicate_table, 42710: duplicate_object (e.g. index), 42701: duplicate_column
       const pgError = error as { code?: string; message?: string };
-      const alreadyExistsCodes = ['42P07', '42710'];
+      const alreadyExistsCodes = ['42P07', '42710', '42701'];
 
       if (pgError.code && alreadyExistsCodes.includes(pgError.code)) {
         skipped++;
