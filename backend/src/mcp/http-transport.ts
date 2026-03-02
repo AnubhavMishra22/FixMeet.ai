@@ -3,20 +3,20 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { registerAllTools } from './tools/index.js';
 import { authenticateMcp } from './auth.js';
-
-const SERVER_NAME = 'fixmeet-mcp';
-const SERVER_VERSION = '1.0.0';
+import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from './types.js';
+import type { McpContext } from './types.js';
 
 /**
  * Creates a fresh MCP server instance with all tools registered.
  * Each HTTP request gets its own server (stateless mode).
+ * Auth context is passed through so tools can access userId/email.
  */
-function createMcpServer(): McpServer {
+function createMcpServer(context?: McpContext): McpServer {
   const server = new McpServer(
-    { name: SERVER_NAME, version: SERVER_VERSION },
+    { name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION },
     { capabilities: { logging: {} } },
   );
-  registerAllTools(server);
+  registerAllTools(server, context);
   return server;
 }
 
@@ -46,18 +46,19 @@ export function mountMcpRoutes(app: Express): void {
   // POST /mcp — handle MCP requests (stateless: new server per request)
   app.post('/mcp', async (req: Request, res: Response) => {
     try {
-      // Validate auth (optional — tools can check auth themselves too)
+      // Authenticate once at transport layer and pass context to tools
+      let context: McpContext | undefined;
       const token = extractAuthToken(req);
       if (token) {
         try {
-          authenticateMcp(token);
+          context = authenticateMcp(token);
         } catch {
           res.status(401).json({ error: 'Invalid authentication token' });
           return;
         }
       }
 
-      const server = createMcpServer();
+      const server = createMcpServer(context);
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined, // stateless — no session persistence
         enableJsonResponse: true,      // return JSON instead of SSE stream

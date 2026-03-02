@@ -1,3 +1,7 @@
+/** Shared MCP server constants — single source of truth */
+export const MCP_SERVER_NAME = 'fixmeet-mcp';
+export const MCP_SERVER_VERSION = '1.0.0';
+
 /** Authenticated MCP user context extracted from JWT */
 export interface McpContext {
   userId: string;

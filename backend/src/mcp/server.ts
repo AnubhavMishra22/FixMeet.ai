@@ -24,41 +24,41 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { registerAllTools } from './tools/index.js';
 import { authenticateMcp } from './auth.js';
-
-const SERVER_NAME = 'fixmeet-mcp';
-const SERVER_VERSION = '1.0.0';
+import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from './types.js';
+import type { McpContext } from './types.js';
 
 async function main(): Promise<void> {
-  // Validate auth token if provided
+  // Authenticate from env var and capture context for tools
+  let context: McpContext | undefined;
   const token = process.env.FIXMEET_API_TOKEN;
   if (token) {
     try {
-      const ctx = authenticateMcp(token);
-      console.error(`[${SERVER_NAME}] Authenticated as user: ${ctx.email}`);
+      context = authenticateMcp(token);
+      console.error(`[${MCP_SERVER_NAME}] Authenticated as user: ${context.email}`);
     } catch (err) {
-      console.error(`[${SERVER_NAME}] Warning: FIXMEET_API_TOKEN is invalid:`, err instanceof Error ? err.message : err);
+      console.error(`[${MCP_SERVER_NAME}] Warning: FIXMEET_API_TOKEN is invalid:`, err instanceof Error ? err.message : err);
     }
   } else {
-    console.error(`[${SERVER_NAME}] No FIXMEET_API_TOKEN set — tools requiring auth will fail.`);
+    console.error(`[${MCP_SERVER_NAME}] No FIXMEET_API_TOKEN set — tools requiring auth will fail.`);
   }
 
   // Create MCP server
   const server = new McpServer(
-    { name: SERVER_NAME, version: SERVER_VERSION },
+    { name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION },
     { capabilities: { logging: {} } },
   );
 
-  // Register all tools
-  registerAllTools(server);
+  // Register all tools with authenticated context
+  registerAllTools(server, context);
 
   // Connect stdio transport
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-  console.error(`[${SERVER_NAME}] v${SERVER_VERSION} running on stdio`);
+  console.error(`[${MCP_SERVER_NAME}] v${MCP_SERVER_VERSION} running on stdio`);
 }
 
 main().catch((err) => {
-  console.error(`[${SERVER_NAME}] Fatal error:`, err);
+  console.error(`[${MCP_SERVER_NAME}] Fatal error:`, err);
   process.exit(1);
 });
