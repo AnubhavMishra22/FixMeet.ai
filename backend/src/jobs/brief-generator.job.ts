@@ -21,13 +21,7 @@ import { generateBrief } from '../modules/briefs/brief-generator.service.js';
  *   scrape → fetch previous meetings → AI generate → save to DB → send email.
  */
 export async function processBriefGeneration(): Promise<void> {
-  console.log('📋 Processing meeting briefs...');
-
-  // -----------------------------------------------------------------------
   // Phase 1: Create pending records for upcoming bookings
-  // Respects per-user briefs_enabled and brief_generation_hours settings.
-  // Window: [now, now + brief_generation_hours] for each user.
-  // -----------------------------------------------------------------------
   try {
     const created = await sql<{ booking_id: string }[]>`
       INSERT INTO meeting_briefs (booking_id, user_id, status)
@@ -47,30 +41,19 @@ export async function processBriefGeneration(): Promise<void> {
     `;
 
     if (created.length > 0) {
-      console.log(`  ✓ Created ${created.length} pending brief records`);
+      console.log(`Briefs: created ${created.length} pending records`);
     }
   } catch (err) {
-    console.error('  ✗ Failed to create pending briefs:', err);
+    console.error('Briefs: failed to create pending records:', err);
   }
 
-  // -----------------------------------------------------------------------
   // Phase 2: Generate briefs for pending/failed records
-  // -----------------------------------------------------------------------
-  if (!env.GOOGLE_AI_API_KEY) {
-    console.log('  Skipping AI generation (no GOOGLE_AI_API_KEY)');
-    console.log('📋 Brief generation processing complete');
-    return;
-  }
+  if (!env.GOOGLE_AI_API_KEY) return;
 
   const pending = await getPendingBriefs();
+  if (pending.length === 0) return;
 
-  if (pending.length === 0) {
-    console.log('  No briefs to generate');
-    console.log('📋 Brief generation processing complete');
-    return;
-  }
-
-  console.log(`  Processing ${pending.length} briefs...`);
+  console.log(`Briefs: generating ${pending.length}...`);
 
   for (const brief of pending) {
     try {
@@ -78,7 +61,6 @@ export async function processBriefGeneration(): Promise<void> {
       await markGenerating(brief.id);
 
       // Step 1: Scrape person/company info
-      console.log(`  🔍 Scraping info for ${brief.invitee_name} (${brief.invitee_email})...`);
       const personInfo = await searchPersonInfo(brief.invitee_name, brief.invitee_email);
 
       // Step 2: Fetch previous meetings with this invitee
@@ -89,7 +71,6 @@ export async function processBriefGeneration(): Promise<void> {
       );
 
       // Step 3: Generate brief with AI
-      console.log(`  🤖 Generating brief for ${brief.invitee_name}...`);
       const result = await generateBrief({
         inviteeName: brief.invitee_name,
         inviteeEmail: brief.invitee_email,
@@ -100,7 +81,6 @@ export async function processBriefGeneration(): Promise<void> {
 
       // Step 4: Save to database
       await markCompleted(brief.id, result, previousMeetings);
-      console.log(`  ✓ Brief generated for ${brief.invitee_name}`);
 
       // Step 5: Send email to host
       try {
@@ -118,19 +98,18 @@ export async function processBriefGeneration(): Promise<void> {
           talkingPoints: result.talkingPoints,
         });
         if (sent) {
-          console.log(`  📧 Brief email sent for ${brief.invitee_name}`);
+          console.log(`Brief email sent for ${brief.invitee_name}`);
         }
       } catch (emailErr) {
-        // Email failure shouldn't mark the brief as failed — content is already saved
-        console.error(`  ⚠ Brief email failed for ${brief.invitee_name}:`, (emailErr as Error).message);
+        console.error(`Brief email failed for ${brief.invitee_name}:`, (emailErr as Error).message);
       }
     } catch (err) {
-      console.error(`  ✗ Failed to generate brief for ${brief.invitee_name}:`, (err as Error).message);
+      console.error(`Brief generation failed for ${brief.invitee_name}:`, (err as Error).message);
       await markFailed(brief.id).catch((failErr) => {
-        console.error(`  ✗ Additionally, failed to mark brief ${brief.id} as failed:`, (failErr as Error).message);
+        console.error(`Failed to mark brief ${brief.id} as failed:`, (failErr as Error).message);
       });
     }
   }
 
-  console.log('📋 Brief generation processing complete');
+  console.log(`Briefs: ${pending.length} processed`);
 }

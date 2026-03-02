@@ -13,8 +13,7 @@ async function start() {
   await mountRoutes();
 
   const server = app.listen(env.PORT, () => {
-    console.log(`Server running on port ${env.PORT}`);
-    console.log(`Environment: ${env.NODE_ENV}`);
+    console.log(`Server running on port ${env.PORT} (${env.NODE_ENV})`);
   });
 
   // Start reminder job scheduler (only in production/development, not in test)
@@ -35,8 +34,6 @@ async function start() {
       });
     }, 5000);
 
-    console.log('Reminder job scheduled (every 15 min)');
-
     // Run brief generation every hour
     const BRIEF_INTERVAL = 60 * 60 * 1000; // 1 hour
 
@@ -51,8 +48,6 @@ async function start() {
         console.error('Initial brief generator job error:', err);
       });
     }, 10000);
-
-    console.log('Brief generator job scheduled (every 1 hour)');
 
     // Run followup generation every 30 minutes
     const FOLLOWUP_INTERVAL = 30 * 60 * 1000; // 30 minutes
@@ -69,7 +64,7 @@ async function start() {
       });
     }, 15000);
 
-    console.log('Followup generator job scheduled (every 30 min)');
+    console.log('Background jobs scheduled (reminders: 15m, briefs: 1h, followups: 30m)');
   }
 
   // Graceful shutdown
