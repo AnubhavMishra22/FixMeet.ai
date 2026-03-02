@@ -14,8 +14,9 @@ export interface McpTextContent {
   text: string;
 }
 
-/** Standard MCP tool result shape */
+/** Standard MCP tool result shape (index signature required by SDK's CallToolResult) */
 export interface McpToolResult {
+  [key: string]: unknown;
   content: McpTextContent[];
   isError?: boolean;
 }
