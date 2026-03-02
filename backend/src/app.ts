@@ -103,6 +103,10 @@ async function mountRoutes() {
       console.log('AI routes skipped (no GOOGLE_AI_API_KEY).');
     }
 
+    // MCP HTTP transport — mount Streamable HTTP endpoint at /mcp
+    const { mountMcpRoutes } = await import('./mcp/http-transport.js');
+    mountMcpRoutes(app);
+
     console.log('All routes imported and mounted successfully.');
   } catch (e) {
     console.error('FAILED TO MOUNT ROUTES:', e);
