@@ -17,7 +17,7 @@ app.get('/health', (_req, res) => {
 // Security middleware
 app.use(helmet());
 
-// CORS
+// TODO: Restrict CORS origin to FRONTEND_URL in production.
 app.use(cors({
   origin: true,
   credentials: true,
@@ -88,6 +88,8 @@ async function mountRoutes() {
       });
       app.use('/api/ai', authMiddleware, aiRoutes.default);
       console.log('AI routes mounted.');
+    } else {
+      console.log('AI routes skipped (GOOGLE_AI_API_KEY not configured).');
     }
 
     // MCP HTTP transport — mount Streamable HTTP endpoint at /mcp
