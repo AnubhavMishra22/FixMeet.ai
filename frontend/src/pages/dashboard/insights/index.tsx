@@ -18,6 +18,7 @@ import {
   getInsightsByType,
   getInsightsTrends,
   getInsightsNoShows,
+  getInsightsComparison,
   getAIInsights,
   refreshAIInsights,
 } from '../../../lib/api';
@@ -68,6 +69,9 @@ export default function InsightsPage() {
     user?.meetingHoursGoal ?? null,
   );
 
+  // Refresh counter for explicit data refresh
+  const [refreshCounter, setRefreshCounter] = useState(0);
+
   // Fetch range-dependent data
   useEffect(() => {
     let cancelled = false;
@@ -75,16 +79,17 @@ export default function InsightsPage() {
     async function fetchData() {
       setIsLoading(true);
       try {
-        const [s, d, h, t, n] = await Promise.all([
-          getInsightsStats(range, true),
+        const [s, d, h, t, n, c] = await Promise.all([
+          getInsightsStats(range),
           getInsightsByDay(range),
           getInsightsByHour(range),
           getInsightsByType(range),
           getInsightsNoShows(range),
+          getInsightsComparison(range),
         ]);
 
         if (!cancelled) {
-          setStats(s);
+          setStats({ ...s, comparison: c });
           setByDay(d);
           setByHour(h);
           setByType(t);
@@ -102,7 +107,7 @@ export default function InsightsPage() {
 
     fetchData();
     return () => { cancelled = true; };
-  }, [range]);
+  }, [range, refreshCounter]);
 
   // Fetch trends + AI insights once on mount (not range-dependent)
   useEffect(() => {
@@ -140,13 +145,9 @@ export default function InsightsPage() {
     }
   }, []);
 
-  const handleRefreshAll = useCallback(async () => {
-    // Re-trigger the range-dependent fetch by toggling range
-    const currentRange = range;
-    setRange('7d');
-    // Use microtask to re-set (triggers useEffect re-run)
-    setTimeout(() => setRange(currentRange), 0);
-  }, [range]);
+  const handleRefreshAll = useCallback(() => {
+    setRefreshCounter((c) => c + 1);
+  }, []);
 
   const handleGoalUpdate = useCallback(
     (goal: number | null) => {

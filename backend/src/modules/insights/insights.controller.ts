@@ -7,45 +7,36 @@ import type { DateRange } from './insights.types.js';
 
 const rangeSchema = z.object({
   range: z.enum(['7d', '30d', '90d', '365d', 'all']).default('30d'),
-  compare: z.enum(['true', 'false']).default('false'),
 });
 
-function parseRange(query: unknown): { range: DateRange; compare: boolean } {
-  const parsed = rangeSchema.parse(query);
-  return { range: parsed.range, compare: parsed.compare === 'true' };
+function parseRange(query: unknown): DateRange {
+  return rangeSchema.parse(query).range;
 }
 
 export async function getStats(req: Request, res: Response): Promise<void> {
   if (!req.user) throw new UnauthorizedError();
-  const { range, compare } = parseRange(req.query);
+  const range = parseRange(req.query);
   const stats = await insightsService.getMeetingStats(req.user.userId, range);
-
-  if (compare) {
-    const comparison = await insightsService.getComparisonMetrics(req.user.userId, range);
-    res.status(200).json({ success: true, data: { ...stats, comparison } });
-    return;
-  }
-
   res.status(200).json({ success: true, data: stats });
 }
 
 export async function getByDay(req: Request, res: Response): Promise<void> {
   if (!req.user) throw new UnauthorizedError();
-  const { range } = parseRange(req.query);
+  const range = parseRange(req.query);
   const data = await insightsService.getMeetingsByDay(req.user.userId, range);
   res.status(200).json({ success: true, data });
 }
 
 export async function getByHour(req: Request, res: Response): Promise<void> {
   if (!req.user) throw new UnauthorizedError();
-  const { range } = parseRange(req.query);
+  const range = parseRange(req.query);
   const data = await insightsService.getMeetingsByHour(req.user.userId, range);
   res.status(200).json({ success: true, data });
 }
 
 export async function getByType(req: Request, res: Response): Promise<void> {
   if (!req.user) throw new UnauthorizedError();
-  const { range } = parseRange(req.query);
+  const range = parseRange(req.query);
   const data = await insightsService.getMeetingsByType(req.user.userId, range);
   res.status(200).json({ success: true, data });
 }
@@ -58,7 +49,7 @@ export async function getTrends(req: Request, res: Response): Promise<void> {
 
 export async function getNoShows(req: Request, res: Response): Promise<void> {
   if (!req.user) throw new UnauthorizedError();
-  const { range } = parseRange(req.query);
+  const range = parseRange(req.query);
   const data = await insightsService.getNoShowRate(req.user.userId, range);
   res.status(200).json({ success: true, data });
 }
@@ -77,7 +68,7 @@ export async function refreshAI(req: Request, res: Response): Promise<void> {
 
 export async function getComparison(req: Request, res: Response): Promise<void> {
   if (!req.user) throw new UnauthorizedError();
-  const { range } = parseRange(req.query);
+  const range = parseRange(req.query);
   const data = await insightsService.getComparisonMetrics(req.user.userId, range);
   res.status(200).json({ success: true, data });
 }

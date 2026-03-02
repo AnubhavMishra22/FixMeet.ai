@@ -5,6 +5,7 @@ import { Input } from '../ui/input';
 import { Target, Edit3, Check, X } from 'lucide-react';
 import type { MeetingStats } from '../../types';
 import api from '../../lib/api';
+import { useToast } from '../../stores/toast-store';
 
 interface MeetingGoalCardProps {
   stats: MeetingStats;
@@ -13,6 +14,7 @@ interface MeetingGoalCardProps {
 }
 
 export function MeetingGoalCard({ stats, goal, onGoalUpdate }: MeetingGoalCardProps) {
+  const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [inputValue, setInputValue] = useState(goal?.toString() ?? '');
   const [saving, setSaving] = useState(false);
@@ -32,7 +34,7 @@ export function MeetingGoalCard({ stats, goal, onGoalUpdate }: MeetingGoalCardPr
       onGoalUpdate(newGoal);
       setEditing(false);
     } catch {
-      // silently ignore
+      toast({ title: 'Failed to update meeting goal', variant: 'destructive' });
     } finally {
       setSaving(false);
     }

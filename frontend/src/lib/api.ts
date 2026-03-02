@@ -147,8 +147,8 @@ export async function getFollowupByBookingId(
 // Insights
 // ---------------------------------------------------------------------------
 
-export async function getInsightsStats(range: DateRange, compare = false): Promise<MeetingStatsWithComparison> {
-  const { data } = await api.get('/api/insights/stats', { params: { range, compare: compare ? 'true' : 'false' } });
+export async function getInsightsStats(range: DateRange): Promise<MeetingStatsWithComparison> {
+  const { data } = await api.get('/api/insights/stats', { params: { range } });
   return data.data;
 }
 

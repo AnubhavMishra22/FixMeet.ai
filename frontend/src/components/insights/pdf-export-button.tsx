@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '../ui/button';
 import { Download, Loader2 } from 'lucide-react';
+import { useToast } from '../../stores/toast-store';
 
 interface PDFExportButtonProps {
   targetId: string;
@@ -11,6 +12,7 @@ export function PDFExportButton({
   targetId,
   filename = 'meeting-insights',
 }: PDFExportButtonProps) {
+  const { toast } = useToast();
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async () => {
@@ -54,6 +56,7 @@ export function PDFExportButton({
       pdf.save(`${filename}-${date}.pdf`);
     } catch (error) {
       console.error('PDF export failed:', error);
+      toast({ title: 'Failed to export PDF', variant: 'destructive' });
     } finally {
       setExporting(false);
     }

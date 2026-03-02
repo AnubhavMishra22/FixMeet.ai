@@ -130,14 +130,18 @@ export async function getMeetingsByDay(
 export async function getMeetingsByHour(
   userId: string,
   range: DateRange,
+  timezone?: string,
 ): Promise<MeetingsByHour> {
   const rangeStart = getDateRangeStart(range);
 
-  // Fetch user timezone for hour extraction
-  const userRows = await sql<{ timezone: string }[]>`
-    SELECT timezone FROM users WHERE id = ${userId}
-  `;
-  const userTimezone = userRows[0]?.timezone ?? 'UTC';
+  // Use provided timezone or fetch from DB
+  let userTimezone = timezone;
+  if (!userTimezone) {
+    const userRows = await sql<{ timezone: string }[]>`
+      SELECT timezone FROM users WHERE id = ${userId}
+    `;
+    userTimezone = userRows[0]?.timezone ?? 'UTC';
+  }
 
   const rows = await sql<HourCountRow[]>`
     SELECT
