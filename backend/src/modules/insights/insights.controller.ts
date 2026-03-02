@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { UnauthorizedError } from '../../utils/errors.js';
 import * as insightsService from './insights.service.js';
-import { getAIInsights } from './ai-insights.service.js';
+import { getAIInsights, refreshAIInsights } from './ai-insights.service.js';
 import type { DateRange } from './insights.types.js';
 
 const rangeSchema = z.object({
@@ -57,5 +57,18 @@ export async function getNoShows(req: Request, res: Response): Promise<void> {
 export async function getAI(req: Request, res: Response): Promise<void> {
   if (!req.user) throw new UnauthorizedError();
   const data = await getAIInsights(req.user.userId);
+  res.status(200).json({ success: true, data });
+}
+
+export async function refreshAI(req: Request, res: Response): Promise<void> {
+  if (!req.user) throw new UnauthorizedError();
+  const data = await refreshAIInsights(req.user.userId);
+  res.status(200).json({ success: true, data });
+}
+
+export async function getComparison(req: Request, res: Response): Promise<void> {
+  if (!req.user) throw new UnauthorizedError();
+  const range = parseRange(req.query);
+  const data = await insightsService.getComparisonMetrics(req.user.userId, range);
   res.status(200).json({ success: true, data });
 }

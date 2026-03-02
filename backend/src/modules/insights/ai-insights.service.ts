@@ -192,6 +192,17 @@ async function saveToCache(
  * Get AI insights for a user. Returns cached insights if valid,
  * otherwise generates fresh insights from Gemini.
  */
+/**
+ * Force-refresh AI insights by invalidating cache first, then generating fresh.
+ */
+export async function refreshAIInsights(userId: string): Promise<AIInsightsResponse> {
+  // Invalidate existing cache
+  await sql`DELETE FROM insights_cache WHERE user_id = ${userId}`;
+
+  // Generate fresh insights (getAIInsights will see no cache and regenerate)
+  return getAIInsights(userId);
+}
+
 export async function getAIInsights(userId: string): Promise<AIInsightsResponse> {
   // 1. Check cache first
   const cached = await getCachedInsights(userId);

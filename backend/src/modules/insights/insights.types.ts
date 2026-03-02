@@ -112,6 +112,14 @@ export interface NoShowRow {
   no_show: string;
 }
 
+// ── Comparison Metrics ───────────────────────────────────────────────
+export interface ComparisonMetrics {
+  totalMeetings: { current: number; previous: number; changePercent: number | null };
+  totalHours: { current: number; previous: number; changePercent: number | null };
+  avgDurationMinutes: { current: number; previous: number; changePercent: number | null };
+  cancellationRate: { current: number; previous: number; changePercent: number | null };
+}
+
 // ── AI Insights ──────────────────────────────────────────────────────
 export type InsightType = 'optimization' | 'warning' | 'positive' | 'suggestion';
 export type InsightPriority = 'high' | 'medium' | 'low';

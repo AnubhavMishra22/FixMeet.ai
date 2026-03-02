@@ -10,5 +10,7 @@ router.get('/by-type', insightsController.getByType);
 router.get('/trends', insightsController.getTrends);
 router.get('/no-shows', insightsController.getNoShows);
 router.get('/ai', insightsController.getAI);
+router.post('/ai/refresh', insightsController.refreshAI);
+router.get('/comparison', insightsController.getComparison);
 
 export default router;

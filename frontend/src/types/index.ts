@@ -9,6 +9,7 @@ export interface User {
   briefGenerationHours: number;
   followupsEnabled: boolean;
   followupTone: 'formal' | 'friendly' | 'casual';
+  meetingHoursGoal: number | null;
   createdAt: string;
 }
 
@@ -219,6 +220,25 @@ export interface NoShowStats {
   totalNoShow: number;
   cancellationRate: number;
   noShowRate: number;
+}
+
+// ── Comparison Metrics ─────────────────────────────────────────────────
+
+export interface ComparisonMetric {
+  current: number;
+  previous: number;
+  changePercent: number | null;
+}
+
+export interface ComparisonMetrics {
+  totalMeetings: ComparisonMetric;
+  totalHours: ComparisonMetric;
+  avgDurationMinutes: ComparisonMetric;
+  cancellationRate: ComparisonMetric;
+}
+
+export interface MeetingStatsWithComparison extends MeetingStats {
+  comparison?: ComparisonMetrics;
 }
 
 export type InsightType = 'optimization' | 'warning' | 'positive' | 'suggestion';
