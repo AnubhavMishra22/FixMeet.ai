@@ -61,7 +61,6 @@ export async function processBriefGeneration(): Promise<void> {
       await markGenerating(brief.id);
 
       // Step 1: Scrape person/company info
-      // Step 1: Scrape person/company info
       const personInfo = await searchPersonInfo(brief.invitee_name, brief.invitee_email);
 
       // Step 2: Fetch previous meetings with this invitee

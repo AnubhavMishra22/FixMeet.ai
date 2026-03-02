@@ -161,6 +161,6 @@ async function sendReminders(
 
     console.log(`Reminder sent (${hoursUntil}h) for booking ${booking.id}`);
   } catch (err) {
-    console.error(`Reminder failed for ${bookingRow.id}:`, err);
+    console.error(`Reminder failed for ${bookingRow.id}:`, (err as Error).message);
   }
 }
