@@ -5,6 +5,7 @@ import { createListMeetingsTool } from './list-meetings.tool.js';
 import { createCancelMeetingTool } from './cancel-meeting.tool.js';
 import { createGenerateFollowupTool } from './generate-followup.tool.js';
 import { createListFollowupsTool } from './list-followups.tool.js';
+import { createQueryInsightsTool } from './query-insights.tool.js';
 
 /**
  * Returns all AI tools configured with the given user's context.
@@ -21,5 +22,6 @@ export function getToolsForUser(
     createCancelMeetingTool(userId, userTimezone),
     createGenerateFollowupTool(userId, userTimezone),
     createListFollowupsTool(userId, userTimezone),
+    createQueryInsightsTool(userId, userTimezone),
   ];
 }

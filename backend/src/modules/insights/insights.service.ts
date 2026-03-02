@@ -12,6 +12,7 @@ import type {
   MeetingTrends,
   NoShowStats,
   NoShowRow,
+  ComparisonMetrics,
 } from './insights.types.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -31,6 +32,11 @@ function getDateRangeStart(range: DateRange): Date | null {
   const d = new Date();
   d.setDate(d.getDate() - days);
   return d;
+}
+
+function calcChangePercent(current: number, previous: number): number | null {
+  if (previous === 0) return current > 0 ? 100 : null;
+  return Math.round(((current - previous) / previous) * 1000) / 10;
 }
 
 /** Build a WHERE fragment for optional date range filtering */
@@ -276,5 +282,109 @@ export async function getNoShowRate(
     totalNoShow: noShow,
     cancellationRate: total > 0 ? Math.round((cancelled / total) * 1000) / 10 : 0,
     noShowRate: total > 0 ? Math.round((noShow / total) * 1000) / 10 : 0,
+  };
+}
+
+// ── Comparison Metrics ──────────────────────────────────────────────
+
+export async function getComparisonMetrics(
+  userId: string,
+  range: DateRange,
+): Promise<ComparisonMetrics> {
+  if (range === 'all') {
+    // No comparison possible for "all time"
+    const stats = await getMeetingStats(userId, 'all');
+    const noShows = await getNoShowRate(userId, 'all');
+    return {
+      totalMeetings: { current: stats.totalMeetings, previous: 0, changePercent: null },
+      totalHours: { current: stats.totalHours, previous: 0, changePercent: null },
+      avgDurationMinutes: { current: stats.avgDurationMinutes, previous: 0, changePercent: null },
+      cancellationRate: { current: noShows.cancellationRate, previous: 0, changePercent: null },
+    };
+  }
+
+  const days = RANGE_DAYS[range];
+  const now = new Date();
+
+  const currentStart = new Date(now);
+  currentStart.setDate(currentStart.getDate() - days);
+
+  const previousStart = new Date(now);
+  previousStart.setDate(previousStart.getDate() - days * 2);
+
+  // Run a single query to get both periods
+  const rows = await sql<{
+    period: string;
+    total: string;
+    total_hours: string;
+    avg_duration_minutes: string;
+    completed: string;
+    cancelled: string;
+    no_show: string;
+  }[]>`
+    SELECT
+      CASE
+        WHEN b.start_time >= ${currentStart.toISOString()} THEN 'current'
+        ELSE 'previous'
+      END AS period,
+      COUNT(*)::text AS total,
+      COALESCE(SUM(EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600), 0)::text AS total_hours,
+      COALESCE(AVG(EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 60), 0)::text AS avg_duration_minutes,
+      COUNT(*) FILTER (WHERE b.status = 'completed')::text AS completed,
+      COUNT(*) FILTER (WHERE b.status = 'cancelled')::text AS cancelled,
+      COUNT(*) FILTER (WHERE b.status = 'no_show')::text AS no_show
+    FROM bookings b
+    WHERE b.host_id = ${userId}
+      AND b.start_time >= ${previousStart.toISOString()}
+    GROUP BY period
+  `;
+
+  const currentRow = rows.find((r) => r.period === 'current');
+  const previousRow = rows.find((r) => r.period === 'previous');
+
+  const cur = {
+    total: parseInt(currentRow?.total ?? '0', 10),
+    hours: Math.round(parseFloat(currentRow?.total_hours ?? '0') * 10) / 10,
+    avgDuration: Math.round(parseFloat(currentRow?.avg_duration_minutes ?? '0')),
+    completed: parseInt(currentRow?.completed ?? '0', 10),
+    cancelled: parseInt(currentRow?.cancelled ?? '0', 10),
+    noShow: parseInt(currentRow?.no_show ?? '0', 10),
+  };
+
+  const prev = {
+    total: parseInt(previousRow?.total ?? '0', 10),
+    hours: Math.round(parseFloat(previousRow?.total_hours ?? '0') * 10) / 10,
+    avgDuration: Math.round(parseFloat(previousRow?.avg_duration_minutes ?? '0')),
+    completed: parseInt(previousRow?.completed ?? '0', 10),
+    cancelled: parseInt(previousRow?.cancelled ?? '0', 10),
+    noShow: parseInt(previousRow?.no_show ?? '0', 10),
+  };
+
+  const curTotal = cur.completed + cur.cancelled + cur.noShow;
+  const prevTotal = prev.completed + prev.cancelled + prev.noShow;
+  const curCancelRate = curTotal > 0 ? Math.round((cur.cancelled / curTotal) * 1000) / 10 : 0;
+  const prevCancelRate = prevTotal > 0 ? Math.round((prev.cancelled / prevTotal) * 1000) / 10 : 0;
+
+  return {
+    totalMeetings: {
+      current: cur.total,
+      previous: prev.total,
+      changePercent: calcChangePercent(cur.total, prev.total),
+    },
+    totalHours: {
+      current: cur.hours,
+      previous: prev.hours,
+      changePercent: calcChangePercent(cur.hours, prev.hours),
+    },
+    avgDurationMinutes: {
+      current: cur.avgDuration,
+      previous: prev.avgDuration,
+      changePercent: calcChangePercent(cur.avgDuration, prev.avgDuration),
+    },
+    cancellationRate: {
+      current: curCancelRate,
+      previous: prevCancelRate,
+      changePercent: calcChangePercent(curCancelRate, prevCancelRate),
+    },
   };
 }

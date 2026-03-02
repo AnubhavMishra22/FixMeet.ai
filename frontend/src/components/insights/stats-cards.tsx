@@ -1,16 +1,36 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Calendar, Clock, XCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import type { MeetingStats, MeetingTrends, NoShowStats } from '../../types';
+import { Calendar, Clock, XCircle, TrendingUp, TrendingDown, Minus, ArrowUp, ArrowDown } from 'lucide-react';
+import type { MeetingStatsWithComparison, MeetingTrends, NoShowStats, ComparisonMetric } from '../../types';
 
 const CANCELLATION_RATE_WARNING_THRESHOLD = 20;
 
 interface StatsCardsProps {
-  stats: MeetingStats;
+  stats: MeetingStatsWithComparison;
   noShows: NoShowStats;
   trends: MeetingTrends;
 }
 
+/** Small comparison badge showing change from previous period */
+function ComparisonBadge({ metric, invertColor }: { metric: ComparisonMetric; invertColor?: boolean }) {
+  if (metric.changePercent === null) return null;
+
+  const isPositive = metric.changePercent > 0;
+  // For cancellation rate, going up is bad (invert the color)
+  const isGood = invertColor ? !isPositive : isPositive;
+  const color = isGood ? 'text-green-600' : 'text-red-600';
+  const Icon = isPositive ? ArrowUp : ArrowDown;
+
+  return (
+    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${color}`}>
+      <Icon className="h-3 w-3" />
+      {Math.abs(metric.changePercent).toFixed(0)}%
+    </span>
+  );
+}
+
 export function StatsCards({ stats, noShows, trends }: StatsCardsProps) {
+  const comparison = stats.comparison;
+
   const trendIcon =
     trends.changePercent === null ? (
       <Minus className="h-4 w-4 text-gray-400" />
@@ -38,9 +58,15 @@ export function StatsCards({ stats, noShows, trends }: StatsCardsProps) {
           <Calendar className="h-4 w-4 text-gray-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.totalMeetings}</div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold">{stats.totalMeetings}</span>
+            {comparison && <ComparisonBadge metric={comparison.totalMeetings} />}
+          </div>
           <p className="text-xs text-gray-500 mt-1">
             {stats.totalHours.toFixed(1)} hours total
+            {comparison && comparison.totalHours.previous > 0 && (
+              <span className="ml-1">(was {comparison.totalHours.previous}h)</span>
+            )}
           </p>
         </CardContent>
       </Card>
@@ -54,8 +80,11 @@ export function StatsCards({ stats, noShows, trends }: StatsCardsProps) {
           <Clock className="h-4 w-4 text-gray-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            {Math.round(stats.avgDurationMinutes)} min
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold">
+              {Math.round(stats.avgDurationMinutes)} min
+            </span>
+            {comparison && <ComparisonBadge metric={comparison.avgDurationMinutes} />}
           </div>
           <p className="text-xs text-gray-500 mt-1">per meeting</p>
         </CardContent>
@@ -72,10 +101,13 @@ export function StatsCards({ stats, noShows, trends }: StatsCardsProps) {
           />
         </CardHeader>
         <CardContent>
-          <div
-            className={`text-2xl font-bold ${noShows.cancellationRate > CANCELLATION_RATE_WARNING_THRESHOLD ? 'text-red-600' : ''}`}
-          >
-            {noShows.cancellationRate.toFixed(1)}%
+          <div className="flex items-baseline gap-2">
+            <span
+              className={`text-2xl font-bold ${noShows.cancellationRate > CANCELLATION_RATE_WARNING_THRESHOLD ? 'text-red-600' : ''}`}
+            >
+              {noShows.cancellationRate.toFixed(1)}%
+            </span>
+            {comparison && <ComparisonBadge metric={comparison.cancellationRate} invertColor />}
           </div>
           <p className="text-xs text-gray-500 mt-1">
             {noShows.totalCancelled} of{' '}

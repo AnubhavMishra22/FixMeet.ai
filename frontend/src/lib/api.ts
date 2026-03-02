@@ -66,12 +66,13 @@ import type {
   MeetingFollowupWithBooking,
   MeetingFollowup,
   DateRange,
-  MeetingStats,
+  MeetingStatsWithComparison,
   MeetingsByDay,
   MeetingsByHour,
   MeetingsByType,
   MeetingTrends,
   NoShowStats,
+  ComparisonMetrics,
   AIInsightsResponse,
 } from '../types';
 
@@ -146,8 +147,8 @@ export async function getFollowupByBookingId(
 // Insights
 // ---------------------------------------------------------------------------
 
-export async function getInsightsStats(range: DateRange): Promise<MeetingStats> {
-  const { data } = await api.get('/api/insights/stats', { params: { range } });
+export async function getInsightsStats(range: DateRange, compare = false): Promise<MeetingStatsWithComparison> {
+  const { data } = await api.get('/api/insights/stats', { params: { range, compare: compare ? 'true' : 'false' } });
   return data.data;
 }
 
@@ -178,6 +179,16 @@ export async function getInsightsNoShows(range: DateRange): Promise<NoShowStats>
 
 export async function getAIInsights(): Promise<AIInsightsResponse> {
   const { data } = await api.get('/api/insights/ai');
+  return data.data;
+}
+
+export async function refreshAIInsights(): Promise<AIInsightsResponse> {
+  const { data } = await api.post('/api/insights/ai/refresh');
+  return data.data;
+}
+
+export async function getInsightsComparison(range: DateRange): Promise<ComparisonMetrics> {
+  const { data } = await api.get('/api/insights/comparison', { params: { range } });
   return data.data;
 }
 

@@ -9,6 +9,7 @@ export interface User {
   brief_generation_hours: number;
   followups_enabled: boolean;
   followup_tone: string;
+  meeting_hours_goal: number | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -29,6 +30,7 @@ export interface UserResponse {
   briefGenerationHours: number;
   followupsEnabled: boolean;
   followupTone: string;
+  meetingHoursGoal: number | null;
   createdAt: Date;
 }
 

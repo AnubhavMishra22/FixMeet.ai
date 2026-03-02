@@ -38,6 +38,7 @@ function sanitizeUser(user: UserWithPassword) {
     briefGenerationHours: user.brief_generation_hours,
     followupsEnabled: user.followups_enabled,
     followupTone: user.followup_tone,
+    meetingHoursGoal: user.meeting_hours_goal,
     createdAt: user.created_at,
   };
 }
@@ -246,7 +247,7 @@ export async function updateProfile(
   }
 
   const updates: string[] = [];
-  const values: (string | boolean | number)[] = [];
+  const values: (string | boolean | number | null)[] = [];
 
   if (input.name !== undefined) {
     updates.push('name');
@@ -279,6 +280,10 @@ export async function updateProfile(
   if (input.followupTone !== undefined) {
     updates.push('followup_tone');
     values.push(input.followupTone);
+  }
+  if (input.meetingHoursGoal !== undefined) {
+    updates.push('meeting_hours_goal');
+    values.push(input.meetingHoursGoal ?? null);
   }
 
   if (updates.length === 0) {

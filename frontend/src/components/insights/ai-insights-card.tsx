@@ -20,6 +20,8 @@ interface AIInsightsCardProps {
   isLoading: boolean;
   error: string | null;
   onRetry: () => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 const TYPE_CONFIG: Record<InsightType, { icon: typeof Zap; color: string }> = {
@@ -35,7 +37,14 @@ const PRIORITY_STYLES: Record<InsightPriority, string> = {
   low: 'bg-green-100 text-green-800',
 };
 
-export function AIInsightsCard({ data, isLoading, error, onRetry }: AIInsightsCardProps) {
+export function AIInsightsCard({
+  data,
+  isLoading,
+  error,
+  onRetry,
+  onRefresh,
+  isRefreshing,
+}: AIInsightsCardProps) {
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   const toggleExpand = (index: number) => {
@@ -46,6 +55,8 @@ export function AIInsightsCard({ data, isLoading, error, onRetry }: AIInsightsCa
       return next;
     });
   };
+
+  const showLoading = isLoading || isRefreshing;
 
   return (
     <Card className="border-primary/20">
@@ -58,11 +69,25 @@ export function AIInsightsCard({ data, isLoading, error, onRetry }: AIInsightsCa
               Powered by AI
             </Badge>
           </div>
-          {data && (
-            <Badge variant="outline" className="text-[10px]">
-              {data.cached ? 'Cached' : 'Fresh'}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {data && (
+              <Badge variant="outline" className="text-[10px]">
+                {data.cached ? 'Cached' : 'Fresh'}
+              </Badge>
+            )}
+            {onRefresh && data && !showLoading && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onRefresh}
+                disabled={isRefreshing || isLoading}
+                title="Regenerate insights"
+                className="h-7 w-7 p-0"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
         </div>
         {data && (
           <p className="text-xs text-gray-500">
@@ -72,7 +97,7 @@ export function AIInsightsCard({ data, isLoading, error, onRetry }: AIInsightsCa
       </CardHeader>
       <CardContent>
         {/* Loading state */}
-        {isLoading && (
+        {showLoading && (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="animate-pulse flex gap-3 p-3 rounded-lg bg-gray-50">
@@ -83,11 +108,16 @@ export function AIInsightsCard({ data, isLoading, error, onRetry }: AIInsightsCa
                 </div>
               </div>
             ))}
+            {isRefreshing && (
+              <p className="text-xs text-center text-gray-400 mt-2">
+                Regenerating insights...
+              </p>
+            )}
           </div>
         )}
 
         {/* Error state */}
-        {error && !isLoading && (
+        {error && !showLoading && (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
             <AlertTriangle className="h-8 w-8 text-red-400" />
             <p className="text-sm text-red-600">{error}</p>
@@ -99,7 +129,7 @@ export function AIInsightsCard({ data, isLoading, error, onRetry }: AIInsightsCa
         )}
 
         {/* Empty state */}
-        {data && data.insights.length === 0 && !isLoading && !error && (
+        {data && data.insights.length === 0 && !showLoading && !error && (
           <div className="flex flex-col items-center gap-2 py-6 text-center text-gray-400">
             <Lightbulb className="h-8 w-8" />
             <p className="text-sm">
@@ -109,7 +139,7 @@ export function AIInsightsCard({ data, isLoading, error, onRetry }: AIInsightsCa
         )}
 
         {/* Insights list */}
-        {data && data.insights.length > 0 && !isLoading && !error && (
+        {data && data.insights.length > 0 && !showLoading && !error && (
           <div className="space-y-3">
             {data.insights.map((insight, index) => {
               const config = TYPE_CONFIG[insight.type];
