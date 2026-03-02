@@ -81,15 +81,15 @@ function rowToBookingWithDetails(row: BookingForReminder) {
 export async function processReminders(): Promise<void> {
   const now = new Date();
 
-  console.log('🔔 Processing reminders...');
-
   // Find bookings starting in ~24 hours (window: 23.5h to 24.5h)
   const reminder24h = await findBookingsNeedingReminder(now, 24);
-  console.log(`  Found ${reminder24h.length} bookings needing 24h reminder`);
 
   // Find bookings starting in ~1 hour (window: 0.5h to 1.5h)
   const reminder1h = await findBookingsNeedingReminder(now, 1);
-  console.log(`  Found ${reminder1h.length} bookings needing 1h reminder`);
+
+  if (reminder24h.length === 0 && reminder1h.length === 0) return;
+
+  console.log(`Reminders: sending ${reminder24h.length} (24h) + ${reminder1h.length} (1h)`);
 
   for (const booking of reminder24h) {
     await sendReminders(booking, 24);
@@ -98,8 +98,6 @@ export async function processReminders(): Promise<void> {
   for (const booking of reminder1h) {
     await sendReminders(booking, 1);
   }
-
-  console.log('🔔 Reminder processing complete');
 }
 
 async function findBookingsNeedingReminder(
@@ -161,10 +159,8 @@ async function sendReminders(
       ON CONFLICT DO NOTHING
     `;
 
-    console.log(
-      `  ✓ Sent ${hoursUntil}h reminders for booking ${booking.id}`
-    );
+    console.log(`Reminder sent (${hoursUntil}h) for booking ${booking.id}`);
   } catch (err) {
-    console.error(`  ✗ Failed to send reminders for ${bookingRow.id}:`, err);
+    console.error(`Reminder failed for ${bookingRow.id}:`, err);
   }
 }

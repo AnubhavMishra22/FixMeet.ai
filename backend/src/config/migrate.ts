@@ -40,13 +40,14 @@ export async function runMigrations(retries = 3): Promise<void> {
   const allFiles = await readdir(migrationsDir);
   const files = allFiles.filter(f => f.endsWith('.sql')).sort();
 
-  console.log(`Running ${files.length} database migrations...`);
+  let applied = 0;
+  let skipped = 0;
 
   for (const file of files) {
     try {
       const content = await readFile(path.join(migrationsDir, file), 'utf-8');
       await sql.unsafe(content);
-      console.log(`  Migration ${file}: OK`);
+      applied++;
     } catch (error) {
       // Use PostgreSQL error codes instead of brittle string matching
       // 42P07: duplicate_table, 42710: duplicate_object (e.g. index)
@@ -54,7 +55,7 @@ export async function runMigrations(retries = 3): Promise<void> {
       const alreadyExistsCodes = ['42P07', '42710'];
 
       if (pgError.code && alreadyExistsCodes.includes(pgError.code)) {
-        console.log(`  Migration ${file}: skipped (already exists)`);
+        skipped++;
       } else {
         const message = error instanceof Error ? error.message : String(error);
         throw new Error(`Migration ${file} failed: ${message}`);
@@ -62,5 +63,5 @@ export async function runMigrations(retries = 3): Promise<void> {
     }
   }
 
-  console.log('Database migrations complete');
+  console.log(`Migrations: ${applied} applied, ${skipped} skipped (${files.length} total)`);
 }
