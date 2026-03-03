@@ -14,10 +14,20 @@ export interface McpTextContent {
   text: string;
 }
 
-/** Standard MCP tool result shape */
+/** Standard MCP tool result shape (index signature required by SDK's CallToolResult) */
 export interface McpToolResult {
+  [key: string]: unknown;
   content: McpTextContent[];
   isError?: boolean;
+}
+
+/** Fetches the user's timezone from the database, defaulting to UTC */
+export async function getUserTimezone(userId: string): Promise<string> {
+  const { sql } = await import('../config/database.js');
+  const rows = await sql<{ timezone: string }[]>`
+    SELECT timezone FROM users WHERE id = ${userId}
+  `;
+  return rows[0]?.timezone ?? 'UTC';
 }
 
 /** Helper to create a successful text result */
