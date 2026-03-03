@@ -2,6 +2,7 @@ import type { Express, Request, Response } from 'express';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { registerAllTools } from './tools/index.js';
+import { registerAllResources } from './resources/index.js';
 import { authenticateMcp } from './auth.js';
 import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from './types.js';
 import type { McpContext } from './types.js';
@@ -17,6 +18,7 @@ function createMcpServer(context?: McpContext): McpServer {
     { capabilities: { logging: {} } },
   );
   registerAllTools(server, context);
+  registerAllResources(server, context);
   return server;
 }
 
