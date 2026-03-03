@@ -11,7 +11,7 @@ import {
 } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import type { McpContext } from '../types.js';
-import { mcpResult, mcpError } from '../types.js';
+import { mcpResult, mcpError, getUserTimezone } from '../types.js';
 
 interface MeetingRow {
   id: string;
@@ -55,11 +55,7 @@ export function registerListMeetingsTool(
       }
 
       try {
-        // Get user timezone
-        const users = await sql<{ timezone: string }[]>`
-          SELECT timezone FROM users WHERE id = ${context.userId}
-        `;
-        const userTimezone = users[0]?.timezone ?? 'UTC';
+        const userTimezone = await getUserTimezone(context.userId);
 
         const now = new Date();
         const zonedNow = toZonedTime(now, userTimezone);
@@ -85,9 +81,10 @@ export function registerListMeetingsTool(
             break;
         }
 
-        const statusFilter = includePast
-          ? `b.status IN ('confirmed', 'completed', 'cancelled', 'no_show')`
-          : `b.status = 'confirmed'`;
+        // Use parameterized ANY() instead of string interpolation for status filter
+        const statuses = includePast
+          ? ['confirmed', 'completed', 'cancelled', 'no_show']
+          : ['confirmed'];
 
         const rows = await sql.unsafe<MeetingRow[]>(
           `
@@ -107,10 +104,10 @@ export function registerListMeetingsTool(
           WHERE b.host_id = $1
             AND b.start_time >= $2
             AND b.start_time <= $3
-            AND ${statusFilter}
+            AND b.status = ANY($4)
           ORDER BY b.start_time ASC
           `,
-          [context.userId, rangeStart.toISOString(), rangeEnd.toISOString()],
+          [context.userId, rangeStart.toISOString(), rangeEnd.toISOString(), statuses],
         );
 
         const meetings = rows.map((row) => {

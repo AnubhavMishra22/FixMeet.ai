@@ -3,9 +3,10 @@ import { z } from 'zod';
 import { sql } from '../../config/database.js';
 import { createBooking } from '../../modules/bookings/bookings.service.js';
 import { fromZonedTime } from 'date-fns-tz';
+import { BadRequestError, ConflictError } from '../../utils/errors.js';
 import type { EventTypeRow } from '../../modules/event-types/event-types.types.js';
 import type { McpContext } from '../types.js';
-import { mcpResult, mcpError } from '../types.js';
+import { mcpResult, mcpError, getUserTimezone } from '../types.js';
 
 /**
  * Registers the create_booking tool on the MCP server.
@@ -42,12 +43,7 @@ export function registerCreateBookingTool(
 
       try {
         const meetingDuration = duration ?? 30;
-
-        // Get user timezone
-        const users = await sql<{ timezone: string }[]>`
-          SELECT timezone FROM users WHERE id = ${context.userId}
-        `;
-        const userTimezone = users[0]?.timezone ?? 'UTC';
+        const userTimezone = await getUserTimezone(context.userId);
 
         // Find a matching active event type for the requested duration
         const eventTypes = await sql<EventTypeRow[]>`
@@ -114,19 +110,20 @@ export function registerCreateBookingTool(
           message: 'Booking created successfully. Confirmation emails sent to both parties.',
         });
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-
-        // Return specific error messages for known booking failures
-        if (message.includes('time slot is no longer available')) {
+        // Use specific error types from service layer
+        if (error instanceof ConflictError) {
           return mcpError('That time slot is no longer available. Check availability and try a different time.');
         }
-        if (message.includes('in the past')) {
-          return mcpError('Cannot book a time in the past. Please choose a future date and time.');
-        }
-        if (message.includes('minimum notice')) {
-          return mcpError('This time is too soon. Bookings require advance notice. Please choose a later time.');
+        if (error instanceof BadRequestError) {
+          if (error.message.includes('in the past')) {
+            return mcpError('Cannot book a time in the past. Please choose a future date and time.');
+          }
+          if (error.message.includes('minimum notice')) {
+            return mcpError('This time is too soon. Bookings require advance notice. Please choose a later time.');
+          }
         }
 
+        const message = error instanceof Error ? error.message : 'Unknown error';
         console.error('MCP create_booking error:', message);
         return mcpError(`Failed to create booking: ${message}`);
       }

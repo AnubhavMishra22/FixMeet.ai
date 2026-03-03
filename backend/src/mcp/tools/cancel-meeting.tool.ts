@@ -4,8 +4,9 @@ import { sql } from '../../config/database.js';
 import { cancelBooking } from '../../modules/bookings/bookings.service.js';
 import { format, addDays } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import type { McpContext } from '../types.js';
-import { mcpResult, mcpError } from '../types.js';
+import { mcpResult, mcpError, getUserTimezone } from '../types.js';
 
 interface BookingSearchRow {
   id: string;
@@ -55,11 +56,7 @@ export function registerCancelMeetingTool(
       }
 
       try {
-        // Get user timezone
-        const users = await sql<{ timezone: string }[]>`
-          SELECT timezone FROM users WHERE id = ${context.userId}
-        `;
-        const userTimezone = users[0]?.timezone ?? 'UTC';
+        const userTimezone = await getUserTimezone(context.userId);
 
         // Direct cancel by booking ID
         if (bookingId) {
@@ -149,15 +146,15 @@ export function registerCancelMeetingTool(
           message: `Found ${matches.length} matching meetings. Please specify which one to cancel by providing the bookingId.`,
         });
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-
-        if (message.includes('not found') || message.includes('Not Found')) {
+        // Use specific error types from service layer
+        if (error instanceof NotFoundError) {
           return mcpError('Meeting not found. It may have already been cancelled or does not exist.');
         }
-        if (message.includes('already cancelled')) {
+        if (error instanceof BadRequestError && error.message.includes('already cancelled')) {
           return mcpError('This meeting has already been cancelled.');
         }
 
+        const message = error instanceof Error ? error.message : 'Unknown error';
         console.error('MCP cancel_meeting error:', message);
         return mcpError(`Failed to cancel meeting: ${message}`);
       }

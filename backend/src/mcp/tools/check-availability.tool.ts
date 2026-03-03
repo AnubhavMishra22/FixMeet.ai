@@ -6,7 +6,7 @@ import { getConfirmedBookingsForDate } from '../../modules/bookings/bookings.ser
 import { parseISO } from 'date-fns';
 import type { EventTypeRow } from '../../modules/event-types/event-types.types.js';
 import type { McpContext } from '../types.js';
-import { mcpResult, mcpError } from '../types.js';
+import { mcpResult, mcpError, getUserTimezone } from '../types.js';
 
 /**
  * Registers the check_availability tool on the MCP server.
@@ -36,11 +36,7 @@ export function registerCheckAvailabilityTool(
           return mcpError(`Invalid date format "${date}". Please use YYYY-MM-DD format.`);
         }
 
-        // Get user timezone
-        const users = await sql<{ timezone: string }[]>`
-          SELECT timezone FROM users WHERE id = ${context.userId}
-        `;
-        const userTimezone = users[0]?.timezone ?? 'UTC';
+        const userTimezone = await getUserTimezone(context.userId);
 
         // Get user's active event types
         const eventTypes = await sql<EventTypeRow[]>`
