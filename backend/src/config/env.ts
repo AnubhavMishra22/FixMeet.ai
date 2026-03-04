@@ -23,6 +23,7 @@ const envSchema = z.object({
   GOOGLE_AI_MAX_TOKENS: z.string().optional(),
   // MCP (optional — HTTP transport only mounts if enabled)
   MCP_ENABLED: z.enum(['true', 'false']).default('true').transform(v => v === 'true'),
+  MCP_RATE_LIMIT: z.string().default('30').transform(Number),
 });
 
 const parsed = envSchema.safeParse(process.env);

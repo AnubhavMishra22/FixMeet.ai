@@ -6,6 +6,26 @@ import { registerAllResources } from './resources/index.js';
 import { authenticateMcpRequest } from './auth.js';
 import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from './types.js';
 import type { McpContext } from './types.js';
+import { env } from '../config/env.js';
+import { logMcpToolCall } from './usage-logger.js';
+
+/** Simple per-user sliding window rate limiter for MCP requests */
+const rateLimitMap = new Map<string, number[]>();
+
+function isRateLimited(userId: string): boolean {
+  const limit = env.MCP_RATE_LIMIT;
+  const now = Date.now();
+  const windowMs = 60_000;
+
+  let timestamps = rateLimitMap.get(userId) ?? [];
+  timestamps = timestamps.filter((t) => now - t < windowMs);
+
+  if (timestamps.length >= limit) return true;
+
+  timestamps.push(now);
+  rateLimitMap.set(userId, timestamps);
+  return false;
+}
 
 /**
  * Creates a fresh MCP server instance with all tools registered.
@@ -61,6 +81,19 @@ export function mountMcpRoutes(app: Express): void {
         }
       }
 
+      if (context && isRateLimited(context.userId)) {
+        res.status(429).json({
+          error: `Rate limit exceeded. Maximum ${env.MCP_RATE_LIMIT} requests per minute.`,
+        });
+        return;
+      }
+
+      // Log tool calls for analytics
+      const startTime = Date.now();
+      const body = req.body as { method?: string; params?: { name?: string } };
+      const isToolCall = body?.method === 'tools/call';
+      const toolName = isToolCall ? body.params?.name : undefined;
+
       const server = createMcpServer(context);
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined, // stateless — no session persistence
@@ -69,6 +102,10 @@ export function mountMcpRoutes(app: Express): void {
 
       res.on('close', () => {
         transport.close().catch(() => { /* ignore cleanup errors */ });
+        if (context && toolName) {
+          const durationMs = Date.now() - startTime;
+          logMcpToolCall(context.userId, toolName, 'http', durationMs, false);
+        }
       });
 
       await server.connect(transport);
