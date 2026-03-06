@@ -23,6 +23,7 @@ dotenv.config();
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { registerAllTools } from './tools/index.js';
+import { registerAllResources } from './resources/index.js';
 import { authenticateMcp } from './auth.js';
 import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from './types.js';
 import type { McpContext } from './types.js';
@@ -48,8 +49,9 @@ async function main(): Promise<void> {
     { capabilities: { logging: {} } },
   );
 
-  // Register all tools with authenticated context
+  // Register all tools and resources with authenticated context
   registerAllTools(server, context);
+  registerAllResources(server, context);
 
   // Connect stdio transport
   const transport = new StdioServerTransport();

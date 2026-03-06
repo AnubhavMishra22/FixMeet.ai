@@ -5,6 +5,9 @@ import { registerCheckAvailabilityTool } from './check-availability.tool.js';
 import { registerListMeetingsTool } from './list-meetings.tool.js';
 import { registerCreateBookingTool } from './create-booking.tool.js';
 import { registerCancelMeetingTool } from './cancel-meeting.tool.js';
+import { registerGetMeetingBriefTool } from './get-meeting-brief.tool.js';
+import { registerGenerateFollowupTool } from './generate-followup.tool.js';
+import { registerGetInsightsTool } from './get-insights.tool.js';
 
 /**
  * Registers all MCP tools on the given server instance.
@@ -20,4 +23,9 @@ export function registerAllTools(server: McpServer, context?: McpContext): void 
   registerListMeetingsTool(server, context);
   registerCreateBookingTool(server, context);
   registerCancelMeetingTool(server, context);
+
+  // Advanced AI-powered tools — require auth context
+  registerGetMeetingBriefTool(server, context);
+  registerGenerateFollowupTool(server, context);
+  registerGetInsightsTool(server, context);
 }

@@ -77,6 +77,10 @@ async function mountRoutes() {
     app.use('/api/followups', authMiddleware, followupsRoutes.default);
     app.use('/api/insights', authMiddleware, insightsRoutes.default);
 
+    // MCP API key management routes
+    const mcpKeysRoutes = await import('./mcp/api-keys.routes.js');
+    app.use('/api/mcp-keys', authMiddleware, mcpKeysRoutes.default);
+
     // AI routes - only mount if GOOGLE_AI_API_KEY is configured
     if (env.GOOGLE_AI_API_KEY) {
       const { initializeAI } = await import('./modules/ai/ai.service.js');
@@ -93,8 +97,12 @@ async function mountRoutes() {
     }
 
     // MCP HTTP transport — mount Streamable HTTP endpoint at /mcp
-    const { mountMcpRoutes } = await import('./mcp/http-transport.js');
-    mountMcpRoutes(app);
+    if (env.MCP_ENABLED) {
+      const { mountMcpRoutes } = await import('./mcp/http-transport.js');
+      mountMcpRoutes(app);
+    } else {
+      console.log('MCP HTTP transport skipped (MCP_ENABLED=false).');
+    }
 
     console.log('All routes mounted successfully.');
   } catch (e) {
