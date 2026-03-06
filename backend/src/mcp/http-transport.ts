@@ -3,7 +3,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { registerAllTools } from './tools/index.js';
 import { registerAllResources } from './resources/index.js';
-import { authenticateMcp } from './auth.js';
+import { authenticateMcpRequest } from './auth.js';
 import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from './types.js';
 import type { McpContext } from './types.js';
 
@@ -53,7 +53,7 @@ export function mountMcpRoutes(app: Express): void {
       const token = extractAuthToken(req);
       if (token) {
         try {
-          context = authenticateMcp(token);
+          context = await authenticateMcpRequest(token);
         } catch {
           res.status(401).json({ error: 'Invalid authentication token' });
           return;

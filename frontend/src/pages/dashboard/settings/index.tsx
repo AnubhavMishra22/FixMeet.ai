@@ -6,12 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { FileText, MailCheck } from 'lucide-react';
+import { FileText, MailCheck, Key, Copy, Plus, Trash2 } from 'lucide-react';
 import { Switch } from '../../../components/ui/switch';
 import { useAuthStore } from '../../../stores/auth-store';
 import { useToast } from '../../../stores/toast-store';
-import api from '../../../lib/api';
-import type { CalendarConnection } from '../../../types';
+import api, { getMcpApiKeys, createMcpApiKey, revokeMcpApiKey } from '../../../lib/api';
+import type { CalendarConnection, McpApiKey } from '../../../types';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -167,6 +167,21 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <FollowupSettings />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5 text-purple-600" />
+            MCP API Keys
+          </CardTitle>
+          <CardDescription>
+            Manage API keys for MCP clients (Claude Desktop, Cursor, etc.)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <McpApiKeys />
         </CardContent>
       </Card>
     </div>
@@ -424,6 +439,162 @@ function FollowupSettings() {
           <option value="friendly">Friendly</option>
           <option value="casual">Casual</option>
         </select>
+      </div>
+    </div>
+  );
+}
+
+function McpApiKeys() {
+  const { toast } = useToast();
+  const [keys, setKeys] = useState<McpApiKey[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [newKeyName, setNewKeyName] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchKeys();
+  }, []);
+
+  async function fetchKeys() {
+    try {
+      const data = await getMcpApiKeys();
+      setKeys(data);
+    } catch {
+      console.error('Failed to fetch API keys');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleCreate() {
+    if (!newKeyName.trim()) return;
+    setIsCreating(true);
+    try {
+      const result = await createMcpApiKey(newKeyName.trim());
+      setNewlyCreatedKey(result.key);
+      setNewKeyName('');
+      await fetchKeys();
+      toast({ title: 'API key created' });
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { error?: { message?: string } } } };
+      toast({
+        title: err.response?.data?.error?.message || 'Failed to create API key',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
+  async function handleRevoke(id: string) {
+    if (!confirm('Are you sure you want to revoke this API key? This cannot be undone.')) return;
+    try {
+      await revokeMcpApiKey(id);
+      setKeys(keys.filter((k) => k.id !== id));
+      toast({ title: 'API key revoked' });
+    } catch {
+      toast({ title: 'Failed to revoke API key', variant: 'destructive' });
+    }
+  }
+
+  function copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text);
+    toast({ title: 'Copied to clipboard' });
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-4">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  const activeKeys = keys.filter((k) => k.isActive);
+
+  return (
+    <div className="space-y-4">
+      {newlyCreatedKey && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-green-800">
+                API key created! Copy it now — you won&apos;t see it again.
+              </p>
+              <code className="block mt-2 text-xs bg-green-100 rounded px-2 py-1.5 break-all font-mono text-green-900">
+                {newlyCreatedKey}
+              </code>
+            </div>
+            <div className="flex gap-1 shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => copyToClipboard(newlyCreatedKey)}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setNewlyCreatedKey(null)}
+                className="text-green-700"
+              >
+                Dismiss
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeKeys.length > 0 ? (
+        <div className="space-y-2">
+          {activeKeys.map((key) => (
+            <div
+              key={key.id}
+              className="flex items-center justify-between p-3 border rounded-lg"
+            >
+              <div>
+                <p className="font-medium">{key.name}</p>
+                <p className="text-xs text-gray-500">
+                  Created {new Date(key.createdAt).toLocaleDateString()}
+                  {key.lastUsedAt && (
+                    <> &middot; Last used {new Date(key.lastUsedAt).toLocaleDateString()}</>
+                  )}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-600"
+                onClick={() => handleRevoke(key.id)}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Revoke
+              </Button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-500 text-sm">No API keys created yet</p>
+      )}
+
+      <div className="flex gap-2">
+        <Input
+          placeholder="Key name (e.g. Claude Desktop)"
+          value={newKeyName}
+          onChange={(e) => setNewKeyName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+          className="flex-1"
+        />
+        <Button
+          variant="outline"
+          onClick={handleCreate}
+          disabled={isCreating || !newKeyName.trim()}
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          {isCreating ? 'Creating...' : 'Create Key'}
+        </Button>
       </div>
     </div>
   );
