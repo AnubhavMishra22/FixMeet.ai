@@ -54,7 +54,8 @@ export function mountMcpRoutes(app: Express): void {
       if (token) {
         try {
           context = await authenticateMcpRequest(token);
-        } catch {
+        } catch (err) {
+          console.error('[mcp-http] Authentication failed:', err);
           res.status(401).json({ error: 'Invalid authentication token' });
           return;
         }

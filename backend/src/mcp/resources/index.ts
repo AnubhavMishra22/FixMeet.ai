@@ -34,6 +34,16 @@ interface CalendarRow {
   is_active: boolean;
 }
 
+function authErrorResponse(uri: string) {
+  return {
+    contents: [{
+      uri,
+      mimeType: 'application/json' as const,
+      text: JSON.stringify({ error: 'Authentication required' }),
+    }],
+  };
+}
+
 /**
  * Registers all MCP resources on the given server instance.
  * Resources provide read-only access to user data.
@@ -45,15 +55,7 @@ export function registerAllResources(server: McpServer, context?: McpContext): v
     'fixmeet://user/profile',
     { description: 'Current user profile including name, email, timezone, and preferences' },
     async () => {
-      if (!context) {
-        return {
-          contents: [{
-            uri: 'fixmeet://user/profile',
-            mimeType: 'application/json',
-            text: JSON.stringify({ error: 'Authentication required' }),
-          }],
-        };
-      }
+      if (!context) return authErrorResponse('fixmeet://user/profile');
 
       const rows = await sql<UserRow[]>`
         SELECT id, name, email, username, timezone,
@@ -89,15 +91,7 @@ export function registerAllResources(server: McpServer, context?: McpContext): v
     'fixmeet://user/event-types',
     { description: "List of the user's event types with scheduling details" },
     async () => {
-      if (!context) {
-        return {
-          contents: [{
-            uri: 'fixmeet://user/event-types',
-            mimeType: 'application/json',
-            text: JSON.stringify({ error: 'Authentication required' }),
-          }],
-        };
-      }
+      if (!context) return authErrorResponse('fixmeet://user/event-types');
 
       const rows = await sql<EventTypeRow[]>`
         SELECT id, slug, title, description, duration_minutes,
@@ -136,15 +130,7 @@ export function registerAllResources(server: McpServer, context?: McpContext): v
     'fixmeet://user/calendar-status',
     { description: 'Connected calendar integrations and their status' },
     async () => {
-      if (!context) {
-        return {
-          contents: [{
-            uri: 'fixmeet://user/calendar-status',
-            mimeType: 'application/json',
-            text: JSON.stringify({ error: 'Authentication required' }),
-          }],
-        };
-      }
+      if (!context) return authErrorResponse('fixmeet://user/calendar-status');
 
       const rows = await sql<CalendarRow[]>`
         SELECT id, provider, provider_account_id, calendar_id,

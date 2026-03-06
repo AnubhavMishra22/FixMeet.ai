@@ -7,3 +7,7 @@ export const createApiKeySchema = z.object({
     .min(1, 'Name is required')
     .max(100, 'Name must be 100 characters or fewer'),
 });
+
+export const revokeApiKeySchema = z.object({
+  id: z.string().uuid('Invalid API key ID'),
+});

@@ -460,8 +460,9 @@ function McpApiKeys() {
     try {
       const data = await getMcpApiKeys();
       setKeys(data);
-    } catch {
-      console.error('Failed to fetch API keys');
+    } catch (err) {
+      console.error('Failed to fetch API keys', err);
+      toast({ title: 'Failed to fetch API keys', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -491,7 +492,7 @@ function McpApiKeys() {
     if (!confirm('Are you sure you want to revoke this API key? This cannot be undone.')) return;
     try {
       await revokeMcpApiKey(id);
-      setKeys(keys.filter((k) => k.id !== id));
+      await fetchKeys();
       toast({ title: 'API key revoked' });
     } catch {
       toast({ title: 'Failed to revoke API key', variant: 'destructive' });

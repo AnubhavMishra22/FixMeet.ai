@@ -83,7 +83,9 @@ export async function validateApiKey(key: string): Promise<McpContext> {
   const userId = row.user_id;
 
   // Fire-and-forget: update last_used_at
-  sql`UPDATE mcp_api_keys SET last_used_at = NOW() WHERE key_hash = ${keyHash}`.catch(() => {});
+  sql`UPDATE mcp_api_keys SET last_used_at = NOW() WHERE key_hash = ${keyHash}`.catch((err) => {
+    console.error('Failed to update last_used_at for API key:', err);
+  });
 
   // Look up user email for context
   const userRows = await sql<UserEmailRow[]>`
@@ -100,14 +102,23 @@ export async function validateApiKey(key: string): Promise<McpContext> {
 
 /**
  * List all API keys for a user (without hashes).
+ * Maps snake_case DB columns to camelCase for the API response.
  */
-export async function listApiKeys(userId: string): Promise<ApiKeyRow[]> {
-  return sql<ApiKeyRow[]>`
+export async function listApiKeys(userId: string) {
+  const rows = await sql<ApiKeyRow[]>`
     SELECT id, user_id, name, last_used_at, created_at, is_active
     FROM mcp_api_keys
     WHERE user_id = ${userId}
     ORDER BY created_at DESC
   `;
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+    lastUsedAt: row.last_used_at,
+  }));
 }
 
 /**
