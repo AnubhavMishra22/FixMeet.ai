@@ -44,13 +44,14 @@ export function registerGenerateFollowupTool(
     'generate_followup',
     'Generate a follow-up email for a past meeting. Finds the meeting by booking ID, attendee name, or uses the most recent past meeting. Returns a draft email with subject, body, and action items.',
     {
-      bookingId: z.string().describe('The booking ID to generate a follow-up for'),
+      bookingId: z.string().optional().describe('Exact booking ID if known'),
+      inviteeName: z.string().optional().describe('Name of the attendee to search for'),
       notes: z
         .string()
         .optional()
         .describe('Optional meeting notes to include as context for the follow-up'),
     },
-    async ({ bookingId, notes }) => {
+    async ({ bookingId, inviteeName, notes }) => {
       if (!context) {
         return mcpError('Authentication required. Please provide a valid API token.');
       }
@@ -58,18 +59,49 @@ export function registerGenerateFollowupTool(
       try {
         const userTimezone = await getUserTimezone(context.userId);
 
-        // Look up the booking
-        const rows = await sql<RecentBookingRow[]>`
-          SELECT b.id, b.invitee_name, b.invitee_email, b.invitee_notes,
-                 b.start_time, b.end_time, et.title AS event_type_title
-          FROM bookings b
-          JOIN event_types et ON b.event_type_id = et.id
-          WHERE b.id = ${bookingId} AND b.host_id = ${context.userId}
-        `;
-        const booking = rows[0];
+        let booking: RecentBookingRow | undefined;
+
+        if (bookingId) {
+          const rows = await sql<RecentBookingRow[]>`
+            SELECT b.id, b.invitee_name, b.invitee_email, b.invitee_notes,
+                   b.start_time, b.end_time, et.title AS event_type_title
+            FROM bookings b
+            JOIN event_types et ON b.event_type_id = et.id
+            WHERE b.id = ${bookingId} AND b.host_id = ${context.userId}
+          `;
+          booking = rows[0];
+        } else if (inviteeName) {
+          const safeName = inviteeName.toLowerCase().replace(/[%_]/g, '\\$&');
+          const rows = await sql<RecentBookingRow[]>`
+            SELECT b.id, b.invitee_name, b.invitee_email, b.invitee_notes,
+                   b.start_time, b.end_time, et.title AS event_type_title
+            FROM bookings b
+            JOIN event_types et ON b.event_type_id = et.id
+            WHERE b.host_id = ${context.userId}
+              AND b.status = 'confirmed'
+              AND b.end_time < NOW()
+              AND LOWER(b.invitee_name) LIKE ${'%' + safeName + '%'}
+            ORDER BY b.end_time DESC
+            LIMIT 1
+          `;
+          booking = rows[0];
+        } else {
+          const rows = await sql<RecentBookingRow[]>`
+            SELECT b.id, b.invitee_name, b.invitee_email, b.invitee_notes,
+                   b.start_time, b.end_time, et.title AS event_type_title
+            FROM bookings b
+            JOIN event_types et ON b.event_type_id = et.id
+            WHERE b.host_id = ${context.userId}
+              AND b.status = 'confirmed'
+              AND b.end_time < NOW()
+            ORDER BY b.end_time DESC
+            LIMIT 1
+          `;
+          booking = rows[0];
+        }
 
         if (!booking) {
-          return mcpError('Booking not found. Please check the booking ID.');
+          return mcpError('No matching past meeting found. Please check the details and try again.');
         }
 
         // Check if a followup already exists
