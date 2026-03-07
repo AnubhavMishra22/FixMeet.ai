@@ -2,6 +2,9 @@
   "name": "fixmeet-backend",
   "version": "1.0.0",
   "type": "module",
+  "bin": {
+    "fixmeet-mcp": "./dist/mcp/cli.js"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc && npm run copy-migrations",

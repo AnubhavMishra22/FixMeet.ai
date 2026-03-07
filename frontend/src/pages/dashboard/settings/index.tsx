@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { FileText, MailCheck, Key, Copy, Plus, Trash2 } from 'lucide-react';
+import { FileText, MailCheck, Key, Copy, Plus, Trash2, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { Switch } from '../../../components/ui/switch';
 import { useAuthStore } from '../../../stores/auth-store';
 import { useToast } from '../../../stores/toast-store';
@@ -451,6 +451,7 @@ function McpApiKeys() {
   const [newKeyName, setNewKeyName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
+  const [showSetup, setShowSetup] = useState(false);
 
   useEffect(() => {
     fetchKeys();
@@ -516,6 +517,57 @@ function McpApiKeys() {
 
   return (
     <div className="space-y-4">
+      <button
+        onClick={() => setShowSetup(!showSetup)}
+        className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800 font-medium"
+      >
+        {showSetup ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        How to connect Claude Desktop, Cursor, or other AI tools
+      </button>
+
+      {showSetup && (
+        <div className="bg-gray-50 border rounded-lg p-4 text-sm space-y-3">
+          <div>
+            <p className="font-medium mb-1">1. Create an API key below</p>
+            <p className="text-gray-600">Give it a name like &quot;Claude Desktop&quot; and copy the key.</p>
+          </div>
+          <div>
+            <p className="font-medium mb-1">2. Add to your MCP client config</p>
+            <p className="text-gray-600 mb-2">
+              For Claude Desktop: Settings &rarr; Developer &rarr; Edit Config
+            </p>
+            <pre className="bg-gray-900 text-gray-100 rounded-md p-3 text-xs overflow-x-auto">
+{`{
+  "mcpServers": {
+    "fixmeet": {
+      "command": "npx",
+      "args": ["fixmeet-mcp"],
+      "env": {
+        "FIXMEET_API_KEY": "fxm_your-key-here",
+        "FIXMEET_API_URL": "${import.meta.env.VITE_API_URL || 'http://localhost:3001'}"
+      }
+    }
+  }
+}`}
+            </pre>
+          </div>
+          <div>
+            <p className="font-medium mb-1">3. Restart your AI client</p>
+            <p className="text-gray-600">
+              Claude Desktop (or Cursor) can now check your availability, book meetings, and more.
+            </p>
+          </div>
+          <a
+            href="https://github.com/AnubhavMishra22/FixMeet.ai/blob/main/backend/src/mcp/README.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-purple-600 hover:text-purple-800"
+          >
+            Full documentation <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      )}
+
       {newlyCreatedKey && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-start justify-between gap-2">

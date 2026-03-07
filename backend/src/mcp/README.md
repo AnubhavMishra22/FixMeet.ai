@@ -23,11 +23,17 @@ FixMeet exposes a [Model Context Protocol](https://modelcontextprotocol.io/) (MC
 | Event Types | `fixmeet://user/event-types` | List of event types with scheduling details |
 | Calendar Status | `fixmeet://user/calendar-status` | Connected calendar integrations |
 
+## Quick Start
+
+The fastest way to get started:
+
+1. Generate an API key from **Settings → MCP API Keys** in the dashboard
+2. Install the CLI: `npx fixmeet-mcp` (or configure your MCP client)
+3. Set `FIXMEET_API_KEY` and `FIXMEET_API_URL` environment variables
+
 ## Authentication
 
-The MCP server supports two authentication methods:
-
-### API Key (recommended for external clients)
+### API Key (recommended)
 
 Generate an API key from **Settings → MCP API Keys** in the dashboard. Keys use the `fxm_` prefix.
 
@@ -43,11 +49,37 @@ Use a JWT access token from the auth system. Useful for stdio transport where yo
 Authorization: Bearer eyJhbG...
 ```
 
-## Setup: Claude Desktop (stdio)
+## Setup: Claude Desktop (recommended)
 
-1. Generate an API key or get a JWT access token
-2. Open Claude Desktop settings → Developer → Edit Config
-3. Add the following to `claude_desktop_config.json`:
+### Option A: Remote mode via CLI (simplest)
+
+1. Generate an API key from Settings → MCP API Keys
+2. Open Claude Desktop → Settings → Developer → Edit Config
+3. Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "fixmeet": {
+      "command": "npx",
+      "args": ["fixmeet-mcp"],
+      "env": {
+        "FIXMEET_API_KEY": "fxm_your-api-key-here",
+        "FIXMEET_API_URL": "https://your-backend-url"
+      }
+    }
+  }
+}
+```
+
+4. Restart Claude Desktop
+5. FixMeet tools appear in the tools menu
+
+See `backend/claude-desktop-config.example.json` for a ready-to-use template.
+
+### Option B: Local mode (direct database access)
+
+For local development, the MCP server can connect directly to the database:
 
 ```json
 {
@@ -66,18 +98,15 @@ Authorization: Bearer eyJhbG...
 }
 ```
 
-4. Restart Claude Desktop
-5. You should see FixMeet tools available in the tools menu
+See `backend/mcp-config.example.json` for this template.
 
-## Setup: Claude Code (stdio)
+## Setup: Claude Code
 
 ```bash
 claude mcp add fixmeet \
-  --command "npx tsx src/mcp/server.ts" \
-  --cwd /path/to/FixMeet.ai/backend \
-  --env DATABASE_URL=postgres://fixmeet:fixmeet@localhost:5432/fixmeet \
-  --env JWT_SECRET=<your-jwt-secret> \
-  --env FIXMEET_API_TOKEN=<your-jwt-access-token>
+  --command "npx fixmeet-mcp" \
+  --env FIXMEET_API_KEY=fxm_your-api-key \
+  --env FIXMEET_API_URL=http://localhost:3001
 ```
 
 ## Setup: Cursor / HTTP Clients
@@ -87,6 +116,7 @@ The MCP server is also available over HTTP at `POST /mcp` (Streamable HTTP trans
 ```bash
 curl -X POST http://localhost:3001/mcp \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
   -H "Authorization: Bearer fxm_your-api-key" \
   -d '{
     "jsonrpc": "2.0",
@@ -110,6 +140,23 @@ For Cursor, add to your MCP settings:
 }
 ```
 
+## Standalone CLI
+
+The `fixmeet-mcp` CLI can run in two modes:
+
+| Mode | Trigger | Use case |
+|------|---------|----------|
+| **Remote** | `FIXMEET_API_KEY` is set | Connects to a running backend via HTTP |
+| **Local** | `DATABASE_URL` is set | Connects directly to the database |
+
+```bash
+# Remote mode
+FIXMEET_API_KEY=fxm_... FIXMEET_API_URL=http://localhost:3001 npx fixmeet-mcp
+
+# Local mode
+DATABASE_URL=postgres://... JWT_SECRET=... FIXMEET_API_TOKEN=... npx fixmeet-mcp
+```
+
 ## Generating API Keys
 
 1. Log in to the FixMeet dashboard
@@ -119,15 +166,24 @@ For Cursor, add to your MCP settings:
 5. Copy the key immediately — it is only shown once
 6. Use the key as a Bearer token in your MCP client config
 
+## Rate Limiting
+
+MCP HTTP requests are rate-limited per user. Default: 30 requests per minute.
+Configure via the `MCP_RATE_LIMIT` environment variable.
+
+## Usage Logging
+
+Tool calls via the HTTP transport are logged to the `mcp_usage_logs` table for analytics.
+Each log entry records the tool name, transport type, duration, and error status.
+
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `JWT_SECRET` | Yes | JWT signing secret (min 32 chars) |
-| `FIXMEET_API_TOKEN` | No | JWT access token for stdio auth |
-| `MCP_ENABLED` | No | Set to `false` to disable HTTP transport (default: `true`) |
-
-## Example Config File
-
-See `backend/mcp-config.example.json` for a ready-to-use Claude Desktop config template.
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `JWT_SECRET` | Yes | — | JWT signing secret (min 32 chars) |
+| `FIXMEET_API_TOKEN` | No | — | JWT access token for stdio auth |
+| `FIXMEET_API_KEY` | No | — | API key for remote CLI mode |
+| `FIXMEET_API_URL` | No | `http://localhost:3001` | Backend URL for remote CLI mode |
+| `MCP_ENABLED` | No | `true` | Set to `false` to disable HTTP transport |
+| `MCP_RATE_LIMIT` | No | `30` | Max requests per minute per user |
