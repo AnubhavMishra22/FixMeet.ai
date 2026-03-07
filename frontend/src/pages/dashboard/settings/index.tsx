@@ -544,7 +544,7 @@ function McpApiKeys() {
       "args": ["fixmeet-mcp"],
       "env": {
         "FIXMEET_API_KEY": "fxm_your-key-here",
-        "FIXMEET_API_URL": "${window.location.origin.replace(':5173', ':3001')}"
+        "FIXMEET_API_URL": "${import.meta.env.VITE_API_URL || 'http://localhost:3001'}"
       }
     }
   }

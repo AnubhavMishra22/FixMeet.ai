@@ -9,7 +9,8 @@ import type { McpContext } from './types.js';
 import { env } from '../config/env.js';
 import { logMcpToolCall } from './usage-logger.js';
 
-/** Simple per-user sliding window rate limiter for MCP requests */
+// In-memory rate limiter — sufficient for single-process deployments.
+// For multi-process/scaled environments, replace with Redis-backed limiter.
 const rateLimitMap = new Map<string, number[]>();
 
 function isRateLimited(userId: string): boolean {

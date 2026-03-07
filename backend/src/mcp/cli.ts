@@ -51,7 +51,6 @@ async function main(): Promise<void> {
 async function startRemoteMode(): Promise<void> {
   const { McpServer } = await import('@modelcontextprotocol/sdk/server/mcp.js');
   const { StdioServerTransport } = await import('@modelcontextprotocol/sdk/server/stdio.js');
-  const { z } = await import('zod');
 
   const server = new McpServer(
     { name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION },
@@ -123,9 +122,9 @@ async function startLocalMode(): Promise<void> {
   const { StdioServerTransport } = await import('@modelcontextprotocol/sdk/server/stdio.js');
   const { registerAllTools } = await import('./tools/index.js');
   const { registerAllResources } = await import('./resources/index.js');
-    const { authenticateMcp } = await import('./auth.js');
+  const { authenticateMcp } = await import('./auth.js');
 
-    let context: import('./types.js').McpContext | undefined;
+  let context: import('./types.js').McpContext | undefined;
   const token = process.env.FIXMEET_API_TOKEN;
   if (token) {
     try {
