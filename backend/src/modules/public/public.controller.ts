@@ -207,6 +207,7 @@ export async function getBookingByToken(
       },
       host: {
         name: booking.host.name,
+        username: booking.host.username,
         email: booking.host.email,
         timezone: booking.host.timezone,
       },
