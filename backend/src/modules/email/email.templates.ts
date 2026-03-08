@@ -63,7 +63,7 @@ export function bookingConfirmedHostEmail(data: BookingEmailData): EmailTemplate
             ${data.dashboardUrl ? `<a href="${data.dashboardUrl}" class="button">View in Dashboard</a>` : ''}
 
             <div class="footer">
-              <p>This email was sent by FixMeet.ai</p>
+              <p>This email was sent by FixMeet.app</p>
             </div>
           </div>
         </div>
@@ -84,7 +84,7 @@ Where: ${data.locationType}${data.meetingUrl ? ` - ${data.meetingUrl}` : ''}
 
 ${data.dashboardUrl ? `View in Dashboard: ${data.dashboardUrl}` : ''}
 
-- FixMeet.ai
+- FixMeet.app
     `.trim(),
   };
 }
@@ -147,7 +147,7 @@ export function bookingConfirmedInviteeEmail(data: BookingEmailData): EmailTempl
             ${data.cancelUrl ? `<a href="${data.cancelUrl}" class="cancel-link">Need to cancel or reschedule?</a>` : ''}
 
             <div class="footer">
-              <p>This email was sent by FixMeet.ai on behalf of ${data.hostName}</p>
+              <p>This email was sent by FixMeet on behalf of ${data.hostName}</p>
             </div>
           </div>
         </div>
@@ -168,7 +168,7 @@ Where: ${data.locationType}${data.meetingUrl ? ` - ${data.meetingUrl}` : ''}
 
 ${data.cancelUrl ? `Need to cancel or reschedule? ${data.cancelUrl}` : ''}
 
-- FixMeet.ai
+- FixMeet.app
     `.trim(),
   };
 }
@@ -225,7 +225,7 @@ export function bookingCancelledEmail(
             ${reason ? `<div class="reason"><strong>Reason:</strong> ${reason}</div>` : ''}
 
             <div class="footer">
-              <p>This email was sent by FixMeet.ai</p>
+              <p>This email was sent by FixMeet.app</p>
             </div>
           </div>
         </div>
@@ -241,7 +241,7 @@ What: ${data.eventTitle}
 Was scheduled for: ${formattedTime}
 ${reason ? `Reason: ${reason}` : ''}
 
-- FixMeet.ai
+- FixMeet.app
     `.trim(),
   };
 }
@@ -308,7 +308,7 @@ export function bookingRescheduledEmail(
             </div>
 
             <div class="footer">
-              <p>This email was sent by FixMeet.ai</p>
+              <p>This email was sent by FixMeet.app</p>
             </div>
           </div>
         </div>
@@ -327,7 +327,7 @@ Old time: ${oldFormattedTime}
 New time: ${newFormattedTime}
 Where: ${data.locationType}${data.meetingUrl ? ` - ${data.meetingUrl}` : ''}
 
-- FixMeet.ai
+- FixMeet.app
     `.trim(),
   };
 }
@@ -396,7 +396,7 @@ export function reminderEmail(
             ${data.meetingUrl ? `<a href="${data.meetingUrl}" class="button">Join Meeting</a>` : ''}
 
             <div class="footer">
-              <p>This email was sent by FixMeet.ai</p>
+              <p>This email was sent by FixMeet.app</p>
             </div>
           </div>
         </div>
@@ -415,7 +415,7 @@ When: ${formattedTime}
 With: ${otherPerson}
 Where: ${data.locationType}${data.meetingUrl ? ` - ${data.meetingUrl}` : ''}
 
-- FixMeet.ai
+- FixMeet.app
     `.trim(),
   };
 }

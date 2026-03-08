@@ -1,8 +1,8 @@
-# FixMeet.ai
+# FixMeet.app
 
 A modern, open-source scheduling and booking platform — a self-hostable alternative to Calendly. Create event types, share public booking pages, and manage appointments with Google Calendar integration, email notifications, and an AI copilot for natural-language scheduling.
 
-**Live at [fixmeet.vercel.app](https://fixmeet.vercel.app)**
+**Live at [fixmeet.app](https://fixmeet.app)**
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)
 ![Node.js](https://img.shields.io/badge/Node.js-20+-green?logo=node.js)
@@ -65,7 +65,7 @@ A modern, open-source scheduling and booking platform — a self-hostable altern
 ## Project Structure
 
 ```
-FixMeet.ai/
+FixMeet.app/
 ├── backend/
 │   ├── src/
 │   │   ├── config/          # Database connection, env validation
@@ -183,7 +183,7 @@ FRONTEND_URL=http://localhost:5173
 
 # Email (Optional - falls back to console.log in dev)
 RESEND_API_KEY=
-EMAIL_FROM=FixMeet <notifications@fixmeet.ai>
+EMAIL_FROM=FixMeet <notifications@fixmeet.app>
 
 # Google Calendar (Optional)
 GOOGLE_CLIENT_ID=

@@ -94,7 +94,7 @@ export function followupEmail(data: FollowupEmailData): EmailTemplate {
             ${actionItemsHtml}
 
             <div class="footer">
-              <p>This email was sent by ${escapeHtml(data.hostName)} via FixMeet.ai</p>
+              <p>This email was sent by ${escapeHtml(data.hostName)} via FixMeet.app</p>
             </div>
           </div>
         </div>
@@ -112,7 +112,7 @@ Meeting Date: ${formattedTime}
 ${data.body}
 ${actionItemsText}
 
-- Sent by ${data.hostName} via FixMeet.ai
+- Sent by ${data.hostName} via FixMeet.app
     `.trim(),
   };
 }
