@@ -98,7 +98,7 @@ export default function SettingsPage() {
             <div>
               <Label htmlFor="username">Username</Label>
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">fixmeet.app/</span>
+                <span className="text-gray-500 text-sm">{new URL(import.meta.env.VITE_APP_URL || 'http://localhost:5173').hostname}/</span>
                 <Input id="username" {...register('username')} />
               </div>
               {errors.username && (
