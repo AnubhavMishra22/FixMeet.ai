@@ -5,8 +5,9 @@ import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Textarea } from '../../components/ui/textarea';
 import { Label } from '../../components/ui/label';
-import { Clock, Video, MapPin, Phone, Globe, CheckCircle, XCircle } from 'lucide-react';
+import { Clock, Video, MapPin, Phone, Globe, XCircle } from 'lucide-react';
 import api from '../../lib/api';
+import { useToast } from '../../stores/toast-store';
 
 interface BookingData {
   id: string;
@@ -65,6 +66,7 @@ export default function BookingManagePage() {
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [cancelled, setCancelled] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!id || !token) {
@@ -105,7 +107,7 @@ export default function BookingManagePage() {
       setBooking((prev) => (prev ? { ...prev, status: 'cancelled' } : null));
     } catch (e: unknown) {
       const err = e as { response?: { data?: { error?: { message?: string } } } };
-      alert(err.response?.data?.error?.message || 'Failed to cancel booking');
+      toast({ title: 'Failed to cancel booking', description: err.response?.data?.error?.message, variant: 'destructive' });
     } finally {
       setIsCancelling(false);
     }
