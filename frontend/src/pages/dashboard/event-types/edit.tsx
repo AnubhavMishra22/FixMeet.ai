@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { format, addMonths } from 'date-fns';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '../../../components/ui/button';
@@ -23,10 +24,20 @@ const eventTypeSchema = z.object({
   locationType: z.enum(['google_meet', 'zoom', 'teams', 'phone', 'in_person', 'custom']),
   locationValue: z.string().optional(),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+  rangeStart: z.string().min(1, 'Start date is required'),
+  rangeEnd: z.string().min(1, 'End date is required'),
+  timeStart: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time (HH:MM)'),
+  timeEnd: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time (HH:MM)'),
   bufferBefore: z.number().int().min(0).max(120),
   bufferAfter: z.number().int().min(0).max(120),
   minNoticeMinutes: z.number().int().min(0).max(43200),
   isActive: z.boolean(),
+}).refine((data) => data.rangeStart <= data.rangeEnd, {
+  message: 'End date must be on or after start date',
+  path: ['rangeEnd'],
+}).refine((data) => data.timeStart < data.timeEnd, {
+  message: 'End time must be after start time',
+  path: ['timeEnd'],
 });
 
 type EventTypeForm = z.infer<typeof eventTypeSchema>;
@@ -71,6 +82,9 @@ export default function EditEventTypePage() {
       try {
         const { data } = await api.get(`/api/event-types/${id}`);
         const et = data.data.eventType;
+        const today = format(new Date(), 'yyyy-MM-dd');
+        const threeMonths = format(addMonths(new Date(), 3), 'yyyy-MM-dd');
+        const firstRange = et.schedule?.monday?.[0] ?? et.schedule?.tuesday?.[0];
         reset({
           title: et.title,
           slug: et.slug,
@@ -79,6 +93,10 @@ export default function EditEventTypePage() {
           locationType: et.locationType,
           locationValue: et.locationValue || '',
           color: et.color,
+          rangeStart: et.rangeStart ?? today,
+          rangeEnd: et.rangeEnd ?? threeMonths,
+          timeStart: firstRange?.start ?? '09:00',
+          timeEnd: firstRange?.end ?? '17:00',
           bufferBefore: et.bufferBefore,
           bufferAfter: et.bufferAfter,
           minNoticeMinutes: et.minNoticeMinutes,
@@ -97,7 +115,24 @@ export default function EditEventTypePage() {
   const onSubmit = async (data: EventTypeForm) => {
     setIsSubmitting(true);
     try {
-      await api.patch(`/api/event-types/${id}`, data);
+      const schedule = {
+        monday: [{ start: data.timeStart, end: data.timeEnd }],
+        tuesday: [{ start: data.timeStart, end: data.timeEnd }],
+        wednesday: [{ start: data.timeStart, end: data.timeEnd }],
+        thursday: [{ start: data.timeStart, end: data.timeEnd }],
+        friday: [{ start: data.timeStart, end: data.timeEnd }],
+        saturday: [{ start: data.timeStart, end: data.timeEnd }],
+        sunday: [{ start: data.timeStart, end: data.timeEnd }],
+      };
+      const { rangeStart, rangeEnd, timeStart, timeEnd, ...rest } = data;
+      await api.patch(`/api/event-types/${id}`, {
+        ...rest,
+        rangeType: 'range',
+        rangeStart,
+        rangeEnd,
+        schedule,
+        slotInterval: 30,
+      });
       toast({ title: 'Event type updated!' });
       navigate('/dashboard/event-types');
     } catch (e: unknown) {
@@ -205,6 +240,49 @@ export default function EditEventTypePage() {
                 <Input id="locationValue" {...register('locationValue')} />
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Availability</CardTitle>
+            <p className="text-sm text-muted-foreground font-normal">
+              When can people book? Slots are shown in 30-minute intervals.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="rangeStart">From date *</Label>
+                <Input id="rangeStart" type="date" {...register('rangeStart')} />
+                {errors.rangeStart && (
+                  <p className="text-sm text-red-500 mt-1">{errors.rangeStart.message}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="rangeEnd">To date *</Label>
+                <Input id="rangeEnd" type="date" {...register('rangeEnd')} />
+                {errors.rangeEnd && (
+                  <p className="text-sm text-red-500 mt-1">{errors.rangeEnd.message}</p>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="timeStart">Start time *</Label>
+                <Input id="timeStart" type="time" {...register('timeStart')} />
+                {errors.timeStart && (
+                  <p className="text-sm text-red-500 mt-1">{errors.timeStart.message}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="timeEnd">End time *</Label>
+                <Input id="timeEnd" type="time" {...register('timeEnd')} />
+                {errors.timeEnd && (
+                  <p className="text-sm text-red-500 mt-1">{errors.timeEnd.message}</p>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
 

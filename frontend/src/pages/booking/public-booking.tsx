@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { format, startOfDay } from 'date-fns';
+import { format, startOfDay, addMonths, endOfMonth } from 'date-fns';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -180,10 +180,21 @@ export default function PublicBookingPage() {
     return days;
   }
 
+  const today = startOfDay(new Date());
+  const minDate = today;
+  const maxDate = endOfMonth(addMonths(new Date(), 3));
+
   function isDateDisabled(date: Date) {
-    const today = startOfDay(new Date());
-    return date < today;
+    const d = startOfDay(date);
+    return d < minDate || d > maxDate;
   }
+
+  const isPrevMonthDisabled =
+    calendarMonth.getFullYear() === today.getFullYear() &&
+    calendarMonth.getMonth() === today.getMonth();
+  const isNextMonthDisabled =
+    calendarMonth.getFullYear() === maxDate.getFullYear() &&
+    calendarMonth.getMonth() === maxDate.getMonth();
 
   function getLocationIcon() {
     switch (eventType?.locationType) {
@@ -265,6 +276,7 @@ export default function PublicBookingPage() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      disabled={isPrevMonthDisabled}
                       onClick={() =>
                         setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1))
                       }
@@ -275,6 +287,7 @@ export default function PublicBookingPage() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      disabled={isNextMonthDisabled}
                       onClick={() =>
                         setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1))
                       }

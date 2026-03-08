@@ -31,6 +31,8 @@ export interface EventType {
   maxBookingsPerDay: number | null;
   rangeType: 'rolling' | 'range' | 'indefinite';
   rangeDays: number | null;
+  rangeStart: string | null;
+  rangeEnd: string | null;
   questions: CustomQuestion[];
   isActive: boolean;
   createdAt: string;
