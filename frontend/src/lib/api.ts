@@ -1,5 +1,13 @@
 import axios from 'axios';
 
+/** Safely extract error message from API errors. */
+export function getApiErrorMessage(e: unknown, fallback: string): string {
+  if (axios.isAxiosError(e) && e.response?.data?.error?.message) {
+    return e.response.data.error.message;
+  }
+  return fallback;
+}
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,

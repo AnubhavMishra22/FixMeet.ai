@@ -25,6 +25,7 @@ import InsightsPage from './pages/dashboard/insights/index';
 
 // Public pages
 import PublicBookingPage from './pages/booking/public-booking';
+import BookingManagePage from './pages/booking/booking-manage';
 
 function App() {
   return (
@@ -168,6 +169,9 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Invitee cancel/reschedule (must be before /:username/:slug) */}
+        <Route path="/bookings/:id" element={<BookingManagePage />} />
 
         {/* Public booking page */}
         <Route path="/:username/:slug" element={<PublicBookingPage />} />
