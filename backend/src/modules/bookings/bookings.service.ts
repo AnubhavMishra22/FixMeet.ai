@@ -83,6 +83,12 @@ function generateCancelToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
+function toDateStr(v: string | Date | null | undefined): string | null {
+  if (v == null) return null;
+  if (typeof v === 'string') return v;
+  return format(v as Date, 'yyyy-MM-dd');
+}
+
 /**
  * Check if a time slot conflicts with existing bookings
  */
@@ -161,17 +167,13 @@ async function validateBookingTime(
       throw new BadRequestError('Selected date is outside the booking window');
     }
   } else if (eventType.range_type === 'range') {
-    const toDateStr = (v: string | Date | null | undefined): string | null => {
-      if (v == null) return null;
-      if (typeof v === 'string') return v;
-      return format(v as Date, 'yyyy-MM-dd');
-    };
     const rangeStart = toDateStr(eventType.range_start);
     const rangeEnd = toDateStr(eventType.range_end);
-    if (rangeStart && startDate < parseISO(rangeStart)) {
+    const startStr = format(startDate, 'yyyy-MM-dd');
+    if (rangeStart && startStr < rangeStart) {
       throw new BadRequestError('Selected date is before the available range');
     }
-    if (rangeEnd && startDate > parseISO(rangeEnd)) {
+    if (rangeEnd && startStr > rangeEnd) {
       throw new BadRequestError('Selected date is after the available range');
     }
   }
