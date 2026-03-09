@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { format, startOfDay, addMonths, endOfMonth, parseISO } from 'date-fns';
+import { format, startOfDay, addMonths, addDays, endOfMonth, parseISO } from 'date-fns';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -132,7 +132,7 @@ export default function PublicBookingPage() {
     } else if (rt === 'indefinite') {
       max = endOfMonth(addMonths(today, 3));
     } else {
-      max = addMonths(today, rd);
+      max = addDays(today, rd);
     }
 
     setCalendarMonth((prev) => {
@@ -191,8 +191,7 @@ export default function PublicBookingPage() {
       setBooking(data.data.booking);
       setStep('confirmed');
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { error?: { message?: string } } } };
-      alert(err.response?.data?.error?.message || 'Booking failed');
+      toast({ title: getApiErrorMessage(e, 'Booking failed'), variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
@@ -240,7 +239,7 @@ export default function PublicBookingPage() {
     }
     return {
       minDate: today.getTime(),
-      maxDate: addMonths(today, rd).getTime(),
+      maxDate: addDays(today, rd).getTime(),
     };
   })();
 
