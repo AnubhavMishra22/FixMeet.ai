@@ -9,7 +9,7 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
-import api from '../../../lib/api';
+import api, { getApiErrorMessage } from '../../../lib/api';
 import { useToast } from '../../../stores/toast-store';
 
 const eventTypeSchema = z.object({
@@ -28,6 +28,7 @@ const eventTypeSchema = z.object({
   rangeEnd: z.string().min(1, 'End date is required'),
   timeStart: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time (HH:MM)'),
   timeEnd: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time (HH:MM)'),
+  slotInterval: z.number().int().min(5).max(60),
   bufferBefore: z.number().int().min(0).max(120),
   bufferAfter: z.number().int().min(0).max(120),
   minNoticeMinutes: z.number().int().min(0).max(43200),
@@ -79,6 +80,7 @@ export default function NewEventTypePage() {
       rangeEnd: threeMonths,
       timeStart: '09:00',
       timeEnd: '17:00',
+      slotInterval: 30,
       bufferBefore: 0,
       bufferAfter: 0,
       minNoticeMinutes: 60,
@@ -110,23 +112,20 @@ export default function NewEventTypePage() {
         saturday: [{ start: data.timeStart, end: data.timeEnd }],
         sunday: [{ start: data.timeStart, end: data.timeEnd }],
       };
-      const { rangeStart, rangeEnd, timeStart, timeEnd, ...rest } = data;
+      const { rangeStart, rangeEnd, timeStart, timeEnd, slotInterval, ...rest } = data;
       await api.post('/api/event-types', {
         ...rest,
-        rangeType: 'range',
+        rangeType: 'range' as const,
         rangeStart,
         rangeEnd,
         schedule,
-        slotInterval: 30,
+        slotInterval,
       });
       toast({ title: 'Event type created!' });
       navigate('/dashboard/event-types');
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { error?: { message?: string } } } };
-      toast({
-        title: err.response?.data?.error?.message || 'Failed to create event type',
-        variant: 'destructive',
-      });
+      const message = getApiErrorMessage(e, 'Failed to create event type');
+      toast({ title: message, variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
@@ -265,10 +264,23 @@ export default function NewEventTypePage() {
           <CardHeader>
             <CardTitle>Availability</CardTitle>
             <p className="text-sm text-muted-foreground font-normal">
-              When can people book? Slots are shown in 30-minute intervals.
+              When can people book? Choose date range and daily time window.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="slotInterval">Slot interval (minutes) *</Label>
+              <select
+                id="slotInterval"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                {...register('slotInterval', { valueAsNumber: true })}
+              >
+                <option value={15}>15 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={60}>60 minutes</option>
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">Time between available slots</p>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="rangeStart">From date *</Label>

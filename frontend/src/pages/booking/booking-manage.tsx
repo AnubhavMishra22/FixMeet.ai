@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Textarea } from '../../components/ui/textarea';
 import { Label } from '../../components/ui/label';
 import { Clock, Video, MapPin, Phone, Globe, XCircle } from 'lucide-react';
-import api from '../../lib/api';
+import api, { getApiErrorMessage } from '../../lib/api';
 import { useToast } from '../../stores/toast-store';
 
 interface BookingData {
@@ -84,8 +84,7 @@ export default function BookingManagePage() {
         setEventType(data.data.eventType);
         setHost(data.data.host);
       } catch (e: unknown) {
-        const err = e as { response?: { data?: { error?: { message?: string } } } };
-        setError(err.response?.data?.error?.message || 'Booking not found or link has expired.');
+        setError(getApiErrorMessage(e, 'Booking not found or link has expired.'));
       } finally {
         setIsLoading(false);
       }
@@ -106,8 +105,11 @@ export default function BookingManagePage() {
       setCancelled(true);
       setBooking((prev) => (prev ? { ...prev, status: 'cancelled' } : null));
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { error?: { message?: string } } } };
-      toast({ title: 'Failed to cancel booking', description: err.response?.data?.error?.message, variant: 'destructive' });
+      toast({
+        title: 'Failed to cancel booking',
+        description: getApiErrorMessage(e, 'Unable to cancel. Please try again.'),
+        variant: 'destructive',
+      });
     } finally {
       setIsCancelling(false);
     }
