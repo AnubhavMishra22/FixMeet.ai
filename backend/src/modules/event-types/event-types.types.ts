@@ -107,6 +107,10 @@ export interface PublicEventType {
   locationType: string;
   color: string;
   questions: CustomQuestion[];
+  rangeType?: 'rolling' | 'range' | 'indefinite';
+  rangeDays?: number | null;
+  rangeStart?: string | null;
+  rangeEnd?: string | null;
 }
 
 export interface PublicHost {
