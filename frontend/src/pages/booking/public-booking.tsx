@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { format, startOfDay, addMonths, endOfMonth } from 'date-fns';
+import { format, startOfDay, addMonths, addDays, endOfMonth, parseISO } from 'date-fns';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Clock, Globe, Video, MapPin, Phone, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import api from '../../lib/api';
+import api, { getApiErrorMessage } from '../../lib/api';
+import { useToast } from '../../stores/toast-store';
 
 interface EventTypeData {
   id: string;
@@ -16,6 +17,10 @@ interface EventTypeData {
   durationMinutes: number;
   locationType: string;
   color: string;
+  rangeType?: 'rolling' | 'range' | 'indefinite';
+  rangeDays?: number | null;
+  rangeStart?: string | null;
+  rangeEnd?: string | null;
   questions: Array<{
     id: string;
     type: string;
@@ -74,6 +79,7 @@ export default function PublicBookingPage() {
   const [booking, setBooking] = useState<BookingResponse | null>(null);
 
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const { toast } = useToast();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -97,14 +103,46 @@ export default function PublicBookingPage() {
         setEventType(data.data.eventType);
         setHost(data.data.host);
       } catch (e: unknown) {
-        const err = e as { response?: { data?: { error?: { message?: string } } } };
-        setError(err.response?.data?.error?.message || 'Event type not found');
+        setError(getApiErrorMessage(e, 'Event type not found'));
       } finally {
         setIsLoading(false);
       }
     }
     fetchData();
   }, [username, slug]);
+
+  useEffect(() => {
+    if (!eventType) return;
+    const today = startOfDay(new Date());
+    const rt = eventType.rangeType ?? 'rolling';
+    const rd = eventType.rangeDays ?? 60;
+    const rs = eventType.rangeStart;
+    const re = eventType.rangeEnd;
+
+    let min: Date;
+    if (rt === 'range' && rs && re) {
+      min = startOfDay(parseISO(rs));
+      if (min.getTime() < today.getTime()) min = today;
+    } else {
+      min = today;
+    }
+    let max: Date;
+    if (rt === 'range' && rs && re) {
+      max = startOfDay(parseISO(re));
+    } else if (rt === 'indefinite') {
+      max = endOfMonth(addMonths(today, 3));
+    } else {
+      max = addDays(today, rd);
+    }
+
+    setCalendarMonth((prev) => {
+      const prevStart = startOfDay(new Date(prev.getFullYear(), prev.getMonth(), 1));
+      if (prevStart.getTime() < min.getTime()) return min;
+      const prevEnd = startOfDay(new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+      if (prevEnd.getTime() > max.getTime()) return max;
+      return prev;
+    });
+  }, [eventType]);
 
   async function handleDateSelect(date: Date) {
     setSelectedDate(date);
@@ -153,8 +191,7 @@ export default function PublicBookingPage() {
       setBooking(data.data.booking);
       setStep('confirmed');
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { error?: { message?: string } } } };
-      alert(err.response?.data?.error?.message || 'Booking failed');
+      toast({ title: getApiErrorMessage(e, 'Booking failed'), variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
@@ -181,20 +218,44 @@ export default function PublicBookingPage() {
   }
 
   const today = startOfDay(new Date());
-  const minDate = today;
-  const maxDate = endOfMonth(addMonths(new Date(), 3));
+
+  const { minDate, maxDate } = (() => {
+    const rt = eventType?.rangeType ?? 'rolling';
+    const rd = eventType?.rangeDays ?? 60;
+    const rs = eventType?.rangeStart;
+    const re = eventType?.rangeEnd;
+
+    if (rt === 'range' && rs && re) {
+      return {
+        minDate: Math.max(startOfDay(parseISO(rs)).getTime(), today.getTime()),
+        maxDate: startOfDay(parseISO(re)).getTime(),
+      };
+    }
+    if (rt === 'indefinite') {
+      return {
+        minDate: today.getTime(),
+        maxDate: endOfMonth(addMonths(today, 3)).getTime(),
+      };
+    }
+    return {
+      minDate: today.getTime(),
+      maxDate: addDays(today, rd).getTime(),
+    };
+  })();
 
   function isDateDisabled(date: Date) {
-    const d = startOfDay(date);
+    const d = startOfDay(date).getTime();
     return d < minDate || d > maxDate;
   }
 
-  const isPrevMonthDisabled =
-    calendarMonth.getFullYear() === today.getFullYear() &&
-    calendarMonth.getMonth() === today.getMonth();
-  const isNextMonthDisabled =
-    calendarMonth.getFullYear() === maxDate.getFullYear() &&
-    calendarMonth.getMonth() === maxDate.getMonth();
+  const canGoPrevMonth = () => {
+    const firstOfMonth = startOfDay(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1));
+    return firstOfMonth.getTime() > minDate;
+  };
+  const canGoNextMonth = () => {
+    const firstOfNextMonth = startOfDay(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1));
+    return firstOfNextMonth.getTime() <= maxDate;
+  };
 
   function getLocationIcon() {
     switch (eventType?.locationType) {
@@ -276,7 +337,7 @@ export default function PublicBookingPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      disabled={isPrevMonthDisabled}
+                      disabled={!canGoPrevMonth()}
                       onClick={() =>
                         setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1))
                       }
@@ -287,7 +348,7 @@ export default function PublicBookingPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      disabled={isNextMonthDisabled}
+                      disabled={!canGoNextMonth()}
                       onClick={() =>
                         setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1))
                       }
@@ -306,10 +367,10 @@ export default function PublicBookingPage() {
                           <button
                             type="button"
                             disabled={isDateDisabled(date)}
-                            onClick={() => handleDateSelect(date)}
+                            onClick={() => !isDateDisabled(date) && handleDateSelect(date)}
                             className={`w-full h-full rounded-full flex items-center justify-center text-sm transition-colors
                               ${isDateDisabled(date)
-                                ? 'text-gray-300 cursor-not-allowed'
+                                ? 'text-gray-300 bg-gray-50/50 cursor-not-allowed'
                                 : 'hover:bg-primary hover:text-white cursor-pointer'
                               }
                               ${selectedDate && format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
