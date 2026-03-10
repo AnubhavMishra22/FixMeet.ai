@@ -66,6 +66,16 @@ ufw allow 80
 ufw allow 443
 ufw --force enable
 
+# --- Step 5b: Swap (1GB droplet needs this for npm run build) ---
+if [ ! -f /swapfile ]; then
+  echo "Adding 1GB swap (prevents OOM during build)..."
+  fallocate -l 1G /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=1024 status=progress
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
 # --- Step 6: Clone and build ---
 echo "[7/8] Cloning repo and building..."
 cd /root
@@ -76,6 +86,8 @@ else
 fi
 cd FixMeet.ai/backend
 npm install
+# 1GB droplet: use swap + allow Node 1.5GB heap for tsc
+export NODE_OPTIONS="--max-old-space-size=1536"
 npm run build
 
 # --- Step 7: Create .env ---

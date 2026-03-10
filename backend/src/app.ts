@@ -1,5 +1,11 @@
 import 'express-async-errors';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import express from 'express';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -35,7 +41,7 @@ app.get('/', (_req, res) => {
     name: 'FixMeet API',
     status: 'running',
     docs: '/health',
-    version: '1.0.0',
+    version: pkg.version,
   });
 });
 
