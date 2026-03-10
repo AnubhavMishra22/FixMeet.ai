@@ -26,6 +26,16 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Root route - API info
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'FixMeet API',
+    status: 'running',
+    docs: '/health',
+    version: '1.0.0',
+  });
+});
+
 // Security middleware
 app.use(helmet());
 
