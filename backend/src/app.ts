@@ -26,6 +26,9 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Security middleware (before other routes for proper headers)
+app.use(helmet());
+
 // Root route - API info
 app.get('/', (_req, res) => {
   res.json({
@@ -35,9 +38,6 @@ app.get('/', (_req, res) => {
     version: '1.0.0',
   });
 });
-
-// Security middleware
-app.use(helmet());
 
 // CORS - allow all origins temporarily for debugging
 // TODO: Restrict to FRONTEND_URL once deployment is stable

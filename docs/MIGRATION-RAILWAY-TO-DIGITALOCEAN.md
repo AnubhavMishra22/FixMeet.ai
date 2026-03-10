@@ -401,7 +401,7 @@ nginx -t && systemctl reload nginx
 | Database | Included / Free | Managed DB ~$7–15/mo |
 | **Total** | ~$0 | **~$12–27/mo** |
 
-**Cheaper option:** $6 Droplet + Docker + self-hosted Postgres (~$21/mo with 1GB DB) — more setup, less managed.
+**Cheaper option:** $6 Droplet + self-hosted Postgres on same droplet (~$6/mo) — more setup, less managed.
 
 ---
 

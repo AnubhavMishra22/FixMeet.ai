@@ -3,6 +3,7 @@
  * Secrets (DATABASE_URL, JWT_SECRET) must be loaded from .env at runtime.
  * Do not add secrets here—use: pm2 start ecosystem.config.cjs (with .env in cwd)
  * or ensure dotenv loads .env before app start.
+ * Note: cwd is droplet-specific; droplet-full-setup.sh deploys to /root/FixMeet.ai/backend.
  */
 module.exports = {
   apps: [{

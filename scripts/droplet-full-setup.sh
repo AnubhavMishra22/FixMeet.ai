@@ -70,7 +70,7 @@ ufw --force enable
 echo "[7/8] Cloning repo and building..."
 cd /root
 if [ -d "FixMeet.ai" ]; then
-  cd FixMeet.ai && git pull origin main 2>/dev/null || git pull 2>/dev/null || true && cd ..
+  (cd FixMeet.ai && { git pull origin main 2>/dev/null || git pull 2>/dev/null || true; })
 else
   git clone "$REPO_URL"
 fi
@@ -142,6 +142,8 @@ echo "Credentials saved in /root/FixMeet.ai/backend/.env"
 
 # --- Backup cron ---
 mkdir -p /root/backups
+echo "127.0.0.1:5432:fixmeet:fixmeet:$DB_PASS" > /root/.pgpass
+chmod 600 /root/.pgpass
 cat > /root/backup-fixmeet.sh << 'BACKUP'
 #!/bin/bash
 BACKUP_DIR="/root/backups"
@@ -150,4 +152,4 @@ pg_dump -h 127.0.0.1 -U fixmeet fixmeet > "$BACKUP_DIR/fixmeet_$(date +%F).sql"
 find "$BACKUP_DIR" -name "fixmeet_*.sql" -mtime +7 -delete
 BACKUP
 chmod +x /root/backup-fixmeet.sh
-(crontab -l 2>/dev/null; echo "0 2 * * * /root/backup-fixmeet.sh") | crontab -
+(crontab -l 2>/dev/null | grep -v 'backup-fixmeet.sh'; echo "0 2 * * * /root/backup-fixmeet.sh") | crontab -
