@@ -1,6 +1,6 @@
 #!/bin/bash
 # FixMeet.ai - DigitalOcean Droplet Setup (Steps 3–7)
-# Run as root after: ssh root@137.184.38.130
+# Run as root after: ssh root@YOUR_DROPLET_IP
 # Usage: bash droplet-setup.sh [REPO_URL]
 # Example: bash droplet-setup.sh https://github.com/AnubhavMishra22/FixMeet.ai.git
 

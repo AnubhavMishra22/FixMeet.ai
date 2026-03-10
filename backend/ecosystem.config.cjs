@@ -1,3 +1,9 @@
+/**
+ * PM2 ecosystem config for FixMeet backend.
+ * Secrets (DATABASE_URL, JWT_SECRET) must be loaded from .env at runtime.
+ * Do not add secrets here—use: pm2 start ecosystem.config.cjs (with .env in cwd)
+ * or ensure dotenv loads .env before app start.
+ */
 module.exports = {
   apps: [{
     name: 'fixmeet-api',
@@ -6,8 +12,6 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       PORT: '3001',
-      DATABASE_URL: 'postgresql://fixmeet@127.0.0.1:5432/fixmeet',
-      JWT_SECRET: 'fixmeet_jwt_secret_min_32_chars_for_production_2024',
       FRONTEND_URL: 'https://fixmeet.app',
       EMAIL_FROM: 'FixMeet <notifications@fixmeet.ai>',
       GOOGLE_REDIRECT_URI: 'https://api.fixmeet.app/api/calendars/google/callback',

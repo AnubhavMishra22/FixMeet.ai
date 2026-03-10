@@ -6,11 +6,11 @@
 set -e
 
 REPO_URL="${1:-https://github.com/AnubhavMishra22/FixMeet.ai.git}"
+DROPLET_IP="${2:-$(curl -s --connect-timeout 2 http://169.254.169.254/metadata/v1/interfaces/public/0/ipv4/address 2>/dev/null || hostname -I | awk '{print $1}')}"
 DB_USER="fixmeet"
-DB_PASS="fixmeet_$(openssl rand -hex 8)"
+DB_PASS="$(openssl rand -hex 16)"
 DB_NAME="fixmeet"
 JWT_SECRET="$(openssl rand -base64 32)"
-DROPLET_IP="137.184.38.130"
 
 echo "=== FixMeet.ai Full Droplet Setup ==="
 

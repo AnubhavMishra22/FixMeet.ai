@@ -261,26 +261,26 @@ If something goes wrong:
 
 If using a **Droplet** instead of App Platform (e.g. $6/mo with GitHub Student credits):
 
-**Droplet IP:** `137.184.38.130` (replace with yours)
+**Droplet IP:** Replace `YOUR_DROPLET_IP` below with your Droplet's IP address.
 
 **Full self-contained setup (PostgreSQL + backend + Nginx, no external DB):**
 ```powershell
-# From your machine (with Droplet root password):
+# From your machine. Use SSH keys (recommended): ssh-copy-id root@YOUR_DROPLET_IP
 cd FixMeet.ai
-.\scripts\run-droplet-setup.ps1 -Password "your_root_password"
+.\scripts\run-droplet-setup.ps1 -IP "YOUR_DROPLET_IP"
 ```
 
 **Or run manually after SSH:**
 ```powershell
-scp scripts/droplet-full-setup.sh root@137.184.38.130:~/
-ssh root@137.184.38.130
+scp scripts/droplet-full-setup.sh root@YOUR_DROPLET_IP:~/
+ssh root@YOUR_DROPLET_IP
 bash droplet-full-setup.sh
 ```
 
 ### Step 2: SSH into Droplet
 
 ```bash
-ssh root@137.184.38.130
+ssh root@YOUR_DROPLET_IP
 ```
 
 ### Step 3: Install nvm + Node 20
@@ -387,7 +387,7 @@ nginx -t && systemctl reload nginx
 
 ### Step 10: DNS + SSL (Optional but Recommended)
 
-1. Point `api.fixmeet.app` A record to `137.184.38.130`
+1. Point `api.fixmeet.app` A record to your Droplet IP
 2. Install Certbot: `apt install -y certbot python3-certbot-nginx`
 3. Run: `certbot --nginx -d api.fixmeet.app`
 

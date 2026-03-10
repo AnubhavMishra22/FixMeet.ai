@@ -1,45 +1,36 @@
 # FixMeet.ai - Run full Droplet setup remotely
-# Usage: .\run-droplet-setup.ps1 -Password "your_root_password"
-# Or:   $env:DROPLET_PW='your_password'; .\run-droplet-setup.ps1
+# Uses native SSH (key-based auth). Ensure your SSH key is added to the Droplet.
+# Usage: .\run-droplet-setup.ps1 -IP "YOUR_DROPLET_IP"
+#
+# Prerequisites: ssh and scp (built into Windows 10+). Configure SSH keys first:
+#   ssh-copy-id root@YOUR_DROPLET_IP
+# Or add your public key to the Droplet during creation.
 
 param(
-    [string]$Password = $env:DROPLET_PW,
-    [string]$IP = "137.184.38.130"
+    [Parameter(Mandatory = $true)]
+    [string]$IP
 )
 
 $ErrorActionPreference = "Stop"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $setupScript = Join-Path $scriptDir "droplet-full-setup.sh"
 
-if (-not $Password) {
-    Write-Host "Usage: .\run-droplet-setup.ps1 -Password 'your_root_password'" -ForegroundColor Yellow
-    Write-Host "Or set: `$env:DROPLET_PW='your_password'" -ForegroundColor Yellow
-    exit 1
-}
+# Prefer native ssh/scp (no password on command line, uses SSH keys)
+$sshPath = Get-Command ssh -ErrorAction SilentlyContinue
+$scpPath = Get-Command scp -ErrorAction SilentlyContinue
 
-$plink = "C:\Program Files\PuTTY\plink.exe"
-if (-not (Test-Path $plink)) {
-    Write-Host "Plink not found. Install PuTTY or run the setup manually:" -ForegroundColor Red
+if (-not $sshPath -or -not $scpPath) {
+    Write-Host "Native ssh/scp not found. Run setup manually:" -ForegroundColor Red
     Write-Host "  1. scp scripts/droplet-full-setup.sh root@${IP}:~/" -ForegroundColor Cyan
     Write-Host "  2. ssh root@${IP}" -ForegroundColor Cyan
     Write-Host "  3. bash droplet-full-setup.sh" -ForegroundColor Cyan
     exit 1
 }
 
-# Accept host key on first connection (SHA256:Q2GtJVYp22Ok8nHDh/B0utFZp3MlPtVaKii+FpOo0s0)
-$hostKey = "SHA256:Q2GtJVYp22Ok8nHDh/B0utFZp3MlPtVaKii+FpOo0s0"
-
-Write-Host "Uploading setup script..." -ForegroundColor Cyan
-$scp = "C:\Program Files\PuTTY\pscp.exe"
-if (Test-Path $scp) {
-    & $scp -pw $Password -hostkey $hostKey $setupScript "root@${IP}:~/droplet-full-setup.sh"
-} else {
-    $content = Get-Content $setupScript -Raw
-    $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($content))
-    & $plink -pw $Password -batch -hostkey $hostKey root@$IP "echo $b64 | base64 -d > droplet-full-setup.sh"
-}
+Write-Host "Uploading setup script to root@${IP}..." -ForegroundColor Cyan
+& scp $setupScript "root@${IP}:~/droplet-full-setup.sh"
 
 Write-Host "Running setup on Droplet (this may take 5-10 min)..." -ForegroundColor Cyan
-& $plink -pw $Password -batch -hostkey $hostKey root@$IP "bash droplet-full-setup.sh"
+& ssh "root@${IP}" "bash droplet-full-setup.sh"
 
 Write-Host "`nDone! Backend should be running at http://${IP}" -ForegroundColor Green
