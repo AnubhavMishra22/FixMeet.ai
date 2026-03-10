@@ -17,6 +17,10 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_REDIRECT_URI: z.string().default('http://localhost:3001/api/calendars/google/callback'),
+  // AI Copilot (optional — routes only mount if API key is set)
+  GOOGLE_AI_API_KEY: z.string().optional(),
+  GOOGLE_AI_MODEL_NAME: z.string().optional(),
+  GOOGLE_AI_MAX_TOKENS: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
