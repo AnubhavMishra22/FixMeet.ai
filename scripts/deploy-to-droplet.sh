@@ -19,7 +19,16 @@ npm run build
 pm2 restart fixmeet-api --update-env
 
 echo "Deploy complete. Waiting for health check..."
-sleep 5
-curl -sf https://api.fixmeet.app/health || curl -sf http://localhost:3001/health
-echo ""
-echo "=== Deploy successful ==="
+for i in 1 2 3 4 5 6; do
+  if curl -sf https://api.fixmeet.app/health >/dev/null || curl -sf http://localhost:3001/health >/dev/null; then
+    echo ""
+    echo "=== Deploy successful ==="
+    exit 0
+  fi
+  if [ "$i" -lt 6 ]; then
+    echo "Health check failed (attempt $i/6). Retrying in 5 seconds..."
+    sleep 5
+  fi
+done
+echo "Health check failed after 30 seconds." >&2
+exit 1
