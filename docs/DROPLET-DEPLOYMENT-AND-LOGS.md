@@ -2,7 +2,7 @@
 
 ## GitHub Deployment Status (like Railway)
 
-A GitHub Action deploys to the Droplet when you push/merge to `main`. You'll see the deployment status on:
+A GitHub Action deploys to the Droplet when you push/merge to `main` (the configured deployment branch). You'll see the deployment status on:
 - **PR merge** → Actions tab shows "Deploy to Droplet" run
 - **Commit page** → Yellow/orange dot while running, green check when done
 
