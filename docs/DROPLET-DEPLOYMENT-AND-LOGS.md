@@ -14,12 +14,14 @@ A GitHub Action deploys to the Droplet when you push/merge to `main`. You'll see
 | Secret | Value |
 |-------|-------|
 | `DROPLET_HOST` | Your droplet IP (e.g. `137.184.38.130`) |
-| `DROPLET_USER` | SSH user (usually `root`) |
+| `DROPLET_USER` | SSH user (usually `root` — see security note below) |
 | `DROPLET_SSH_KEY` | Full contents of your private SSH key |
 
 3. To get your SSH key: if you use a key pair for the droplet, copy the **private** key (the one you use with `ssh -i key.pem`). Paste the entire contents including `-----BEGIN ... -----` and `-----END ... -----`.
 
 4. Ensure GitHub Actions can reach the droplet: your droplet firewall must allow SSH (port 22) from GitHub's IPs, or use a key that's already in `~/.ssh/authorized_keys` on the droplet.
+
+**Security note (root user):** Using `root` for SSH is convenient but not ideal. For production hardening, consider creating a dedicated `deploy` user with limited sudo permissions and deploying to e.g. `/home/deploy/FixMeet.ai`. The current setup uses `root` for simplicity with our single-droplet MVP; `droplet-full-setup.sh` installs to `/root/FixMeet.ai`.
 
 ---
 
