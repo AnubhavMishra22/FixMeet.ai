@@ -139,3 +139,15 @@ echo "  3. Restart: pm2 restart fixmeet-api"
 echo "  4. SSL: apt install certbot python3-certbot-nginx && certbot --nginx -d api.fixmeet.app"
 echo ""
 echo "Credentials saved in /root/FixMeet.ai/backend/.env"
+
+# --- Backup cron ---
+mkdir -p /root/backups
+cat > /root/backup-fixmeet.sh << 'BACKUP'
+#!/bin/bash
+BACKUP_DIR="/root/backups"
+mkdir -p "$BACKUP_DIR"
+pg_dump -h 127.0.0.1 -U fixmeet fixmeet > "$BACKUP_DIR/fixmeet_$(date +%F).sql"
+find "$BACKUP_DIR" -name "fixmeet_*.sql" -mtime +7 -delete
+BACKUP
+chmod +x /root/backup-fixmeet.sh
+(crontab -l 2>/dev/null; echo "0 2 * * * /root/backup-fixmeet.sh") | crontab -
