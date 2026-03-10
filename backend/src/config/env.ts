@@ -12,7 +12,7 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().default('http://localhost:5173'),
   // Email (Resend)
   RESEND_API_KEY: z.string().optional(),
-  EMAIL_FROM: z.string().default('FixMeet <notifications@fixmeet.ai>'),
+  EMAIL_FROM: z.string().default('FixMeet <notifications@fixmeet.app>'),
   // Google OAuth
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
@@ -21,6 +21,9 @@ const envSchema = z.object({
   GOOGLE_AI_API_KEY: z.string().optional(),
   GOOGLE_AI_MODEL_NAME: z.string().optional(),
   GOOGLE_AI_MAX_TOKENS: z.string().optional(),
+  // MCP (optional — HTTP transport only mounts if enabled)
+  MCP_ENABLED: z.enum(['true', 'false']).default('true').transform(v => v === 'true'),
+  MCP_RATE_LIMIT: z.string().default('30').transform(Number),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -33,3 +36,6 @@ if (!parsed.success) {
 export const env = parsed.data;
 
 export const isProd = env.NODE_ENV === 'production';
+
+/** Default AI model — used by both AI copilot and brief generator */
+export const DEFAULT_AI_MODEL = 'gemini-2.5-flash-lite';

@@ -2,6 +2,8 @@ import app, { mountRoutes } from './app.js';
 import { env } from './config/env.js';
 import { runMigrations } from './config/migrate.js';
 import { processReminders } from './jobs/reminder.job.js';
+import { processBriefGeneration } from './jobs/brief-generator.job.js';
+import { processFollowupGeneration } from './jobs/followup-generator.job.js';
 
 async function start() {
   // Run database migrations before starting the server
@@ -11,8 +13,7 @@ async function start() {
   await mountRoutes();
 
   const server = app.listen(env.PORT, () => {
-    console.log(`Server running on port ${env.PORT}`);
-    console.log(`Environment: ${env.NODE_ENV}`);
+    console.log(`Server running on port ${env.PORT} (${env.NODE_ENV})`);
   });
 
   // Start reminder job scheduler (only in production/development, not in test)
@@ -33,7 +34,37 @@ async function start() {
       });
     }, 5000);
 
-    console.log('Reminder job scheduled (every 15 min)');
+    // Run brief generation every hour
+    const BRIEF_INTERVAL = 60 * 60 * 1000; // 1 hour
+
+    setInterval(() => {
+      processBriefGeneration().catch((err) => {
+        console.error('Brief generator job error:', err);
+      });
+    }, BRIEF_INTERVAL);
+
+    setTimeout(() => {
+      processBriefGeneration().catch((err) => {
+        console.error('Initial brief generator job error:', err);
+      });
+    }, 10000);
+
+    // Run followup generation every 30 minutes
+    const FOLLOWUP_INTERVAL = 30 * 60 * 1000; // 30 minutes
+
+    setInterval(() => {
+      processFollowupGeneration().catch((err) => {
+        console.error('Followup generator job error:', err);
+      });
+    }, FOLLOWUP_INTERVAL);
+
+    setTimeout(() => {
+      processFollowupGeneration().catch((err) => {
+        console.error('Initial followup generator job error:', err);
+      });
+    }, 15000);
+
+    console.log('Background jobs scheduled (reminders: 15m, briefs: 1h, followups: 30m)');
   }
 
   // Graceful shutdown

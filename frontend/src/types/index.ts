@@ -4,6 +4,12 @@ export interface User {
   name: string;
   username: string;
   timezone: string;
+  briefsEnabled: boolean;
+  briefEmailsEnabled: boolean;
+  briefGenerationHours: number;
+  followupsEnabled: boolean;
+  followupTone: 'formal' | 'friendly' | 'casual';
+  meetingHoursGoal: number | null;
   createdAt: string;
 }
 
@@ -25,6 +31,8 @@ export interface EventType {
   maxBookingsPerDay: number | null;
   rangeType: 'rolling' | 'range' | 'indefinite';
   rangeDays: number | null;
+  rangeStart: string | null;
+  rangeEnd: string | null;
   questions: CustomQuestion[];
   isActive: boolean;
   createdAt: string;
@@ -103,4 +111,170 @@ export interface CalendarConnection {
   isPrimary: boolean;
   isActive: boolean;
   createdAt: string;
+}
+
+export type BriefStatus = 'pending' | 'generating' | 'completed' | 'failed';
+
+export interface PreviousMeeting {
+  date: string;
+  title: string;
+  notes?: string;
+}
+
+export interface MeetingBrief {
+  id: string;
+  bookingId: string;
+  userId: string;
+  inviteeSummary: string | null;
+  companySummary: string | null;
+  previousMeetings: PreviousMeeting[];
+  talkingPoints: string[];
+  status: BriefStatus;
+  attemptCount: number;
+  generatedAt: string | null;
+  sentAt: string | null;
+  createdAt: string;
+}
+
+export interface MeetingBriefWithBooking extends MeetingBrief {
+  booking: {
+    inviteeName: string;
+    inviteeEmail: string;
+    startTime: string;
+    endTime: string;
+    eventTypeTitle: string;
+  };
+}
+
+// ── Follow-ups ──────────────────────────────────────────────────────────
+
+export type FollowupStatus = 'draft' | 'sent' | 'skipped';
+
+export interface MeetingFollowup {
+  id: string;
+  bookingId: string;
+  userId: string;
+  subject: string | null;
+  body: string | null;
+  actionItems: string[];
+  status: FollowupStatus;
+  sentAt: string | null;
+  createdAt: string;
+}
+
+export interface MeetingFollowupWithBooking extends MeetingFollowup {
+  booking: {
+    inviteeName: string;
+    inviteeEmail: string;
+    startTime: string;
+    endTime: string;
+    eventTypeTitle: string;
+  };
+}
+
+// ── Insights ────────────────────────────────────────────────────────────
+
+export type DateRange = '7d' | '30d' | '90d' | '365d' | 'all';
+
+export interface MeetingStats {
+  totalMeetings: number;
+  totalHours: number;
+  avgDurationMinutes: number;
+  byStatus: {
+    confirmed: number;
+    completed: number;
+    cancelled: number;
+    noShow: number;
+    rescheduled: number;
+  };
+}
+
+export interface MeetingsByDay {
+  days: { day: string; count: number }[];
+  busiestDay: string | null;
+}
+
+export interface MeetingsByHour {
+  hours: { hour: number; count: number }[];
+  peakHour: number | null;
+}
+
+export interface MeetingsByType {
+  types: {
+    eventTypeId: string;
+    title: string;
+    color: string;
+    count: number;
+    totalMinutes: number;
+  }[];
+}
+
+export interface MeetingTrends {
+  weeks: { week: string; count: number }[];
+  currentPeriodCount: number;
+  previousPeriodCount: number;
+  changePercent: number | null;
+}
+
+export interface NoShowStats {
+  totalCompleted: number;
+  totalCancelled: number;
+  totalNoShow: number;
+  cancellationRate: number;
+  noShowRate: number;
+}
+
+// ── Comparison Metrics ─────────────────────────────────────────────────
+
+export interface ComparisonMetric {
+  current: number;
+  previous: number;
+  changePercent: number | null;
+}
+
+export interface ComparisonMetrics {
+  totalMeetings: ComparisonMetric;
+  totalHours: ComparisonMetric;
+  avgDurationMinutes: ComparisonMetric;
+  cancellationRate: ComparisonMetric;
+}
+
+export interface MeetingStatsWithComparison extends MeetingStats {
+  comparison?: ComparisonMetrics;
+}
+
+// ── MCP API Keys ─────────────────────────────────────────────────────────
+
+export interface McpApiKey {
+  id: string;
+  name: string;
+  lastUsedAt: string | null;
+  createdAt: string;
+  isActive: boolean;
+}
+
+export interface McpApiKeyCreateResult {
+  id: string;
+  key: string;
+  name: string;
+  createdAt: string;
+}
+
+// ── AI Insights ──────────────────────────────────────────────────────────
+
+export type InsightType = 'optimization' | 'warning' | 'positive' | 'suggestion';
+export type InsightPriority = 'high' | 'medium' | 'low';
+
+export interface AIInsight {
+  title: string;
+  description: string;
+  type: InsightType;
+  priority: InsightPriority;
+}
+
+export interface AIInsightsResponse {
+  insights: AIInsight[];
+  generatedAt: string;
+  expiresAt: string;
+  cached: boolean;
 }
