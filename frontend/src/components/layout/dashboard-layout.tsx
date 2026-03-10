@@ -47,8 +47,9 @@ export function DashboardLayout({ children }: Props) {
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1">
             {navigation.map((item) => {
-              const isActive = location.pathname === item.href ||
-                              location.pathname.startsWith(item.href + '/');
+              const isActive = item.href === '/dashboard'
+                ? location.pathname === '/dashboard'
+                : (location.pathname === item.href || location.pathname.startsWith(item.href + '/'));
               return (
                 <Link
                   key={item.name}
