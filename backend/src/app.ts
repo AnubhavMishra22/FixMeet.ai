@@ -1,5 +1,11 @@
 import 'express-async-errors';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import express from 'express';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -14,8 +20,18 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Security middleware
+// Security middleware (before other routes for proper headers)
 app.use(helmet());
+
+// Root route - API info
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'FixMeet API',
+    status: 'running',
+    docs: '/health',
+    version: pkg.version,
+  });
+});
 
 // TODO: Restrict CORS origin to FRONTEND_URL in production.
 app.use(cors({
