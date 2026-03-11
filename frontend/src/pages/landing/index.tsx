@@ -18,16 +18,12 @@ export default function LandingPage() {
           Built for SCADA teams, IIoT engineers, and operations staff. Schedule meetings, manage calendars, and let AI help you stay organized.
         </p>
         <div className="mt-10 flex flex-wrap gap-4 justify-center">
-          <Link to="/login">
-            <Button size="lg" className="bg-[#F5821F] hover:bg-[#e07318] text-white px-8">
-              Sign in
-            </Button>
-          </Link>
-          <Link to="/register">
-            <Button size="lg" variant="outline" className="border-[#1B2B4B] text-[#1B2B4B] hover:bg-[#1B2B4B]/5 px-8">
-              Create account
-            </Button>
-          </Link>
+          <Button asChild size="lg" className="bg-[#F5821F] hover:bg-[#e07318] text-white px-8">
+            <Link to="/login">Sign in</Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="border-[#1B2B4B] text-[#1B2B4B] hover:bg-[#1B2B4B]/5 px-8">
+            <Link to="/register">Create account</Link>
+          </Button>
         </div>
       </div>
 
