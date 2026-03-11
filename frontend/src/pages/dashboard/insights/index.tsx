@@ -88,17 +88,23 @@ export default function InsightsPage() {
           getInsightsComparison(range),
         ]);
 
-        if (!cancelled) {
+        if (!cancelled && s != null && c != null) {
           setStats({ ...s, comparison: c });
-          setByDay(d);
-          setByHour(h);
-          setByType(t);
-          setNoShows(n);
+          setByDay(d ?? null);
+          setByHour(h ?? null);
+          setByType(t ?? null);
+          setNoShows(n ?? null);
         }
       } catch (e) {
+        const err = e as { response?: { data?: { error?: { message?: string } } }; message?: string };
+        const msg = err.response?.data?.error?.message ?? err.message ?? 'Unknown error';
         console.error('Failed to fetch insights data:', e);
         if (!cancelled) {
-          toast({ title: 'Failed to load insights data', variant: 'destructive' });
+          toast({
+            title: 'Failed to load insights data',
+            description: msg,
+            variant: 'destructive',
+          });
         }
       } finally {
         if (!cancelled) setIsLoading(false);
