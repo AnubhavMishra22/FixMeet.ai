@@ -8,13 +8,21 @@ import {
   LogOut,
   LayoutDashboard,
   Link as LinkIcon,
+  Sparkles,
+  FileText,
+  MailCheck,
+  BarChart3,
 } from 'lucide-react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Event Types', href: '/dashboard/event-types', icon: LinkIcon },
-  { name: 'Bookings', href: '/dashboard/bookings', icon: Calendar },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, badge: null },
+  { name: 'Event Types', href: '/dashboard/event-types', icon: LinkIcon, badge: null },
+  { name: 'Bookings', href: '/dashboard/bookings', icon: Calendar, badge: null },
+  { name: 'AI Assistant', href: '/dashboard/ai', icon: Sparkles, badge: 'Pro' },
+  { name: 'Meeting Briefs', href: '/dashboard/briefs', icon: FileText, badge: 'Pro' },
+  { name: 'Follow-ups', href: '/dashboard/followups', icon: MailCheck, badge: 'Max' },
+  { name: 'Insights', href: '/dashboard/insights', icon: BarChart3, badge: 'Max' },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings, badge: null },
 ];
 
 interface Props {
@@ -61,6 +69,11 @@ export function DashboardLayout({ children }: Props) {
                 >
                   <item.icon className="h-5 w-5" />
                   {item.name}
+                  {item.badge && (
+                    <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
