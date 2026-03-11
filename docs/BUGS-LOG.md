@@ -2,9 +2,20 @@
 
 Documentation of bugs found, how they were discovered, and how they were fixed.
 
+## Keeping this file in sync across branches
+
+Git does not have a shared-file mechanism. This file is versioned like any other. To keep it updated across branches:
+
+- **When you fix a bug in a branch:** Add the entry in that branch. When you merge to `main`, the log comes with it.
+- **To get updates in your branch:** Merge `main` into your branch periodically (`git merge main`).
+- **When merging branches:** Resolve any conflicts in this file by keeping all entries from both sides.
+
 ---
 
 ## 1. AI Chat 404 — POST /api/ai/chat not found
+
+**Branch:** `Migration/Backend`  
+**File(s):** `backend/ecosystem.config.cjs`, `backend/src/config/env.ts`
 
 **What it was:** The AI chat endpoint returned 404 "Route not found". The AI routes are only mounted when `GOOGLE_AI_API_KEY` is set, but PM2 was not loading `.env`, so the key was never available at startup.
 
@@ -18,6 +29,9 @@ Documentation of bugs found, how they were discovered, and how they were fixed.
 
 ## 2. Merge conflicts in Migration/Backend (env.ts, app.ts)
 
+**Branch:** `Migration/Backend`  
+**File(s):** `backend/src/config/env.ts`, `backend/src/app.ts`
+
 **What it was:** Two merge conflicts when merging `main` into `Migration/Backend`: `backend/src/config/env.ts` (AI vs MCP env vars) and `backend/src/app.ts` (root route vs CORS comment).
 
 **How we found it:** `git merge origin/main` reported conflicts in both files.
@@ -29,6 +43,9 @@ Documentation of bugs found, how they were discovered, and how they were fixed.
 ---
 
 ## 3. GitHub deploy — "Error: missing server host"
+
+**Branch:** `main` (after merging PR #58)  
+**File(s):** `.github/workflows/deploy-droplet.yml` (workflow expects secrets)
 
 **What it was:** The Deploy to Droplet workflow failed with "Error: missing server host" because the required GitHub Actions secrets were not set.
 
@@ -42,6 +59,9 @@ Documentation of bugs found, how they were discovered, and how they were fixed.
 ---
 
 ## 4. Insights tab — "Failed to load insights data"
+
+**Branch:** `AI/Insights-Dashboard`  
+**File(s):** `frontend/src/lib/api.ts`, `frontend/src/pages/dashboard/insights/index.tsx`
 
 **What it was:** The Insights dashboard showed "Failed to load insights data" and did not load stats, charts, or AI insights.
 
@@ -59,6 +79,8 @@ Documentation of bugs found, how they were discovered, and how they were fixed.
 
 For each new bug, add a section with:
 
-1. **What it was** — Brief description of the bug.
-2. **How we found it** — How the bug was observed or reproduced.
-3. **How we solved it** — Exact changes made (files, code, config, etc.).
+1. **Branch** — Where the bug was found/fixed.
+2. **File(s)** — Paths to affected files.
+3. **What it was** — Brief description of the bug.
+4. **How we found it** — How the bug was observed or reproduced.
+5. **How we solved it** — Exact changes made (files, code, config, etc.).
