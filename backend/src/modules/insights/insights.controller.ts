@@ -13,11 +13,37 @@ function parseRange(query: unknown): DateRange {
   return rangeSchema.parse(query).range;
 }
 
+export async function getDashboard(req: Request, res: Response): Promise<void> {
+  if (!req.user) throw new UnauthorizedError();
+  const range = parseRange(req.query);
+  const [stats, comparison, byDay, byHour, byType, noShows] = await Promise.all([
+    insightsService.getMeetingStats(req.user.userId, range),
+    insightsService.getComparisonMetrics(req.user.userId, range),
+    insightsService.getMeetingsByDay(req.user.userId, range),
+    insightsService.getMeetingsByHour(req.user.userId, range),
+    insightsService.getMeetingsByType(req.user.userId, range),
+    insightsService.getNoShowRate(req.user.userId, range),
+  ]);
+  res.status(200).json({
+    success: true,
+    data: {
+      stats: { ...stats, comparison },
+      byDay,
+      byHour,
+      byType,
+      noShows,
+    },
+  });
+}
+
 export async function getStats(req: Request, res: Response): Promise<void> {
   if (!req.user) throw new UnauthorizedError();
   const range = parseRange(req.query);
-  const stats = await insightsService.getMeetingStats(req.user.userId, range);
-  res.status(200).json({ success: true, data: stats });
+  const [stats, comparison] = await Promise.all([
+    insightsService.getMeetingStats(req.user.userId, range),
+    insightsService.getComparisonMetrics(req.user.userId, range),
+  ]);
+  res.status(200).json({ success: true, data: { ...stats, comparison } });
 }
 
 export async function getByDay(req: Request, res: Response): Promise<void> {
