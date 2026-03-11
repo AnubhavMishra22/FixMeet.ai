@@ -30,9 +30,7 @@ interface BriefRow {
  * Phase 2: Generate AI content for drafts that have no subject/body yet.
  */
 export async function processFollowupGeneration(): Promise<void> {
-  console.log('📝 Processing meeting followups...');
-
-  // ── Phase 1: Create draft records for recently ended meetings ─────────
+  // Phase 1: Create draft records for recently ended meetings
   try {
     const created = await sql<{ booking_id: string; invitee_name: string }[]>`
       INSERT INTO meeting_followups (booking_id, user_id, status)
@@ -54,23 +52,14 @@ export async function processFollowupGeneration(): Promise<void> {
     `;
 
     if (created.length > 0) {
-      for (const row of created) {
-        console.log(`  ✓ Created draft followup for booking ${row.booking_id} (${row.invitee_name})`);
-      }
-      console.log(`  Total: ${created.length} new followup drafts`);
-    } else {
-      console.log('  No recently ended meetings found');
+      console.log(`Followups: created ${created.length} drafts`);
     }
   } catch (err) {
-    console.error('  ✗ Failed to create followup drafts:', (err as Error).message);
+    console.error('Followups: failed to create drafts:', (err as Error).message);
   }
 
-  // ── Phase 2: Generate AI content for empty drafts ─────────────────────
-  if (!env.GOOGLE_AI_API_KEY) {
-    console.log('  Skipping AI generation (no GOOGLE_AI_API_KEY)');
-    console.log('📝 Followup processing complete');
-    return;
-  }
+  // Phase 2: Generate AI content for empty drafts
+  if (!env.GOOGLE_AI_API_KEY) return;
 
   // Find drafts without subject/body (not yet generated)
   const pending = await sql<PendingFollowupRow[]>`
@@ -97,13 +86,9 @@ export async function processFollowupGeneration(): Promise<void> {
     LIMIT 5
   `;
 
-  if (pending.length === 0) {
-    console.log('  No followups need AI generation');
-    console.log('📝 Followup processing complete');
-    return;
-  }
+  if (pending.length === 0) return;
 
-  console.log(`  Generating AI content for ${pending.length} followups...`);
+  console.log(`Followups: generating ${pending.length}...`);
 
   for (const row of pending) {
     try {
@@ -130,7 +115,6 @@ export async function processFollowupGeneration(): Promise<void> {
       }
 
       // Generate followup content with AI
-      console.log(`  🤖 Generating followup for ${row.invitee_name}...`);
       const result = await generateFollowup({
         eventTitle: row.event_type_title,
         inviteeName: row.invitee_name,
@@ -152,12 +136,12 @@ export async function processFollowupGeneration(): Promise<void> {
         WHERE id = ${row.id}
       `;
 
-      console.log(`  ✓ Followup generated for ${row.invitee_name}: "${result.subject}"`);
+      console.log(`Followup generated for ${row.invitee_name}`);
     } catch (err) {
-      console.error(`  ✗ Failed to generate followup for ${row.invitee_name}:`, (err as Error).message);
+      console.error(`Followup failed for ${row.invitee_name}:`, (err as Error).message);
       // Don't block other followups — continue to next
     }
   }
 
-  console.log('📝 Followup processing complete');
+  console.log(`Followups: ${pending.length} processed`);
 }

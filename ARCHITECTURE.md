@@ -1,7 +1,7 @@
-# FixMeet.ai - Architecture Reference
+# FixMeet.app - Architecture Reference
 
 ## Overview
-FixMeet.ai is a Calendly competitor — a scheduling/booking platform where users create event types, share public booking pages, and manage appointments. Includes Google Calendar integration, email notifications, and an AI copilot for natural-language scheduling.
+FixMeet.app is a Calendly competitor — a scheduling/booking platform where users create event types, share public booking pages, and manage appointments. Includes Google Calendar integration, email notifications, and an AI copilot for natural-language scheduling.
 
 ---
 
@@ -39,7 +39,7 @@ FixMeet.ai is a Calendly competitor — a scheduling/booking platform where user
 ## Project Structure
 
 ```
-FixMeet.ai/
+FixMeet.app/
 ├── backend/
 │   ├── src/
 │   │   ├── config/
@@ -294,7 +294,7 @@ JWT_SECRET=<min 32 chars>
 
 # Optional — falls back to console.log
 RESEND_API_KEY=re_xxxx
-EMAIL_FROM=FixMeet <notifications@fixmeet.ai>
+EMAIL_FROM=FixMeet <notifications@fixmeet.app>
 
 # Optional — for Google Calendar integration
 GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com

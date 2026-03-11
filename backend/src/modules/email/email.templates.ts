@@ -6,6 +6,15 @@ function formatDateTime(date: Date, timezone: string): string {
   return formatInTimeZone(date, timezone, "EEEE, MMMM d, yyyy 'at' h:mm a zzz");
 }
 
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // ============ BOOKING CONFIRMED - HOST ============
 
 export function bookingConfirmedHostEmail(data: BookingEmailData): EmailTemplate {
@@ -40,12 +49,12 @@ export function bookingConfirmedHostEmail(data: BookingEmailData): EmailTemplate
             <h1>📅 New Booking Confirmed</h1>
           </div>
           <div class="content">
-            <p>Hi ${data.hostName},</p>
+            <p>Hi ${escapeHtml(data.hostName)},</p>
             <p>You have a new booking!</p>
 
             <div class="detail">
               <span class="label">What</span>
-              <span class="value">${data.eventTitle}</span>
+              <span class="value">${escapeHtml(data.eventTitle)}</span>
             </div>
             <div class="detail">
               <span class="label">When</span>
@@ -53,7 +62,7 @@ export function bookingConfirmedHostEmail(data: BookingEmailData): EmailTemplate
             </div>
             <div class="detail">
               <span class="label">Who</span>
-              <span class="value">${data.inviteeName} (<a href="mailto:${data.inviteeEmail}">${data.inviteeEmail}</a>)</span>
+              <span class="value">${escapeHtml(data.inviteeName)} (<a href="mailto:${escapeHtml(data.inviteeEmail)}">${escapeHtml(data.inviteeEmail)}</a>)</span>
             </div>
             <div class="detail">
               <span class="label">Where</span>
@@ -63,7 +72,7 @@ export function bookingConfirmedHostEmail(data: BookingEmailData): EmailTemplate
             ${data.dashboardUrl ? `<a href="${data.dashboardUrl}" class="button">View in Dashboard</a>` : ''}
 
             <div class="footer">
-              <p>This email was sent by FixMeet.ai</p>
+              <p>This email was sent by FixMeet.app</p>
             </div>
           </div>
         </div>
@@ -84,7 +93,7 @@ Where: ${data.locationType}${data.meetingUrl ? ` - ${data.meetingUrl}` : ''}
 
 ${data.dashboardUrl ? `View in Dashboard: ${data.dashboardUrl}` : ''}
 
-- FixMeet.ai
+- FixMeet.app
     `.trim(),
   };
 }
@@ -124,12 +133,12 @@ export function bookingConfirmedInviteeEmail(data: BookingEmailData): EmailTempl
             <h1>✓ Booking Confirmed</h1>
           </div>
           <div class="content">
-            <p>Hi ${data.inviteeName},</p>
+            <p>Hi ${escapeHtml(data.inviteeName)},</p>
             <p>Your meeting has been scheduled!</p>
 
             <div class="detail">
               <span class="label">What</span>
-              <span class="value">${data.eventTitle}</span>
+              <span class="value">${escapeHtml(data.eventTitle)}</span>
             </div>
             <div class="detail">
               <span class="label">When</span>
@@ -137,7 +146,7 @@ export function bookingConfirmedInviteeEmail(data: BookingEmailData): EmailTempl
             </div>
             <div class="detail">
               <span class="label">With</span>
-              <span class="value">${data.hostName}</span>
+              <span class="value">${escapeHtml(data.hostName)}</span>
             </div>
             <div class="detail">
               <span class="label">Where</span>
@@ -147,7 +156,7 @@ export function bookingConfirmedInviteeEmail(data: BookingEmailData): EmailTempl
             ${data.cancelUrl ? `<a href="${data.cancelUrl}" class="cancel-link">Need to cancel or reschedule?</a>` : ''}
 
             <div class="footer">
-              <p>This email was sent by FixMeet.ai on behalf of ${data.hostName}</p>
+              <p>This email was sent by FixMeet.app on behalf of ${escapeHtml(data.hostName)}</p>
             </div>
           </div>
         </div>
@@ -168,7 +177,7 @@ Where: ${data.locationType}${data.meetingUrl ? ` - ${data.meetingUrl}` : ''}
 
 ${data.cancelUrl ? `Need to cancel or reschedule? ${data.cancelUrl}` : ''}
 
-- FixMeet.ai
+- FixMeet.app
     `.trim(),
   };
 }
@@ -211,21 +220,21 @@ export function bookingCancelledEmail(
             <h1>❌ Booking Cancelled</h1>
           </div>
           <div class="content">
-            <p>This meeting has been cancelled by ${cancelledByName}.</p>
+            <p>This meeting has been cancelled by ${escapeHtml(cancelledByName)}.</p>
 
             <div class="detail">
               <span class="label">What</span>
-              <span class="value">${data.eventTitle}</span>
+              <span class="value">${escapeHtml(data.eventTitle)}</span>
             </div>
             <div class="detail">
               <span class="label">Was scheduled for</span>
               <span class="value">${formattedTime}</span>
             </div>
 
-            ${reason ? `<div class="reason"><strong>Reason:</strong> ${reason}</div>` : ''}
+            ${reason ? `<div class="reason"><strong>Reason:</strong> ${escapeHtml(reason)}</div>` : ''}
 
             <div class="footer">
-              <p>This email was sent by FixMeet.ai</p>
+              <p>This email was sent by FixMeet.app</p>
             </div>
           </div>
         </div>
@@ -241,7 +250,7 @@ What: ${data.eventTitle}
 Was scheduled for: ${formattedTime}
 ${reason ? `Reason: ${reason}` : ''}
 
-- FixMeet.ai
+- FixMeet.app
     `.trim(),
   };
 }
@@ -287,12 +296,12 @@ export function bookingRescheduledEmail(
             <h1>🔄 Meeting Rescheduled</h1>
           </div>
           <div class="content">
-            <p>Hi ${recipientName},</p>
-            <p>Your meeting with ${otherPerson} has been rescheduled.</p>
+            <p>Hi ${escapeHtml(recipientName)},</p>
+            <p>Your meeting with ${escapeHtml(otherPerson)} has been rescheduled.</p>
 
             <div class="detail">
               <span class="label">What</span>
-              <span class="value">${data.eventTitle}</span>
+              <span class="value">${escapeHtml(data.eventTitle)}</span>
             </div>
             <div class="detail">
               <span class="label">Old time</span>
@@ -308,7 +317,7 @@ export function bookingRescheduledEmail(
             </div>
 
             <div class="footer">
-              <p>This email was sent by FixMeet.ai</p>
+              <p>This email was sent by FixMeet.app</p>
             </div>
           </div>
         </div>
@@ -327,7 +336,7 @@ Old time: ${oldFormattedTime}
 New time: ${newFormattedTime}
 Where: ${data.locationType}${data.meetingUrl ? ` - ${data.meetingUrl}` : ''}
 
-- FixMeet.ai
+- FixMeet.app
     `.trim(),
   };
 }
@@ -373,12 +382,12 @@ export function reminderEmail(
             <h1>⏰ Meeting Reminder</h1>
           </div>
           <div class="content">
-            <p>Hi ${recipientName},</p>
+            <p>Hi ${escapeHtml(recipientName)},</p>
             <p>Friendly reminder about your upcoming meeting ${timeLabel}!</p>
 
             <div class="detail">
               <span class="label">What</span>
-              <span class="value">${data.eventTitle}</span>
+              <span class="value">${escapeHtml(data.eventTitle)}</span>
             </div>
             <div class="detail">
               <span class="label">When</span>
@@ -386,7 +395,7 @@ export function reminderEmail(
             </div>
             <div class="detail">
               <span class="label">With</span>
-              <span class="value">${otherPerson}</span>
+              <span class="value">${escapeHtml(otherPerson)}</span>
             </div>
             <div class="detail">
               <span class="label">Where</span>
@@ -396,7 +405,7 @@ export function reminderEmail(
             ${data.meetingUrl ? `<a href="${data.meetingUrl}" class="button">Join Meeting</a>` : ''}
 
             <div class="footer">
-              <p>This email was sent by FixMeet.ai</p>
+              <p>This email was sent by FixMeet.app</p>
             </div>
           </div>
         </div>
@@ -415,7 +424,7 @@ When: ${formattedTime}
 With: ${otherPerson}
 Where: ${data.locationType}${data.meetingUrl ? ` - ${data.meetingUrl}` : ''}
 
-- FixMeet.ai
+- FixMeet.app
     `.trim(),
   };
 }

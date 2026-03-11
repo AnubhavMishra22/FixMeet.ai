@@ -31,6 +31,8 @@ export interface EventType {
   maxBookingsPerDay: number | null;
   rangeType: 'rolling' | 'range' | 'indefinite';
   rangeDays: number | null;
+  rangeStart: string | null;
+  rangeEnd: string | null;
   questions: CustomQuestion[];
   isActive: boolean;
   createdAt: string;
@@ -240,6 +242,25 @@ export interface ComparisonMetrics {
 export interface MeetingStatsWithComparison extends MeetingStats {
   comparison?: ComparisonMetrics;
 }
+
+// ── MCP API Keys ─────────────────────────────────────────────────────────
+
+export interface McpApiKey {
+  id: string;
+  name: string;
+  lastUsedAt: string | null;
+  createdAt: string;
+  isActive: boolean;
+}
+
+export interface McpApiKeyCreateResult {
+  id: string;
+  key: string;
+  name: string;
+  createdAt: string;
+}
+
+// ── AI Insights ──────────────────────────────────────────────────────────
 
 export type InsightType = 'optimization' | 'warning' | 'positive' | 'suggestion';
 export type InsightPriority = 'high' | 'medium' | 'low';

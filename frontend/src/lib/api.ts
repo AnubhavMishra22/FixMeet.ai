@@ -1,5 +1,13 @@
 import axios from 'axios';
 
+/** Safely extract error message from API errors. */
+export function getApiErrorMessage(e: unknown, fallback: string): string {
+  if (axios.isAxiosError(e) && e.response?.data?.error?.message) {
+    return e.response.data.error.message;
+  }
+  return fallback;
+}
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
@@ -67,6 +75,8 @@ import type {
   MeetingFollowup,
   DateRange,
   MeetingStatsWithComparison,
+  McpApiKey,
+  McpApiKeyCreateResult,
   MeetingsByDay,
   MeetingsByHour,
   MeetingsByType,
@@ -210,6 +220,24 @@ export async function refreshAIInsights(): Promise<AIInsightsResponse> {
 export async function getInsightsComparison(range: DateRange): Promise<ComparisonMetrics> {
   const { data } = await api.get('/api/insights/comparison', { params: { range } });
   return unwrap<ComparisonMetrics>(data);
+}
+
+// ---------------------------------------------------------------------------
+// MCP API Keys
+// ---------------------------------------------------------------------------
+
+export async function getMcpApiKeys(): Promise<McpApiKey[]> {
+  const { data } = await api.get('/api/mcp-keys');
+  return data.data;
+}
+
+export async function createMcpApiKey(name: string): Promise<McpApiKeyCreateResult> {
+  const { data } = await api.post('/api/mcp-keys', { name });
+  return data.data;
+}
+
+export async function revokeMcpApiKey(id: string): Promise<void> {
+  await api.delete(`/api/mcp-keys/${id}`);
 }
 
 export default api;

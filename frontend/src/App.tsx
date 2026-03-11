@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/auth/protected-route';
 import { DashboardLayout } from './components/layout/dashboard-layout';
@@ -24,6 +25,7 @@ import InsightsPage from './pages/dashboard/insights/index';
 
 // Public pages
 import PublicBookingPage from './pages/booking/public-booking';
+import BookingManagePage from './pages/booking/booking-manage';
 
 function App() {
   return (
@@ -168,6 +170,9 @@ function App() {
           }
         />
 
+        {/* Invitee cancel/reschedule (must be before /:username/:slug) */}
+        <Route path="/bookings/:id" element={<BookingManagePage />} />
+
         {/* Public booking page */}
         <Route path="/:username/:slug" element={<PublicBookingPage />} />
 
@@ -177,6 +182,7 @@ function App() {
       </Routes>
 
       <Toaster />
+      <Analytics />
     </BrowserRouter>
   );
 }
