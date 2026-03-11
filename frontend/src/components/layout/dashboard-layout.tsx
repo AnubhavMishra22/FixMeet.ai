@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
 import { LOGO_SMALL_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 import {
   Calendar,
   Settings,
@@ -18,10 +19,10 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, badge: null },
   { name: 'Event Types', href: '/dashboard/event-types', icon: LinkIcon, badge: null },
   { name: 'Bookings', href: '/dashboard/bookings', icon: Calendar, badge: null },
-  { name: 'AI Assistant', href: '/dashboard/ai', icon: Sparkles, badge: 'NEW' },
-  { name: 'Meeting Briefs', href: '/dashboard/briefs', icon: FileText, badge: 'NEW' },
-  { name: 'Follow-ups', href: '/dashboard/followups', icon: MailCheck, badge: 'NEW' },
-  { name: 'Insights', href: '/dashboard/insights', icon: BarChart3, badge: 'NEW' },
+  { name: 'AI Assistant', href: '/dashboard/ai', icon: Sparkles, badge: 'Pro' },
+  { name: 'Meeting Briefs', href: '/dashboard/briefs', icon: FileText, badge: 'Pro' },
+  { name: 'Follow-ups', href: '/dashboard/followups', icon: MailCheck, badge: 'Max' },
+  { name: 'Insights', href: '/dashboard/insights', icon: BarChart3, badge: 'Max' },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings, badge: null },
 ];
 
@@ -70,9 +71,9 @@ export function DashboardLayout({ children }: Props) {
                   <item.icon className="h-5 w-5" />
                   {item.name}
                   {item.badge && (
-                    <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                    <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0">
                       {item.badge}
-                    </span>
+                    </Badge>
                   )}
                 </Link>
               );
