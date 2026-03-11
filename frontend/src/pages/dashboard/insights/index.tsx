@@ -12,12 +12,8 @@ import { InsightsSkeleton } from '../../../components/insights/insights-skeleton
 import { InsightsEmptyState } from '../../../components/insights/insights-empty-state';
 import { PDFExportButton } from '../../../components/insights/pdf-export-button';
 import {
-  getInsightsStats,
-  getInsightsByDay,
-  getInsightsByHour,
-  getInsightsByType,
+  getDashboardInsights,
   getInsightsTrends,
-  getInsightsNoShows,
   getAIInsights,
   refreshAIInsights,
 } from '../../../lib/api';
@@ -78,20 +74,14 @@ export default function InsightsPage() {
     async function fetchData() {
       setIsLoading(true);
       try {
-        const [s, d, h, t, n] = await Promise.all([
-          getInsightsStats(range),
-          getInsightsByDay(range),
-          getInsightsByHour(range),
-          getInsightsByType(range),
-          getInsightsNoShows(range),
-        ]);
+        const allInsights = await getDashboardInsights(range);
 
         if (!cancelled) {
-          setStats(s);
-          setByDay(d);
-          setByHour(h);
-          setByType(t);
-          setNoShows(n);
+          setStats(allInsights.stats);
+          setByDay(allInsights.byDay);
+          setByHour(allInsights.byHour);
+          setByType(allInsights.byType);
+          setNoShows(allInsights.noShows);
         }
       } catch (e) {
         const err = e as { response?: { data?: { error?: { message?: string } } }; message?: string };

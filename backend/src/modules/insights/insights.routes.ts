@@ -3,6 +3,7 @@ import * as insightsController from './insights.controller.js';
 
 const router = Router();
 
+router.get('/dashboard', insightsController.getDashboard);
 router.get('/stats', insightsController.getStats);
 router.get('/by-day', insightsController.getByDay);
 router.get('/by-hour', insightsController.getByHour);

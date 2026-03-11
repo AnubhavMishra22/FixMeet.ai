@@ -154,6 +154,19 @@ function unwrap<T>(res: { data?: T; success?: boolean }): T {
   throw new Error('Invalid API response: missing data');
 }
 
+export interface DashboardInsights {
+  stats: MeetingStatsWithComparison;
+  byDay: MeetingsByDay;
+  byHour: MeetingsByHour;
+  byType: MeetingsByType;
+  noShows: NoShowStats;
+}
+
+export async function getDashboardInsights(range: DateRange): Promise<DashboardInsights> {
+  const { data } = await api.get('/api/insights/dashboard', { params: { range } });
+  return unwrap<DashboardInsights>(data);
+}
+
 export async function getInsightsStats(range: DateRange): Promise<MeetingStatsWithComparison> {
   const { data } = await api.get('/api/insights/stats', { params: { range } });
   return unwrap<MeetingStatsWithComparison>(data);
