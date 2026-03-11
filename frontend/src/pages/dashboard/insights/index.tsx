@@ -18,7 +18,6 @@ import {
   getInsightsByType,
   getInsightsTrends,
   getInsightsNoShows,
-  getInsightsComparison,
   getAIInsights,
   refreshAIInsights,
 } from '../../../lib/api';
@@ -79,17 +78,16 @@ export default function InsightsPage() {
     async function fetchData() {
       setIsLoading(true);
       try {
-        const [s, d, h, t, n, c] = await Promise.all([
+        const [s, d, h, t, n] = await Promise.all([
           getInsightsStats(range),
           getInsightsByDay(range),
           getInsightsByHour(range),
           getInsightsByType(range),
           getInsightsNoShows(range),
-          getInsightsComparison(range),
         ]);
 
         if (!cancelled) {
-          setStats({ ...s, comparison: c });
+          setStats(s);
           setByDay(d);
           setByHour(h);
           setByType(t);
