@@ -1,0 +1,51 @@
+# Deploy FixMeet backend to DigitalOcean Droplet on push to main
+# Shows deployment status on GitHub (like Railway did)
+# Required secrets: DROPLET_HOST, DROPLET_USER, DROPLET_SSH_KEY
+name: Deploy to Droplet
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  deploy:
+    name: Deploy to api.fixmeet.app
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        id: deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            cd /root/FixMeet.ai
+            git fetch origin main
+            git reset --hard origin/main
+            cd backend
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            export NODE_OPTIONS="--max-old-space-size=1536"
+            npm ci
+            npm run build
+            pm2 restart fixmeet-api --update-env
+
+      - name: Health check
+        run: |
+          echo "Waiting for app to start..."
+          for i in 1 2 3 4 5 6; do
+            if curl -sf https://api.fixmeet.app/health; then
+              echo ""
+              echo "Deployment successful!"
+              exit 0
+            fi
+            if [ "$i" -lt 6 ]; then
+              echo "Attempt $i/6 failed. Retrying in 5 seconds..."
+              sleep 5
+            fi
+          done
+          echo "Health check failed after 30 seconds."
+          exit 1
