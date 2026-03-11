@@ -41,12 +41,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-sky-100">
-      <img src={LOGO_PATH} alt="FixMeet logo" className="h-40 w-auto mb-6" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f5f7fa]">
+      <Link to="/welcome" className="mb-6 w-full max-w-md flex justify-center">
+        <img src={LOGO_PATH} alt="MeetIA logo" className="w-full h-auto" />
+      </Link>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your FixMeet account</CardDescription>
+          <CardDescription>Get started with MeetIA by Inductive Automation</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

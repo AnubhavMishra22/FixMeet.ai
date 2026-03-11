@@ -18,11 +18,13 @@ export function PDFExportButton({
   const handleExport = async () => {
     setExporting(true);
     try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+
       const element = document.getElementById(targetId);
       if (!element) return;
-
-      const html2canvas = (await import('html2canvas')).default;
-      const { jsPDF } = await import('jspdf');
 
       const canvas = await html2canvas(element, {
         scale: 2,

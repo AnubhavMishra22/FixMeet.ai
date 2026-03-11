@@ -6,7 +6,7 @@ import api from '../../../lib/api';
 import { Bot, Sparkles, Trash2, RotateCcw } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 
-const SESSION_STORAGE_KEY = 'fixmeet-ai-chat';
+const SESSION_STORAGE_KEY = 'meetia-ai-chat';
 
 interface Message {
   id: string;
@@ -209,7 +209,7 @@ function EmptyState({ onSuggestionClick }: { onSuggestionClick: (msg: string) =>
       <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
         <Bot className="h-8 w-8 text-primary" />
       </div>
-      <h2 className="text-xl font-semibold mb-2">Hi! I'm FixMeet AI</h2>
+      <h2 className="text-xl font-semibold mb-2">Hi! I'm MeetIA AI</h2>
       <p className="text-gray-500 max-w-md mb-6">
         I can help you check your availability, manage meetings, and answer questions about your schedule.
       </p>
