@@ -96,9 +96,15 @@ export default function InsightsPage() {
           setNoShows(n);
         }
       } catch (e) {
+        const err = e as { response?: { data?: { error?: { message?: string } } }; message?: string };
+        const msg = err.response?.data?.error?.message ?? err.message ?? 'Unknown error';
         console.error('Failed to fetch insights data:', e);
         if (!cancelled) {
-          toast({ title: 'Failed to load insights data', variant: 'destructive' });
+          toast({
+            title: 'Failed to load insights data',
+            description: msg,
+            variant: 'destructive',
+          });
         }
       } finally {
         if (!cancelled) setIsLoading(false);

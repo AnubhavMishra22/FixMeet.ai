@@ -157,49 +157,56 @@ export async function getFollowupByBookingId(
 // Insights
 // ---------------------------------------------------------------------------
 
+/** Extract data from API response - handles both { data: x } and { success: true, data: x } */
+function unwrap<T>(res: { data?: T; success?: boolean }): T {
+  const d = res?.data;
+  if (d != null) return d;
+  throw new Error('Invalid API response: missing data');
+}
+
 export async function getInsightsStats(range: DateRange): Promise<MeetingStatsWithComparison> {
   const { data } = await api.get('/api/insights/stats', { params: { range } });
-  return data.data;
+  return unwrap<MeetingStatsWithComparison>(data);
 }
 
 export async function getInsightsByDay(range: DateRange): Promise<MeetingsByDay> {
   const { data } = await api.get('/api/insights/by-day', { params: { range } });
-  return data.data;
+  return unwrap<MeetingsByDay>(data);
 }
 
 export async function getInsightsByHour(range: DateRange): Promise<MeetingsByHour> {
   const { data } = await api.get('/api/insights/by-hour', { params: { range } });
-  return data.data;
+  return unwrap<MeetingsByHour>(data);
 }
 
 export async function getInsightsByType(range: DateRange): Promise<MeetingsByType> {
   const { data } = await api.get('/api/insights/by-type', { params: { range } });
-  return data.data;
+  return unwrap<MeetingsByType>(data);
 }
 
 export async function getInsightsTrends(): Promise<MeetingTrends> {
   const { data } = await api.get('/api/insights/trends');
-  return data.data;
+  return unwrap<MeetingTrends>(data);
 }
 
 export async function getInsightsNoShows(range: DateRange): Promise<NoShowStats> {
   const { data } = await api.get('/api/insights/no-shows', { params: { range } });
-  return data.data;
+  return unwrap<NoShowStats>(data);
 }
 
 export async function getAIInsights(): Promise<AIInsightsResponse> {
   const { data } = await api.get('/api/insights/ai');
-  return data.data;
+  return unwrap<AIInsightsResponse>(data);
 }
 
 export async function refreshAIInsights(): Promise<AIInsightsResponse> {
   const { data } = await api.post('/api/insights/ai/refresh');
-  return data.data;
+  return unwrap<AIInsightsResponse>(data);
 }
 
 export async function getInsightsComparison(range: DateRange): Promise<ComparisonMetrics> {
   const { data } = await api.get('/api/insights/comparison', { params: { range } });
-  return data.data;
+  return unwrap<ComparisonMetrics>(data);
 }
 
 // ---------------------------------------------------------------------------
