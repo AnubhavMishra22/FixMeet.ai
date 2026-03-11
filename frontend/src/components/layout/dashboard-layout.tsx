@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
-import { LOGO_SMALL_PATH } from '../../lib/constants';
+import { LOGO_SMALL_PATH, LOGO_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -43,13 +43,13 @@ export function DashboardLayout({ children }: Props) {
   return (
     <div>
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 w-64 bg-white border-r">
+      <aside className="fixed inset-y-0 left-0 w-64 bg-[#1B2B4B] border-r border-[#1B2B4B]">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b">
-            <Link to="/dashboard" className="flex items-center gap-2 text-xl font-bold text-primary">
-              <img src={LOGO_SMALL_PATH} alt="FixMeet logo" className="h-8 w-8" />
-              FixMeet
+          <div className="p-6 border-b border-white/10">
+            <Link to="/dashboard" className="flex items-center gap-2 text-xl font-bold text-white">
+              <img src={LOGO_SMALL_PATH} alt="MeetIA logo" className="h-8 w-8" />
+              MeetIA
             </Link>
           </div>
 
@@ -64,14 +64,14 @@ export function DashboardLayout({ children }: Props) {
                   to={item.href}
                   className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
                     isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-[#F5821F]/20 text-[#F5821F]'
+                      : 'text-white/90 hover:bg-white/10'
                   }`}
                 >
                   <item.icon className="h-5 w-5" />
                   {item.name}
                   {item.badge && (
-                    <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0">
+                    <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0.5 bg-[#F5821F]/20 text-[#F5821F] border-0">
                       {item.badge}
                     </Badge>
                   )}
@@ -81,21 +81,21 @@ export function DashboardLayout({ children }: Props) {
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t">
+          <div className="p-4 border-t border-white/10">
             <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-primary font-medium">
+              <div className="h-10 w-10 rounded-full bg-[#F5821F]/20 flex items-center justify-center">
+                <span className="text-[#F5821F] font-medium">
                   {user?.name?.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user?.name}</p>
-                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                <p className="text-sm font-medium truncate text-white">{user?.name}</p>
+                <p className="text-xs text-white/70 truncate">{user?.email}</p>
               </div>
             </div>
             <Button
               variant="ghost"
-              className="w-full justify-start text-gray-600"
+              className="w-full justify-start text-white/90 hover:bg-white/10 hover:text-white"
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4 mr-2" />
@@ -106,8 +106,15 @@ export function DashboardLayout({ children }: Props) {
       </aside>
 
       {/* Main content */}
-      <main className="pl-64 bg-sky-50 min-h-screen">
+      <main className="pl-64 bg-white min-h-screen">
         <div className="max-w-5xl mx-auto p-8">{children}</div>
+        {/* Bottom right: MeetIA by [logo] */}
+        <div className="fixed bottom-6 right-6 flex items-center gap-2">
+          <span className="text-2xl text-gray-600">
+            <span className="font-bold">MeetIA</span> by
+          </span>
+          <img src={LOGO_PATH} alt="Inductive Automation" className="h-10 w-auto" />
+        </div>
       </main>
     </div>
   );

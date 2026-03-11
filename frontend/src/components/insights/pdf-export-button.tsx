@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Button } from '../ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import { useToast } from '../../stores/toast-store';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface PDFExportButtonProps {
   targetId: string;
@@ -20,9 +22,6 @@ export function PDFExportButton({
     try {
       const element = document.getElementById(targetId);
       if (!element) return;
-
-      const html2canvas = (await import('html2canvas')).default;
-      const { jsPDF } = await import('jspdf');
 
       const canvas = await html2canvas(element, {
         scale: 2,

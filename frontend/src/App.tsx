@@ -26,6 +26,7 @@ import InsightsPage from './pages/dashboard/insights/index';
 // Public pages
 import PublicBookingPage from './pages/booking/public-booking';
 import BookingManagePage from './pages/booking/booking-manage';
+import LandingPage from './pages/landing';
 
 function App() {
   return (
@@ -176,7 +177,8 @@ function App() {
         {/* Public booking page */}
         <Route path="/:username/:slug" element={<PublicBookingPage />} />
 
-        {/* Redirects */}
+        {/* Landing page & redirects */}
+        <Route path="/welcome" element={<LandingPage />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/settings/calendars" element={<Navigate to="/dashboard/settings" replace />} />
       </Routes>
