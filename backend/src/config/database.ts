@@ -6,4 +6,5 @@ export const sql = postgres(env.DATABASE_URL, {
   max: isProd ? 10 : 5,
   idle_timeout: 20,
   connect_timeout: 30,
+  onnotice: isProd ? () => {} : undefined, // Suppress NOTICE messages in production to avoid Railway rate limits
 });

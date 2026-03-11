@@ -1,0 +1,2 @@
+# Shell scripts must use LF (Linux) - prevents $'\r': command not found on Droplet
+*.sh text eol=lf

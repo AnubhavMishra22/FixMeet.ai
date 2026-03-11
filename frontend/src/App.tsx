@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/auth/protected-route';
 import { DashboardLayout } from './components/layout/dashboard-layout';
@@ -15,9 +16,16 @@ import EditEventTypePage from './pages/dashboard/event-types/edit';
 import BookingsPage from './pages/dashboard/bookings/index';
 import BookingDetailsPage from './pages/dashboard/bookings/details';
 import SettingsPage from './pages/dashboard/settings/index';
+import AIChatPage from './pages/dashboard/ai/index';
+import BriefsPage from './pages/dashboard/briefs/index';
+import BriefDetailsPage from './pages/dashboard/briefs/details';
+import FollowupsPage from './pages/dashboard/followups/index';
+import FollowupDetailsPage from './pages/dashboard/followups/details';
+import InsightsPage from './pages/dashboard/insights/index';
 
 // Public pages
 import PublicBookingPage from './pages/booking/public-booking';
+import BookingManagePage from './pages/booking/booking-manage';
 
 function App() {
   return (
@@ -99,6 +107,72 @@ function App() {
           }
         />
 
+        <Route
+          path="/dashboard/ai"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <AIChatPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/briefs"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <BriefsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/briefs/:bookingId"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <BriefDetailsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/followups"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <FollowupsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/followups/:id"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <FollowupDetailsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/insights"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <InsightsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Invitee cancel/reschedule (must be before /:username/:slug) */}
+        <Route path="/bookings/:id" element={<BookingManagePage />} />
+
         {/* Public booking page */}
         <Route path="/:username/:slug" element={<PublicBookingPage />} />
 
@@ -108,6 +182,7 @@ function App() {
       </Routes>
 
       <Toaster />
+      <Analytics />
     </BrowserRouter>
   );
 }

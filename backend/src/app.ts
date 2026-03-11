@@ -1,5 +1,11 @@
 import 'express-async-errors';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import express from 'express';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -7,30 +13,27 @@ import { env, isProd } from './config/env.js';
 import { AppError } from './utils/errors.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 
-console.log('APP.TS LOADING...');
-
-// Debug: check env variables are loaded
-console.log('ENV CHECK:', {
-  NODE_ENV: process.env.NODE_ENV,
-  FRONTEND_URL: process.env.FRONTEND_URL,
-  JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'MISSING',
-  DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'MISSING',
-});
-
 const app = express();
-
-console.log('EXPRESS APP CREATED');
 
 // Health check FIRST - before any middleware
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Security middleware
+// Security middleware (before other routes for proper headers)
 app.use(helmet());
 
-// CORS - allow all origins temporarily for debugging
-// TODO: Restrict to FRONTEND_URL once deployment is stable
+// Root route - API info
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'FixMeet API',
+    status: 'running',
+    docs: '/health',
+    version: pkg.version,
+  });
+});
+
+// TODO: Restrict CORS origin to FRONTEND_URL in production.
 app.use(cors({
   origin: true,
   credentials: true,
@@ -43,11 +46,13 @@ app.options('*', cors());
 app.use(express.json());
 app.use(cookieParser());
 
-// Debug: request logger
-app.use((req, _res, next) => {
-  console.log(`REQUEST: ${req.method} ${req.path}`);
-  next();
-});
+// Request logger — dev only to avoid Railway rate limits
+if (!isProd) {
+  app.use((req, _res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+  });
+}
 
 // Simple test route to confirm routing works
 app.get('/api/test', (_req, res) => {
@@ -64,6 +69,9 @@ async function mountRoutes() {
       bookingsRoutes,
       calendarsRoutes,
       publicRoutes,
+      briefsRoutes,
+      followupsRoutes,
+      insightsRoutes,
     ] = await Promise.all([
       import('./middleware/auth.middleware.js'),
       import('./modules/auth/auth.routes.js'),
@@ -71,6 +79,9 @@ async function mountRoutes() {
       import('./modules/bookings/bookings.routes.js'),
       import('./modules/calendars/calendars.routes.js'),
       import('./modules/public/public.routes.js'),
+      import('./modules/briefs/briefs.routes.js'),
+      import('./modules/followups/followups.routes.js'),
+      import('./modules/insights/insights.routes.js'),
     ]);
 
     app.use('/api/auth', authRoutes.default);
@@ -78,8 +89,38 @@ async function mountRoutes() {
     app.use('/api/bookings', authMiddleware, bookingsRoutes.default);
     app.use('/api/calendars', calendarsRoutes.default);
     app.use('/api/public', publicRoutes.default);
+    app.use('/api/briefs', authMiddleware, briefsRoutes.default);
+    app.use('/api/followups', authMiddleware, followupsRoutes.default);
+    app.use('/api/insights', authMiddleware, insightsRoutes.default);
 
-    console.log('All routes imported and mounted successfully.');
+    // MCP API key management routes
+    const mcpKeysRoutes = await import('./mcp/api-keys.routes.js');
+    app.use('/api/mcp-keys', authMiddleware, mcpKeysRoutes.default);
+
+    // AI routes - only mount if GOOGLE_AI_API_KEY is configured
+    if (env.GOOGLE_AI_API_KEY) {
+      const { initializeAI } = await import('./modules/ai/ai.service.js');
+      const aiRoutes = await import('./modules/ai/ai.routes.js');
+      initializeAI({
+        apiKey: env.GOOGLE_AI_API_KEY,
+        modelName: env.GOOGLE_AI_MODEL_NAME,
+        maxTokens: env.GOOGLE_AI_MAX_TOKENS,
+      });
+      app.use('/api/ai', authMiddleware, aiRoutes.default);
+      console.log('AI routes mounted.');
+    } else {
+      console.log('AI routes skipped (GOOGLE_AI_API_KEY not configured).');
+    }
+
+    // MCP HTTP transport — mount Streamable HTTP endpoint at /mcp
+    if (env.MCP_ENABLED) {
+      const { mountMcpRoutes } = await import('./mcp/http-transport.js');
+      mountMcpRoutes(app);
+    } else {
+      console.log('MCP HTTP transport skipped (MCP_ENABLED=false).');
+    }
+
+    console.log('All routes mounted successfully.');
   } catch (e) {
     console.error('FAILED TO MOUNT ROUTES:', e);
     throw e;
@@ -87,14 +128,11 @@ async function mountRoutes() {
 
   // 404 catch-all - MUST be after all routes
   app.use((req, _res, next) => {
-    console.log(`NO ROUTE MATCHED: ${req.method} ${req.path}`);
     next(new AppError(`Route not found: ${req.method} ${req.path}`, 404, 'NOT_FOUND'));
   });
 
   // Error handling
   app.use(errorMiddleware);
-
-  console.log('ALL ROUTES MOUNTED');
 }
 
 export { mountRoutes };

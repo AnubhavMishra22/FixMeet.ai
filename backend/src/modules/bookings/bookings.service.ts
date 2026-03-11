@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { addMinutes, parseISO, isBefore, startOfDay, endOfDay } from 'date-fns';
+import { addMinutes, parseISO, isBefore, startOfDay, endOfDay, format } from 'date-fns';
 import { sql } from '../../config/database.js';
 import {
   BadRequestError,
@@ -83,6 +83,12 @@ function generateCancelToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
+function toDateStr(v: string | Date | null | undefined): string | null {
+  if (v == null) return null;
+  if (typeof v === 'string') return v;
+  return format(v as Date, 'yyyy-MM-dd');
+}
+
 /**
  * Check if a time slot conflicts with existing bookings
  */
@@ -161,10 +167,13 @@ async function validateBookingTime(
       throw new BadRequestError('Selected date is outside the booking window');
     }
   } else if (eventType.range_type === 'range') {
-    if (eventType.range_start && startDate < parseISO(eventType.range_start)) {
+    const rangeStart = toDateStr(eventType.range_start);
+    const rangeEnd = toDateStr(eventType.range_end);
+    const startStr = format(startDate, 'yyyy-MM-dd');
+    if (rangeStart && startStr < rangeStart) {
       throw new BadRequestError('Selected date is before the available range');
     }
-    if (eventType.range_end && startDate > parseISO(eventType.range_end)) {
+    if (rangeEnd && startStr > rangeEnd) {
       throw new BadRequestError('Selected date is after the available range');
     }
   }

@@ -1,0 +1,147 @@
+import { sql } from '../config/database.js';
+import { env } from '../config/env.js';
+import { generateFollowup } from '../modules/followups/followup-generator.service.js';
+
+interface PendingFollowupRow {
+  id: string;
+  booking_id: string;
+  user_id: string;
+  user_timezone: string;
+  followup_tone: string;
+  invitee_name: string;
+  invitee_email: string;
+  invitee_notes: string | null;
+  start_time: Date;
+  end_time: Date;
+  event_type_title: string;
+}
+
+interface BriefRow {
+  invitee_summary: string | null;
+  company_summary: string | null;
+  talking_points: string[];
+}
+
+/**
+ * Followup generator job — runs every 30 minutes.
+ *
+ * Phase 1: Create draft followup records for recently ended meetings
+ *   (ended 30–90 minutes ago).
+ * Phase 2: Generate AI content for drafts that have no subject/body yet.
+ */
+export async function processFollowupGeneration(): Promise<void> {
+  // Phase 1: Create draft records for recently ended meetings
+  try {
+    const created = await sql<{ booking_id: string; invitee_name: string }[]>`
+      INSERT INTO meeting_followups (booking_id, user_id, status)
+      SELECT b.id, b.host_id, 'draft'
+      FROM bookings b
+      JOIN users u ON b.host_id = u.id
+      WHERE b.status = 'confirmed'
+        AND b.end_time < NOW() - INTERVAL '30 minutes'
+        AND b.end_time > NOW() - INTERVAL '90 minutes'
+        AND u.followups_enabled = true
+        AND NOT EXISTS (
+          SELECT 1 FROM meeting_followups mf
+          WHERE mf.booking_id = b.id AND mf.user_id = b.host_id
+        )
+      ON CONFLICT (booking_id, user_id) DO NOTHING
+      RETURNING booking_id, (
+        SELECT invitee_name FROM bookings WHERE id = booking_id
+      ) AS invitee_name
+    `;
+
+    if (created.length > 0) {
+      console.log(`Followups: created ${created.length} drafts`);
+    }
+  } catch (err) {
+    console.error('Followups: failed to create drafts:', (err as Error).message);
+  }
+
+  // Phase 2: Generate AI content for empty drafts
+  if (!env.GOOGLE_AI_API_KEY) return;
+
+  // Find drafts without subject/body (not yet generated)
+  const pending = await sql<PendingFollowupRow[]>`
+    SELECT
+      mf.id,
+      mf.booking_id,
+      mf.user_id,
+      u.timezone AS user_timezone,
+      u.followup_tone,
+      b.invitee_name,
+      b.invitee_email,
+      b.invitee_notes,
+      b.start_time,
+      b.end_time,
+      et.title AS event_type_title
+    FROM meeting_followups mf
+    JOIN bookings b ON mf.booking_id = b.id
+    JOIN event_types et ON b.event_type_id = et.id
+    JOIN users u ON mf.user_id = u.id
+    WHERE mf.status = 'draft'
+      AND mf.subject IS NULL
+      AND mf.body IS NULL
+    ORDER BY mf.created_at ASC
+    LIMIT 5
+  `;
+
+  if (pending.length === 0) return;
+
+  console.log(`Followups: generating ${pending.length}...`);
+
+  for (const row of pending) {
+    try {
+      // Fetch meeting brief if one exists (for extra context)
+      let meetingBrief: string | null = null;
+      const briefRows = await sql<BriefRow[]>`
+        SELECT invitee_summary, company_summary, talking_points
+        FROM meeting_briefs
+        WHERE booking_id = ${row.booking_id}
+          AND user_id = ${row.user_id}
+          AND status = 'completed'
+        LIMIT 1
+      `;
+
+      const brief = briefRows[0];
+      if (brief) {
+        const parts: string[] = [];
+        if (brief.invitee_summary) parts.push(`About attendee: ${brief.invitee_summary}`);
+        if (brief.company_summary) parts.push(`About company: ${brief.company_summary}`);
+        if (brief.talking_points?.length > 0) {
+          parts.push(`Talking points: ${brief.talking_points.join(', ')}`);
+        }
+        if (parts.length > 0) meetingBrief = parts.join('\n');
+      }
+
+      // Generate followup content with AI
+      const result = await generateFollowup({
+        eventTitle: row.event_type_title,
+        inviteeName: row.invitee_name,
+        startTime: row.start_time,
+        endTime: row.end_time,
+        timezone: row.user_timezone,
+        meetingBrief,
+        inviteeNotes: row.invitee_notes,
+        tone: row.followup_tone as 'formal' | 'friendly' | 'casual',
+      });
+
+      // Save generated content to database
+      await sql`
+        UPDATE meeting_followups
+        SET
+          subject = ${result.subject},
+          body = ${result.body},
+          action_items = ${sql.json(result.actionItems)}
+        WHERE id = ${row.id}
+      `;
+
+      console.log(`Followup generated for ${row.invitee_name}`);
+    } catch (err) {
+      console.error(`Followup failed for ${row.invitee_name}:`, (err as Error).message);
+      // Don't block other followups — continue to next
+    }
+  }
+
+  console.log(`Followups: ${pending.length} processed`);
+}

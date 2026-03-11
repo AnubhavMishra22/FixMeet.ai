@@ -1,5 +1,13 @@
 import axios from 'axios';
 
+/** Safely extract error message from API errors. */
+export function getApiErrorMessage(e: unknown, fallback: string): string {
+  if (axios.isAxiosError(e) && e.response?.data?.error?.message) {
+    return e.response.data.error.message;
+  }
+  return fallback;
+}
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
@@ -57,5 +65,179 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// ---------------------------------------------------------------------------
+// Meeting Briefs
+// ---------------------------------------------------------------------------
+import type {
+  MeetingBriefWithBooking,
+  MeetingFollowupWithBooking,
+  MeetingFollowup,
+  DateRange,
+  MeetingStatsWithComparison,
+  McpApiKey,
+  McpApiKeyCreateResult,
+  MeetingsByDay,
+  MeetingsByHour,
+  MeetingsByType,
+  MeetingTrends,
+  NoShowStats,
+  ComparisonMetrics,
+  AIInsightsResponse,
+} from '../types';
+
+export async function getBriefs(): Promise<MeetingBriefWithBooking[]> {
+  const { data } = await api.get('/api/briefs');
+  return data.data;
+}
+
+export async function getBrief(bookingId: string): Promise<MeetingBriefWithBooking> {
+  const { data } = await api.get(`/api/briefs/${bookingId}`);
+  return data.data;
+}
+
+export async function generateBriefForBooking(bookingId: string): Promise<MeetingBriefWithBooking> {
+  const { data } = await api.post(`/api/briefs/generate/${bookingId}`);
+  return data.data;
+}
+
+export async function regenerateBrief(bookingId: string): Promise<MeetingBriefWithBooking> {
+  const { data } = await api.post(`/api/briefs/regenerate/${bookingId}`);
+  return data.data;
+}
+
+// ---------------------------------------------------------------------------
+// Follow-ups
+// ---------------------------------------------------------------------------
+
+export async function getFollowups(): Promise<MeetingFollowupWithBooking[]> {
+  const { data } = await api.get('/api/followups');
+  return data.data;
+}
+
+export async function getFollowup(id: string): Promise<MeetingFollowupWithBooking> {
+  const { data } = await api.get(`/api/followups/${id}`);
+  return data.data;
+}
+
+export async function updateFollowup(
+  id: string,
+  updates: { subject?: string; body?: string; actionItems?: string[] },
+): Promise<MeetingFollowup> {
+  const { data } = await api.patch(`/api/followups/${id}`, updates);
+  return data.data;
+}
+
+export async function sendFollowup(id: string): Promise<MeetingFollowup> {
+  const { data } = await api.post(`/api/followups/${id}/send`);
+  return data.data;
+}
+
+export async function skipFollowup(id: string): Promise<MeetingFollowup> {
+  const { data } = await api.post(`/api/followups/${id}/skip`);
+  return data.data;
+}
+
+export async function generateFollowupForBooking(
+  bookingId: string,
+  meetingNotes?: string,
+): Promise<MeetingFollowupWithBooking> {
+  const { data } = await api.post(`/api/followups/generate/${bookingId}`, { meetingNotes });
+  return data.data;
+}
+
+export async function getFollowupByBookingId(
+  bookingId: string,
+): Promise<MeetingFollowupWithBooking | null> {
+  const { data } = await api.get(`/api/followups/by-booking/${bookingId}`);
+  return data.data;
+}
+
+// ---------------------------------------------------------------------------
+// Insights
+// ---------------------------------------------------------------------------
+
+/** Extract data from API response - handles both { data: x } and { success: true, data: x } */
+function unwrap<T>(res: { data?: T; success?: boolean }): T {
+  const d = res?.data;
+  if (d != null) return d;
+  throw new Error('Invalid API response: missing data');
+}
+
+export interface DashboardInsights {
+  stats: MeetingStatsWithComparison;
+  byDay: MeetingsByDay;
+  byHour: MeetingsByHour;
+  byType: MeetingsByType;
+  noShows: NoShowStats;
+}
+
+export async function getDashboardInsights(range: DateRange): Promise<DashboardInsights> {
+  const { data } = await api.get('/api/insights/dashboard', { params: { range } });
+  return unwrap<DashboardInsights>(data);
+}
+
+export async function getInsightsStats(range: DateRange): Promise<MeetingStatsWithComparison> {
+  const { data } = await api.get('/api/insights/stats', { params: { range } });
+  return unwrap<MeetingStatsWithComparison>(data);
+}
+
+export async function getInsightsByDay(range: DateRange): Promise<MeetingsByDay> {
+  const { data } = await api.get('/api/insights/by-day', { params: { range } });
+  return unwrap<MeetingsByDay>(data);
+}
+
+export async function getInsightsByHour(range: DateRange): Promise<MeetingsByHour> {
+  const { data } = await api.get('/api/insights/by-hour', { params: { range } });
+  return unwrap<MeetingsByHour>(data);
+}
+
+export async function getInsightsByType(range: DateRange): Promise<MeetingsByType> {
+  const { data } = await api.get('/api/insights/by-type', { params: { range } });
+  return unwrap<MeetingsByType>(data);
+}
+
+export async function getInsightsTrends(): Promise<MeetingTrends> {
+  const { data } = await api.get('/api/insights/trends');
+  return unwrap<MeetingTrends>(data);
+}
+
+export async function getInsightsNoShows(range: DateRange): Promise<NoShowStats> {
+  const { data } = await api.get('/api/insights/no-shows', { params: { range } });
+  return unwrap<NoShowStats>(data);
+}
+
+export async function getAIInsights(): Promise<AIInsightsResponse> {
+  const { data } = await api.get('/api/insights/ai');
+  return unwrap<AIInsightsResponse>(data);
+}
+
+export async function refreshAIInsights(): Promise<AIInsightsResponse> {
+  const { data } = await api.post('/api/insights/ai/refresh');
+  return unwrap<AIInsightsResponse>(data);
+}
+
+export async function getInsightsComparison(range: DateRange): Promise<ComparisonMetrics> {
+  const { data } = await api.get('/api/insights/comparison', { params: { range } });
+  return unwrap<ComparisonMetrics>(data);
+}
+
+// ---------------------------------------------------------------------------
+// MCP API Keys
+// ---------------------------------------------------------------------------
+
+export async function getMcpApiKeys(): Promise<McpApiKey[]> {
+  const { data } = await api.get('/api/mcp-keys');
+  return data.data;
+}
+
+export async function createMcpApiKey(name: string): Promise<McpApiKeyCreateResult> {
+  const { data } = await api.post('/api/mcp-keys', { name });
+  return data.data;
+}
+
+export async function revokeMcpApiKey(id: string): Promise<void> {
+  await api.delete(`/api/mcp-keys/${id}`);
+}
 
 export default api;

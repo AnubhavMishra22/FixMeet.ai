@@ -30,6 +30,12 @@ export const updateProfileSchema = z.object({
     .regex(/^[a-z0-9_-]+$/, 'Only lowercase letters, numbers, hyphens, and underscores')
     .optional(),
   timezone: z.string().max(100).optional(),
+  briefsEnabled: z.boolean().optional(),
+  briefEmailsEnabled: z.boolean().optional(),
+  briefGenerationHours: z.number().int().min(1).max(72).optional(),
+  followupsEnabled: z.boolean().optional(),
+  followupTone: z.enum(['formal', 'friendly', 'casual']).optional(),
+  meetingHoursGoal: z.number().min(0).max(168).nullable().optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

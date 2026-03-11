@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
 import { LOGO_SMALL_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 import {
   Calendar,
   Settings,
@@ -47,7 +48,7 @@ export function DashboardLayout({ children }: Props) {
           {/* Logo */}
           <div className="p-6 border-b">
             <Link to="/dashboard" className="flex items-center gap-2 text-xl font-bold text-primary">
-              <img src={LOGO_SMALL_PATH} alt="FixMeet" className="h-8 w-8" />
+              <img src={LOGO_SMALL_PATH} alt="FixMeet logo" className="h-8 w-8" />
               FixMeet
             </Link>
           </div>
@@ -70,9 +71,9 @@ export function DashboardLayout({ children }: Props) {
                   <item.icon className="h-5 w-5" />
                   {item.name}
                   {item.badge && (
-                    <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                    <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0">
                       {item.badge}
-                    </span>
+                    </Badge>
                   )}
                 </Link>
               );

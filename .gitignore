@@ -37,5 +37,8 @@ coverage/
 .claude/
 CLAUDE.md
 
+# Local bugs log (do not push to GitHub)
+docs/BUGS-LOG.md
+
 # OS files
 Thumbs.db

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "fixmeet": {
+      "command": "npx",
+      "args": ["tsx", "src/mcp/server.ts"],
+      "cwd": "backend",
+      "env": {
+        "DATABASE_URL": "postgres://postgres:postgres@localhost:5432/fixmeet",
+        "JWT_SECRET": "<your-jwt-secret-min-32-chars>",
+        "FIXMEET_API_TOKEN": "<your-jwt-access-token>"
+      }
+    }
+  }
+}
