@@ -1,5 +1,6 @@
 # Deploy FixMeet backend to DigitalOcean Droplet on push to main
 # Build-only validation on PRs (no deploy)
+# Build runs on runner (avoids OOM on memory-limited Droplet)
 # Required secrets: DROPLET_HOST, DROPLET_USER, DROPLET_SSH_KEY
 name: Deploy to Droplet
 
@@ -11,7 +12,7 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 jobs:
-  # Option A: Build-only validation on PRs - no deploy
+  # Build-only validation on PRs - no deploy
   build:
     name: Build backend (validate)
     runs-on: ubuntu-latest
@@ -32,6 +33,7 @@ jobs:
           npm run build
 
   # Deploy only on push to main (not on PRs)
+  # Build on runner, then rsync to Droplet - avoids OOM on memory-limited server
   deploy:
     name: Deploy to api.fixmeet.app
     runs-on: ubuntu-latest
@@ -39,23 +41,41 @@ jobs:
     if: github.event_name != 'pull_request'
 
     steps:
-      - name: Deploy via SSH
-        id: deploy
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Build backend
+        working-directory: backend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Copy built artifacts to Droplet
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DROPLET_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_HOST }} \
+            "cd /root/FixMeet.ai && git fetch origin main && git reset --hard origin/main"
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key" \
+            backend/dist/ \
+            ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_HOST }}:/root/FixMeet.ai/backend/dist/
+
+      - name: Install deps and restart on Droplet
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
-            cd /root/FixMeet.ai
-            git fetch origin main
-            git reset --hard origin/main
-            cd backend
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            export NODE_OPTIONS="--max-old-space-size=1536"
-            npm ci
-            npm run build
+            cd /root/FixMeet.ai/backend
+            npm ci --omit=dev --ignore-scripts
             pm2 restart fixmeet-api --update-env
 
       - name: Health check
