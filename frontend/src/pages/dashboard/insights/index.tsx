@@ -88,12 +88,12 @@ export default function InsightsPage() {
           getInsightsComparison(range),
         ]);
 
-        if (!cancelled && s != null && c != null) {
+        if (!cancelled) {
           setStats({ ...s, comparison: c });
-          setByDay(d ?? null);
-          setByHour(h ?? null);
-          setByType(t ?? null);
-          setNoShows(n ?? null);
+          setByDay(d);
+          setByHour(h);
+          setByType(t);
+          setNoShows(n);
         }
       } catch (e) {
         const err = e as { response?: { data?: { error?: { message?: string } } }; message?: string };

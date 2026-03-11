@@ -150,7 +150,7 @@ export async function getFollowupByBookingId(
 /** Extract data from API response - handles both { data: x } and { success: true, data: x } */
 function unwrap<T>(res: { data?: T; success?: boolean }): T {
   const d = res?.data;
-  if (d !== undefined && d !== null) return d as T;
+  if (d != null) return d;
   throw new Error('Invalid API response: missing data');
 }
 
