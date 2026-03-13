@@ -194,14 +194,10 @@ export function DashboardLayout({ children }: Props) {
                       : 'text-cyan-950 hover:bg-cyan-200/70'
                   }`}
                 >
-                  <item.icon
-                    className={`h-5 w-5 shrink-0 ${isActive ? 'text-primary' : 'text-cyan-950'}`}
-                  />
+                  <item.icon className="h-5 w-5 shrink-0" />
                   {showLabels && (
                     <>
-                      <span className={`min-w-0 flex-1 truncate ${isActive ? 'text-primary' : 'text-cyan-950'}`}>
-                        {item.name}
-                      </span>
+                      <span className="min-w-0 flex-1 truncate">{item.name}</span>
                       {item.badge && (
                         <Badge
                           variant="secondary"

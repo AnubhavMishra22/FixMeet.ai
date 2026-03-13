@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '../../components/ui/card';
 import { useAuthStore } from '../../stores/auth-store';
 import { LOGO_PATH } from '../../lib/constants';
 
@@ -43,10 +43,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-sky-50">
       <img src={LOGO_PATH} alt="FixMeet logo" className="h-40 w-auto mb-2" />
-      <h1 className="mb-6 text-2xl font-bold tracking-tight text-primary-wordmark">FixMeet</h1>
+      <p className="mb-6 text-2xl font-bold tracking-tight text-primary-wordmark">FixMeet</p>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
+          <h1 className="text-2xl font-semibold leading-none tracking-tight">Welcome back</h1>
           <CardDescription>
             Sign in to your{' '}
             <span className="font-semibold text-primary-wordmark">FixMeet</span> account
