@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
-import { LOGO_SMALL_PATH, LOGO_PATH } from '../../lib/constants';
+import { IA_NAME, IA_URL, LOGO_SMALL_PATH, LOGO_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -113,7 +113,14 @@ export function DashboardLayout({ children }: Props) {
           <span className="text-2xl text-gray-600">
             <span className="font-bold">MeetIA</span> by
           </span>
-          <img src={LOGO_PATH} alt="Inductive Automation" className="h-10 w-auto" />
+          <a
+            href={IA_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Visit ${IA_NAME}`}
+          >
+            <img src={LOGO_PATH} alt={IA_NAME} className="h-10 w-auto" />
+          </a>
         </div>
       </main>
     </div>
