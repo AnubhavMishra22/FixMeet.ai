@@ -26,6 +26,9 @@ const navigation = [
   { name: 'Settings', href: '/dashboard/settings', icon: Settings, badge: null },
 ];
 
+const SIDEBAR_WIDTH_CLASS = 'w-16 md:w-64';
+const MAIN_CONTENT_PADDING_CLASS = 'pl-16 md:pl-64';
+
 interface Props {
   children: React.ReactNode;
 }
@@ -43,7 +46,7 @@ export function DashboardLayout({ children }: Props) {
   return (
     <div>
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 w-16 md:w-64 bg-white border-r">
+      <aside className={`fixed inset-y-0 left-0 ${SIDEBAR_WIDTH_CLASS} bg-white border-r`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="px-3 py-4 md:p-6 border-b">
@@ -58,12 +61,13 @@ export function DashboardLayout({ children }: Props) {
             {navigation.map((item) => {
               const isActive = location.pathname === item.href ||
                 (item.href !== '/dashboard' && location.pathname.startsWith(item.href + '/'));
+              const navA11yLabel = item.badge ? `${item.name} (${item.badge})` : item.name;
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  title={item.name}
-                  aria-label={item.name}
+                  title={navA11yLabel}
+                  aria-label={navA11yLabel}
                   className={`flex items-center justify-center md:justify-start gap-0 md:gap-3 px-2 md:px-3 py-2 rounded-md transition-colors ${
                     isActive
                       ? 'bg-primary/10 text-primary'
@@ -110,7 +114,7 @@ export function DashboardLayout({ children }: Props) {
       </aside>
 
       {/* Main content */}
-      <main className="pl-16 md:pl-64 bg-sky-50 min-h-screen">
+      <main className={`${MAIN_CONTENT_PADDING_CLASS} bg-sky-50 min-h-screen`}>
         <div className="max-w-5xl mx-auto p-4 md:p-8">{children}</div>
       </main>
     </div>
