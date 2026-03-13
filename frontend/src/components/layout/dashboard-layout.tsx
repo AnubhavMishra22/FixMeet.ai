@@ -113,7 +113,14 @@ export function DashboardLayout({ children }: Props) {
           <span className="text-2xl text-gray-600">
             <span className="font-bold">MeetIA</span> by
           </span>
-          <img src={LOGO_PATH} alt="Inductive Automation" className="h-10 w-auto" />
+          <a
+            href="https://inductiveautomation.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visit Inductive Automation"
+          >
+            <img src={LOGO_PATH} alt="Inductive Automation" className="h-10 w-auto" />
+          </a>
         </div>
       </main>
     </div>
