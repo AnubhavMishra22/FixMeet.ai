@@ -23,7 +23,6 @@ import FollowupsPage from './pages/dashboard/followups/index';
 import FollowupDetailsPage from './pages/dashboard/followups/details';
 import InsightsPage from './pages/dashboard/insights/index';
 import DemoPage from './pages/dashboard/demo/index';
-import DevDashboardPreview from './pages/dev/dashboard-preview';
 
 // Public pages
 import PublicBookingPage from './pages/booking/public-booking';
@@ -36,11 +35,6 @@ function App() {
         {/* Auth routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-
-        {/* Dev-only: dashboard UI without login (not in production build) */}
-        {import.meta.env.DEV && (
-          <Route path="/dev/preview-dashboard" element={<DevDashboardPreview />} />
-        )}
 
         {/* Dashboard routes */}
         <Route

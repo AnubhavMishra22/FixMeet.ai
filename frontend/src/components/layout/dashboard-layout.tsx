@@ -44,9 +44,7 @@ function normalizePathname(pathname: string): string {
 }
 
 function isDashboardHomePath(path: string): boolean {
-  if (path === '/dashboard') return true;
-  if (import.meta.env.DEV && path === '/dev/preview-dashboard') return true;
-  return false;
+  return path === '/dashboard';
 }
 
 /** Whether this nav item should show the “selected” styles for the current URL */
