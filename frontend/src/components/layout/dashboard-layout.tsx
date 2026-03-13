@@ -43,18 +43,18 @@ export function DashboardLayout({ children }: Props) {
   return (
     <div>
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 w-64 bg-white border-r">
+      <aside className="fixed inset-y-0 left-0 w-16 md:w-64 bg-white border-r">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b">
-            <Link to="/dashboard" className="flex items-center gap-2 text-xl font-bold text-primary">
-              <img src={LOGO_SMALL_PATH} alt="FixMeet logo" className="h-8 w-8" />
-              FixMeet
+          <div className="px-3 py-4 md:p-6 border-b">
+            <Link to="/dashboard" className="flex items-center justify-center md:justify-start gap-2 text-xl font-bold text-primary">
+              <img src={LOGO_SMALL_PATH} alt="FixMeet logo" className="h-7 w-7 md:h-8 md:w-8" />
+              <span className="hidden md:inline">FixMeet</span>
             </Link>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 p-2 md:p-4 space-y-1">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href ||
                 (item.href !== '/dashboard' && location.pathname.startsWith(item.href + '/'));
@@ -62,16 +62,18 @@ export function DashboardLayout({ children }: Props) {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                  title={item.name}
+                  aria-label={item.name}
+                  className={`flex items-center justify-center md:justify-start gap-0 md:gap-3 px-2 md:px-3 py-2 rounded-md transition-colors ${
                     isActive
                       ? 'bg-primary/10 text-primary'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
                   <item.icon className="h-5 w-5" />
-                  {item.name}
+                  <span className="hidden md:inline">{item.name}</span>
                   {item.badge && (
-                    <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0">
+                    <Badge variant="secondary" className="hidden md:inline-flex ml-auto text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0">
                       {item.badge}
                     </Badge>
                   )}
@@ -81,33 +83,35 @@ export function DashboardLayout({ children }: Props) {
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="p-2 md:p-4 border-t">
+            <div className="flex items-center justify-center md:justify-start gap-3 mb-2 md:mb-3">
+              <div className="h-9 w-9 md:h-10 md:w-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-primary font-medium">
                   {user?.name?.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="hidden md:block flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{user?.name}</p>
                 <p className="text-xs text-gray-500 truncate">{user?.email}</p>
               </div>
             </div>
             <Button
               variant="ghost"
-              className="w-full justify-start text-gray-600"
+              className="w-full justify-center md:justify-start text-gray-600"
               onClick={handleLogout}
+              title="Logout"
+              aria-label="Logout"
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              <LogOut className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Logout</span>
             </Button>
           </div>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="pl-64 bg-sky-50 min-h-screen">
-        <div className="max-w-5xl mx-auto p-8">{children}</div>
+      <main className="pl-16 md:pl-64 bg-sky-50 min-h-screen">
+        <div className="max-w-5xl mx-auto p-4 md:p-8">{children}</div>
       </main>
     </div>
   );
