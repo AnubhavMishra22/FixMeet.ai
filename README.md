@@ -294,9 +294,9 @@ The AI copilot can check availability, create bookings, list meetings, and cance
 
 ## Deployment
 
-<!-- TODO: Add deployment instructions for production environments -->
-
-*Deployment guide coming soon. This section will cover production setup, environment configuration, and hosting options.*
+- **Backend**: DigitalOcean Droplet (deployed via GitHub Actions on push to `main`). See [`.github/workflows/deploy-droplet.yml`](.github/workflows/deploy-droplet.yml). Requires secrets: `DROPLET_HOST`, `DROPLET_USER`, `DROPLET_SSH_KEY` (see [setup instructions](docs/DROPLET-DEPLOYMENT-AND-LOGS.md)).
+- **Frontend**: Vercel (deploys from `main`).
+- **API**: [api.fixmeet.app](https://api.fixmeet.app)
 
 ---
 

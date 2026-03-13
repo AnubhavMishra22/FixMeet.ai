@@ -32,7 +32,7 @@ FixMeet.app is a Calendly competitor — a scheduling/booking platform where use
 ### Infrastructure
 - **Email**: Resend (falls back to console.log without API key)
 - **Background Jobs**: Simple setInterval (no Redis/BullMQ)
-- **Hosting**: Railway (backend), Vercel (frontend)
+- **Hosting**: DigitalOcean Droplet (backend), Vercel (frontend)
 
 ---
 

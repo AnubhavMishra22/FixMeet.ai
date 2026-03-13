@@ -1,9 +1,10 @@
-export const APP_NAME = 'FixMeet';
+export const APP_NAME = 'MeetIA';
 
-// Logo (transparent PNG) for all pages
-export const LOGO_PATH = '/logo-transparent.png';
-// Small logo for the navbar (same file, sized via CSS)
-export const LOGO_SMALL_PATH = '/logo-transparent.png';
+// Inductive Automation logo for MeetIA demo
+export const LOGO_PATH = '/ia-logo.png';
+export const LOGO_SMALL_PATH = '/ia-logo-icon.svg'; // IA gear icon only, no text (for navbar)
+export const IA_URL = 'https://inductiveautomation.com';
+export const IA_NAME = 'Inductive Automation';
 
 export const BOOKING_STATUS = {
   confirmed: { label: 'Confirmed', color: 'bg-green-100 text-green-800' },
