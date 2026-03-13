@@ -42,12 +42,14 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-sky-100">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-sky-50">
       <img src={LOGO_PATH} alt="FixMeet logo" className="h-40 w-auto mb-6" />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Get started with FixMeet</CardDescription>
+          <CardDescription>
+            Get started with <span className="font-semibold text-primary-wordmark">FixMeet</span>
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

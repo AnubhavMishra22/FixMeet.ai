@@ -13,6 +13,8 @@
   --color-foreground: hsl(222.2 84% 4.9%);
 
   --color-primary: hsl(221.2 72% 38%);
+  /* Sidebar “FixMeet” wordmark: same hue as primary, slightly higher lightness */
+  --color-primary-wordmark: hsl(221.2 72% 43%);
   --color-primary-foreground: hsl(210 40% 98%);
 
   --color-secondary: hsl(210 40% 96.1%);
