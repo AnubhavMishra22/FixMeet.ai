@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
-import { IA_NAME, IA_URL, LOGO_SMALL_PATH, LOGO_PATH } from '../../lib/constants';
+import { DEMO_STATUS_LABEL, IA_NAME, IA_URL, LOGO_SMALL_PATH, LOGO_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -116,6 +116,9 @@ export function DashboardLayout({ children }: Props) {
       {/* Main content */}
       <main className={`${MAIN_CONTENT_PADDING_CLASS} bg-white min-h-screen`}>
         <div className="max-w-5xl mx-auto p-4 md:p-8">{children}</div>
+        <div className="hidden md:block fixed bottom-6 left-[calc(theme(spacing.64)+theme(spacing.6))] text-lg font-semibold text-gray-500">
+          {DEMO_STATUS_LABEL}
+        </div>
         {/* Bottom right: MeetIA by [logo] */}
         <div className="hidden md:flex fixed bottom-6 right-6 items-center gap-2">
           <span className="text-2xl text-gray-600">
