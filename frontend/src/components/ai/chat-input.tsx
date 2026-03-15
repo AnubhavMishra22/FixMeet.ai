@@ -54,7 +54,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Ask MeetIA AI anything about your schedule..."
+        placeholder="Ask FixMeet AI anything about your schedule..."
         disabled={isLoading}
         rows={1}
         className="flex-1 resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50 placeholder:text-gray-400"

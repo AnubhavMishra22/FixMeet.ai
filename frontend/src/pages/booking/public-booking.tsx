@@ -50,7 +50,7 @@ interface BookingResponse {
 
 type Step = 'calendar' | 'time' | 'form' | 'confirmed';
 
-const PAGE_BG = 'bg-white';
+const PAGE_BG = 'bg-sky-50';
 
 // Convert "HH:mm" (24h) to "h:mm AM/PM" (12h)
 function formatTime12h(time: string): string {
@@ -565,7 +565,7 @@ export default function PublicBookingPage() {
         </Card>
 
         <p className="text-center text-gray-400 text-sm mt-6">
-          Powered by <span className="font-medium">MeetIA</span>
+          Powered by <span className="font-medium">FixMeet</span>
         </p>
       </div>
     </div>
