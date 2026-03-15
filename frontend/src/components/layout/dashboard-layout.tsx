@@ -108,6 +108,9 @@ export function DashboardLayout({ children }: Props) {
       {/* Main content */}
       <main className="pl-64 bg-white min-h-screen">
         <div className="max-w-5xl mx-auto p-8">{children}</div>
+        <div className="fixed bottom-6 left-[17.5rem] text-lg font-semibold text-gray-500">
+          FixMeet Currently on Demo
+        </div>
         {/* Bottom right: MeetIA by [logo] */}
         <div className="fixed bottom-6 right-6 flex items-center gap-2">
           <span className="text-2xl text-gray-600">
