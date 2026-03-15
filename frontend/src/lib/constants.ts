@@ -5,6 +5,7 @@ export const LOGO_PATH = '/ia-logo.png';
 export const LOGO_SMALL_PATH = '/ia-logo-icon.svg'; // IA gear icon only, no text (for navbar)
 export const IA_URL = 'https://inductiveautomation.com';
 export const IA_NAME = 'Inductive Automation';
+export const DEMO_STATUS_LABEL = 'FixMeet Currently on Demo';
 
 export const BOOKING_STATUS = {
   confirmed: { label: 'Confirmed', color: 'bg-green-100 text-green-800' },

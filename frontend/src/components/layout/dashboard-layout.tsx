@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
-import { IA_NAME, IA_URL, LOGO_SMALL_PATH, LOGO_PATH } from '../../lib/constants';
+import { DEMO_STATUS_LABEL, IA_NAME, IA_URL, LOGO_SMALL_PATH, LOGO_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -108,8 +108,8 @@ export function DashboardLayout({ children }: Props) {
       {/* Main content */}
       <main className="pl-64 bg-white min-h-screen">
         <div className="max-w-5xl mx-auto p-8">{children}</div>
-        <div className="fixed bottom-6 left-[17.5rem] text-lg font-semibold text-gray-500">
-          FixMeet Currently on Demo
+        <div className="fixed bottom-6 left-[calc(theme(spacing.64)+theme(spacing.6))] text-lg font-semibold text-gray-500">
+          {DEMO_STATUS_LABEL}
         </div>
         {/* Bottom right: MeetIA by [logo] */}
         <div className="fixed bottom-6 right-6 flex items-center gap-2">
