@@ -5,7 +5,7 @@ export default function DemoPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Custom Demo</h1>
-        <p className="text-gray-600">Configured demo links for custom showcases.</p>
+        <p className="text-slate-600">Configured demo links for custom showcases.</p>
       </div>
 
       <Card>
@@ -17,16 +17,16 @@ export default function DemoPage() {
           <div className="divide-y rounded-md border">
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-700">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-700">
                   1
                 </span>
-                <span className="font-medium text-gray-900">Inductive Automation</span>
+                <span className="font-medium text-slate-900">Inductive Automation</span>
               </div>
               <a
                 href="https://meetiademo.vercel.app"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                className="text-sm font-medium text-primary hover:underline"
               >
                 meetiademo.vercel.app
               </a>
