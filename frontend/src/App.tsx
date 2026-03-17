@@ -22,6 +22,7 @@ import BriefDetailsPage from './pages/dashboard/briefs/details';
 import FollowupsPage from './pages/dashboard/followups/index';
 import FollowupDetailsPage from './pages/dashboard/followups/details';
 import InsightsPage from './pages/dashboard/insights/index';
+import DemoPage from './pages/dashboard/demo/index';
 
 // Public pages
 import PublicBookingPage from './pages/booking/public-booking';
@@ -165,6 +166,17 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <InsightsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/demo"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DemoPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

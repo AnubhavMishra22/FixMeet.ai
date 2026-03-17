@@ -13,6 +13,7 @@ import {
   FileText,
   MailCheck,
   BarChart3,
+  Presentation,
 } from 'lucide-react';
 
 const navigation = [
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Meeting Briefs', href: '/dashboard/briefs', icon: FileText, badge: 'Pro' },
   { name: 'Follow-ups', href: '/dashboard/followups', icon: MailCheck, badge: 'Max' },
   { name: 'Insights', href: '/dashboard/insights', icon: BarChart3, badge: 'Max' },
+  { name: 'Demo', href: '/dashboard/demo', icon: Presentation, badge: null },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings, badge: null },
 ];
 
