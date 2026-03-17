@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
 import { LOGO_SMALL_PATH } from '../../lib/constants';
@@ -28,8 +29,50 @@ const navigation = [
   { name: 'Settings', href: '/dashboard/settings', icon: Settings, badge: null },
 ];
 
-const SIDEBAR_WIDTH_CLASS = 'w-16 md:w-64';
-const MAIN_CONTENT_PADDING_CLASS = 'pl-16 md:pl-64';
+const SIDEBAR_WIDTH_STORAGE_KEY = 'fixmeet-sidebar-width-px';
+const SIDEBAR_MIN_WIDTH = 56;
+const SIDEBAR_MAX_WIDTH = 420;
+const SIDEBAR_DEFAULT_WIDTH = 256;
+/** At or above this width, show labels; below = icon rail only */
+const SIDEBAR_LABEL_BREAKPOINT = 128;
+
+function normalizePathname(pathname: string): string {
+  if (pathname.length > 1 && pathname.endsWith('/')) {
+    return pathname.slice(0, -1);
+  }
+  return pathname;
+}
+
+function isDashboardHomePath(path: string): boolean {
+  return path === '/dashboard';
+}
+
+/** Whether this nav item should show the “selected” styles for the current URL */
+function isNavItemActive(pathname: string, itemHref: string): boolean {
+  const path = normalizePathname(pathname);
+  const href = normalizePathname(itemHref);
+
+  // Home: only the real index, not /dashboard/anything
+  if (href === '/dashboard') {
+    return isDashboardHomePath(path);
+  }
+
+  if (path === href) return true;
+  // Nested routes under this section (e.g. /dashboard/bookings/:id)
+  if (path.startsWith(href + '/')) return true;
+  return false;
+}
+
+function readStoredSidebarWidth(): number {
+  try {
+    const raw = localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY);
+    const n = raw ? parseInt(raw, 10) : NaN;
+    if (!Number.isFinite(n)) return SIDEBAR_DEFAULT_WIDTH;
+    return Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, n));
+  } catch {
+    return SIDEBAR_DEFAULT_WIDTH;
+  }
+}
 
 interface Props {
   children: React.ReactNode;
@@ -40,6 +83,68 @@ export function DashboardLayout({ children }: Props) {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
 
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() =>
+    typeof window !== 'undefined' ? readStoredSidebarWidth() : SIDEBAR_DEFAULT_WIDTH
+  );
+
+  const showLabels = sidebarWidth >= SIDEBAR_LABEL_BREAKPOINT;
+
+  const handleResizeStart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      const startX = e.clientX;
+      const startWidth = sidebarWidth;
+      let lastWidth = startWidth;
+
+      const onMove = (ev: MouseEvent) => {
+        const delta = ev.clientX - startX;
+        lastWidth = Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, startWidth + delta));
+        setSidebarWidth(lastWidth);
+      };
+
+      const onUp = () => {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+        document.body.style.removeProperty('cursor');
+        document.body.style.removeProperty('user-select');
+        try {
+          localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(lastWidth));
+        } catch {
+          /* ignore */
+        }
+      };
+
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    },
+    [sidebarWidth]
+  );
+
+  const handleResizeDoubleClick = useCallback(() => {
+    setSidebarWidth(SIDEBAR_DEFAULT_WIDTH);
+    try {
+      localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(SIDEBAR_DEFAULT_WIDTH));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // Sync from storage if another tab changes (optional)
+  useEffect(() => {
+    const onStorage = (ev: StorageEvent) => {
+      if (ev.key === SIDEBAR_WIDTH_STORAGE_KEY && ev.newValue) {
+        const n = parseInt(ev.newValue, 10);
+        if (Number.isFinite(n)) {
+          setSidebarWidth(Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, n)));
+        }
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -47,26 +152,32 @@ export function DashboardLayout({ children }: Props) {
 
   return (
     <div>
-      {/* Sidebar — light blue */}
-      <aside className={`fixed inset-y-0 left-0 ${SIDEBAR_WIDTH_CLASS} bg-sky-100 border-r border-sky-200`}>
-        <div className="flex flex-col h-full">
+      {/* Sidebar — light blue, width controlled by drag */}
+      <aside
+        className="fixed inset-y-0 left-0 z-10 overflow-hidden bg-sky-100 border-r border-sky-200"
+        style={{ width: sidebarWidth }}
+      >
+        <div className="flex h-full min-h-0 flex-col">
           {/* Logo */}
-          <div className="px-3 py-4 md:p-6 border-b border-sky-200">
+          <div className="border-b border-sky-200 px-2 py-3 sm:px-3 sm:py-4 md:px-6 md:py-6">
             <Link
               to="/dashboard"
-              className="flex items-center justify-center md:justify-start gap-2 text-xl font-bold text-slate-900"
+              className={`flex items-center gap-2 text-xl font-bold text-primary ${
+                showLabels ? 'justify-start' : 'justify-center'
+              }`}
             >
-              <img src={LOGO_SMALL_PATH} alt="FixMeet logo" className="h-7 w-7 md:h-8 md:w-8" />
-              <span className="hidden md:inline">FixMeet</span>
+              <img src={LOGO_SMALL_PATH} alt="FixMeet logo" className="h-7 w-7 shrink-0 md:h-8 md:w-8" />
+              {showLabels && <span className="truncate">FixMeet</span>}
             </Link>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-2 md:p-4 space-y-1">
+          <nav
+            className="scrollbar-none flex min-h-0 flex-1 flex-col space-y-1 overflow-y-auto overflow-x-hidden p-2 md:p-4"
+            aria-label="Main navigation"
+          >
             {navigation.map((item) => {
-              const isActive =
-                location.pathname === item.href ||
-                (item.href !== '/dashboard' && location.pathname.startsWith(item.href + '/'));
+              const isActive = isNavItemActive(location.pathname, item.href);
               const navA11yLabel = item.badge ? `${item.name} (${item.badge})` : item.name;
               return (
                 <Link
@@ -74,21 +185,32 @@ export function DashboardLayout({ children }: Props) {
                   to={item.href}
                   title={navA11yLabel}
                   aria-label={navA11yLabel}
-                  className={`flex items-center justify-center md:justify-start gap-0 md:gap-3 px-2 md:px-3 py-2 rounded-md transition-colors ${
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex items-center rounded-md px-2 py-2 transition-colors md:px-3 ${
+                    showLabels ? 'justify-start gap-3' : 'justify-center gap-0'
+                  } ${
                     isActive
-                      ? 'bg-sky-300/70 text-slate-900 shadow-sm'
-                      : 'text-slate-800 hover:bg-sky-200/80 hover:text-slate-900'
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-sky-900 hover:bg-sky-200/60'
                   }`}
                 >
-                  <item.icon className="h-5 w-5" />
-                  <span className="hidden md:inline">{item.name}</span>
-                  {item.badge && (
-                    <Badge
-                      variant="secondary"
-                      className="hidden md:inline-flex ml-auto text-[10px] px-1.5 py-0.5 bg-primary text-primary-foreground border-0 font-semibold"
-                    >
-                      {item.badge}
-                    </Badge>
+                  <item.icon
+                    className={`h-5 w-5 shrink-0 ${isActive ? 'text-primary' : 'text-sky-900'}`}
+                  />
+                  {showLabels && (
+                    <>
+                      <span className={`min-w-0 flex-1 truncate ${isActive ? 'text-primary' : 'text-sky-900'}`}>
+                        {item.name}
+                      </span>
+                      {item.badge && (
+                        <Badge
+                          variant="secondary"
+                          className="ml-auto shrink-0 text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0 font-semibold"
+                        >
+                          {item.badge}
+                        </Badge>
+                      )}
+                    </>
                   )}
                 </Link>
               );
@@ -96,35 +218,54 @@ export function DashboardLayout({ children }: Props) {
           </nav>
 
           {/* User section */}
-          <div className="p-2 md:p-4 border-t border-sky-200">
-            <div className="flex items-center justify-center md:justify-start gap-3 mb-2 md:mb-3">
-              <div className="h-10 w-10 rounded-full bg-sky-300/90 flex items-center justify-center ring-1 ring-sky-400/50">
-                <span className="text-slate-900 font-semibold">
-                  {user?.name?.charAt(0).toUpperCase()}
-                </span>
+          <div className="border-t border-sky-200 p-2 md:p-4">
+            <div
+              className={`mb-2 flex items-center gap-3 md:mb-3 ${showLabels ? 'justify-start' : 'justify-center'}`}
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                <span className="font-medium text-primary">{user?.name?.charAt(0).toUpperCase()}</span>
               </div>
-              <div className="hidden md:block flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate text-slate-900">{user?.name}</p>
-                <p className="text-xs text-slate-600 truncate">{user?.email}</p>
-              </div>
+              {showLabels && (
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-gray-900">{user?.name}</p>
+                  <p className="truncate text-xs text-gray-500">{user?.email}</p>
+                </div>
+              )}
             </div>
             <Button
               variant="ghost"
-              className="w-full justify-center md:justify-start text-slate-800 hover:bg-sky-200/90 hover:text-slate-950"
+              className={`w-full text-gray-600 hover:bg-gray-100 hover:text-gray-900 ${
+                showLabels ? 'justify-start' : 'justify-center'
+              }`}
               onClick={handleLogout}
               title="Logout"
               aria-label="Logout"
             >
-              <LogOut className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Logout</span>
+              <LogOut className={`h-4 w-4 shrink-0 ${showLabels ? 'mr-2' : ''}`} />
+              {showLabels && <span>Logout</span>}
             </Button>
           </div>
         </div>
+
+        {/* Drag handle — resize sidebar */}
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize navigation sidebar"
+          aria-valuemin={SIDEBAR_MIN_WIDTH}
+          aria-valuemax={SIDEBAR_MAX_WIDTH}
+          aria-valuenow={Math.round(sidebarWidth)}
+          title="Drag to resize. Double-click to reset."
+          tabIndex={0}
+          onMouseDown={handleResizeStart}
+          onDoubleClick={handleResizeDoubleClick}
+          className="absolute right-0 top-0 z-20 h-full w-3 max-w-[12px] translate-x-1/2 cursor-col-resize select-none border-0 bg-transparent p-0 hover:bg-sky-400/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
+        />
       </aside>
 
       {/* Main content */}
-      <main className={`${MAIN_CONTENT_PADDING_CLASS} bg-sky-50 min-h-screen`}>
-        <div className="max-w-5xl mx-auto p-4 md:p-8">{children}</div>
+      <main className="min-h-screen bg-sky-50" style={{ paddingLeft: sidebarWidth }}>
+        <div className="mx-auto max-w-5xl p-4 md:p-8">{children}</div>
       </main>
     </div>
   );
