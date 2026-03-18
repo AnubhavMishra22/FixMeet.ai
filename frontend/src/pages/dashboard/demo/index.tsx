@@ -23,12 +23,12 @@ export default function DemoPage() {
                 <span className="font-medium text-gray-900">Inductive Automation</span>
               </div>
               <a
-                href="https://meetia.demo.vercel.app"
+                href="https://meetiademo.vercel.app"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
               >
-                meetia.demo.vercel.app
+                meetiademo.vercel.app
               </a>
             </div>
           </div>
