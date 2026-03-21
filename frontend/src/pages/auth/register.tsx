@@ -42,14 +42,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f5f7fa]">
-      <Link to="/welcome" className="mb-6 w-full max-w-md flex justify-center">
-        <img src={LOGO_PATH} alt="MeetIA logo" className="w-full h-auto" />
-      </Link>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-sky-100">
+      <img src={LOGO_PATH} alt="FixMeet logo" className="h-40 w-auto mb-6" />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Get started with MeetIA</CardDescription>
+          <CardDescription>Get started with FixMeet</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

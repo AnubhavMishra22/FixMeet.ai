@@ -4,31 +4,31 @@
 @source "../index.html";
 @source "./**/*.{js,ts,jsx,tsx}";
 
-/* Inductive Automation brand theme: navy #1B2B4B, accent orange #F5821F */
+/* Custom theme using CSS variables */
 @theme {
-  --color-border: hsl(214 30% 90%);
-  --color-input: hsl(214 30% 90%);
-  --color-ring: hsl(24 91% 54%);
+  --color-border: hsl(214.3 31.8% 91.4%);
+  --color-input: hsl(214.3 31.8% 91.4%);
+  --color-ring: hsl(221.2 83.2% 53.3%);
   --color-background: hsl(0 0% 100%);
-  --color-foreground: hsl(217 50% 18%);
+  --color-foreground: hsl(222.2 84% 4.9%);
 
-  --color-primary: hsl(24 91% 54%);
-  --color-primary-foreground: hsl(0 0% 100%);
+  --color-primary: hsl(221.2 83.2% 53.3%);
+  --color-primary-foreground: hsl(210 40% 98%);
 
-  --color-secondary: hsl(217 50% 96%);
-  --color-secondary-foreground: hsl(217 50% 18%);
+  --color-secondary: hsl(210 40% 96.1%);
+  --color-secondary-foreground: hsl(222.2 47.4% 11.2%);
 
   --color-destructive: hsl(0 84.2% 60.2%);
-  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-destructive-foreground: hsl(210 40% 98%);
 
-  --color-muted: hsl(217 20% 95%);
+  --color-muted: hsl(210 40% 96.1%);
   --color-muted-foreground: hsl(215.4 16.3% 46.9%);
 
-  --color-accent: hsl(24 91% 96%);
-  --color-accent-foreground: hsl(217 50% 18%);
+  --color-accent: hsl(210 40% 96.1%);
+  --color-accent-foreground: hsl(222.2 47.4% 11.2%);
 
   --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(217 50% 18%);
+  --color-card-foreground: hsl(222.2 84% 4.9%);
 
   --radius-lg: 0.5rem;
   --radius-md: calc(0.5rem - 2px);

@@ -34,7 +34,7 @@ interface HostData {
   timezone: string;
 }
 
-const PAGE_BG = 'bg-white';
+const PAGE_BG = 'bg-sky-50';
 
 function getLocationIcon(locationType: string) {
   switch (locationType) {
@@ -258,7 +258,7 @@ export default function BookingManagePage() {
         </Card>
 
         <p className="text-center text-gray-400 text-sm mt-6">
-          Powered by <span className="font-medium">MeetIA</span>
+          Powered by <span className="font-medium">FixMeet</span>
         </p>
       </div>
     </div>
