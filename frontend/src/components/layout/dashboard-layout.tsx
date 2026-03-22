@@ -154,15 +154,15 @@ export function DashboardLayout({ children }: Props) {
     <div>
       {/* Sidebar — light blue, width controlled by drag */}
       <aside
-        className="fixed inset-y-0 left-0 z-10 overflow-hidden bg-sky-100 border-r border-sky-200"
+        className="fixed inset-y-0 left-0 z-10 overflow-hidden bg-cyan-100 border-r border-cyan-200"
         style={{ width: sidebarWidth }}
       >
         <div className="flex h-full min-h-0 flex-col">
-          {/* Logo */}
-          <div className="border-b border-sky-200 px-2 py-3 sm:px-3 sm:py-4 md:px-6 md:py-6">
+          {/* Logo — wordmark: primary-wordmark (slightly lighter than buttons/links primary). */}
+          <div className="border-b border-cyan-200 px-2 py-3 sm:px-3 sm:py-4 md:px-6 md:py-6">
             <Link
               to="/dashboard"
-              className={`flex items-center gap-2 text-xl font-bold text-primary ${
+              className={`flex items-center gap-2 text-xl font-bold text-primary-wordmark transition-colors hover:text-primary ${
                 showLabels ? 'justify-start' : 'justify-center'
               }`}
             >
@@ -191,17 +191,13 @@ export function DashboardLayout({ children }: Props) {
                   } ${
                     isActive
                       ? 'bg-primary/10 text-primary'
-                      : 'text-sky-900 hover:bg-sky-200/60'
+                      : 'text-cyan-950 hover:bg-cyan-200/70'
                   }`}
                 >
-                  <item.icon
-                    className={`h-5 w-5 shrink-0 ${isActive ? 'text-primary' : 'text-sky-900'}`}
-                  />
+                  <item.icon className="h-5 w-5 shrink-0" />
                   {showLabels && (
                     <>
-                      <span className={`min-w-0 flex-1 truncate ${isActive ? 'text-primary' : 'text-sky-900'}`}>
-                        {item.name}
-                      </span>
+                      <span className="min-w-0 flex-1 truncate">{item.name}</span>
                       {item.badge && (
                         <Badge
                           variant="secondary"
@@ -218,7 +214,7 @@ export function DashboardLayout({ children }: Props) {
           </nav>
 
           {/* User section */}
-          <div className="border-t border-sky-200 p-2 md:p-4">
+          <div className="border-t border-cyan-200 p-2 md:p-4">
             <div
               className={`mb-2 flex items-center gap-3 md:mb-3 ${showLabels ? 'justify-start' : 'justify-center'}`}
             >
@@ -259,12 +255,12 @@ export function DashboardLayout({ children }: Props) {
           tabIndex={0}
           onMouseDown={handleResizeStart}
           onDoubleClick={handleResizeDoubleClick}
-          className="absolute right-0 top-0 z-20 h-full w-3 max-w-[12px] translate-x-1/2 cursor-col-resize select-none border-0 bg-transparent p-0 hover:bg-sky-400/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
+          className="absolute right-0 top-0 z-20 h-full w-3 max-w-[12px] translate-x-1/2 cursor-col-resize select-none border-0 bg-transparent p-0 hover:bg-cyan-300/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
         />
       </aside>
 
       {/* Main content */}
-      <main className="min-h-screen bg-sky-50" style={{ paddingLeft: sidebarWidth }}>
+      <main className="min-h-screen bg-slate-50" style={{ paddingLeft: sidebarWidth }}>
         <div className="mx-auto max-w-5xl p-4 md:p-8">{children}</div>
       </main>
     </div>
