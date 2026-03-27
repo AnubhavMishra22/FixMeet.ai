@@ -5,6 +5,7 @@
 - Define how **Pro / Max** relate to **Stripe** while the app stays in **showcase mode**: dashboard routes remain reachable; no hard paywalls on navigation.
 - **Later implementation:** Stripe Checkout (test), webhooks, `customer` / `subscription` on `users`, API checks returning **403** for disallowed tiers.
 - **Out of scope for v1:** team billing, usage-based AI pricing, invoices/tax/VAT, dunning, proration, mobile IAP, affiliate codes, admin refunds, live keys in committed config.
+- **Brand assets:** `frontend/public/ia-logo-full.svg` and `ia-logo-light.svg` use **outlined `<path>` geometry** (no `<text>`) so the wordmark renders the same without relying on system fonts.
 
 ## Inventory — “Pro” / “Max”
 
@@ -29,13 +30,13 @@
 | Feature | Free | Pro | Max | v1 note |
 |---------|------|-----|-----|---------|
 | Event types, bookings, calendar, public booking | Yes | Yes | Yes | Core — not Stripe-gated v1 |
-| AI Assistant | TBD | Yes | Yes | Enforce in API |
+| AI Assistant | No‡ | Yes | Yes | Enforce in API |
 | Meeting briefs | No* | Yes | Yes | Enforce in API |
 | Follow-ups | No | No | Yes | Enforce in API |
 | Insights (+ AI insights, PDF export UX) | No | No | Yes | Enforce in API |
 | MCP API keys | No | Yes† | Yes† | Enforce in API |
 
-\* Showcase may use a flag to allow full access. † Suggested mapping.
+\* Showcase may use a flag to allow full access. † Suggested mapping. ‡ **Free and AI Assistant:** when billing enforcement is on, Free is **No** (403 on `/api/ai`). **Showcase mode** may use a server-side flag so every logged-in user keeps **Pro-parity** access for demos without changing this matrix.
 
 ## User states
 
