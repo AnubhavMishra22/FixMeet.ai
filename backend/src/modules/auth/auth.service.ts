@@ -10,12 +10,14 @@ import {
   UnauthorizedError,
   NotFoundError,
 } from '../../utils/errors.js';
+import { env } from '../../config/env.js';
 import type {
   UserWithPassword,
   UserResponse,
   RefreshToken,
   AuthResponse,
   TokenResponse,
+  BillingPlan,
 } from './auth.types.js';
 import type { RegisterInput, LoginInput, UpdateProfileInput } from './auth.schema.js';
 
@@ -27,6 +29,7 @@ function generateUsername(email: string): string {
 }
 
 function sanitizeUser(user: UserWithPassword) {
+  const billingPlan = (user.billing_plan ?? 'free') as BillingPlan;
   return {
     id: user.id,
     email: user.email,
@@ -39,6 +42,12 @@ function sanitizeUser(user: UserWithPassword) {
     followupsEnabled: user.followups_enabled,
     followupTone: user.followup_tone,
     meetingHoursGoal: user.meeting_hours_goal,
+    billingPlan,
+    subscriptionStatus: user.subscription_status,
+    subscriptionCurrentPeriodEnd: user.subscription_current_period_end
+      ? user.subscription_current_period_end.toISOString()
+      : null,
+    billingShowcaseMode: env.BILLING_SHOWCASE_MODE,
     createdAt: user.created_at,
   };
 }

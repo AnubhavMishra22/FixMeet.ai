@@ -1,3 +1,6 @@
+/** Mirrors `users.billing_plan` — entitlement tier (updated from Stripe webhooks). */
+export type BillingPlan = 'free' | 'pro' | 'max';
+
 export interface User {
   id: string;
   email: string;
@@ -10,6 +13,12 @@ export interface User {
   followups_enabled: boolean;
   followup_tone: string;
   meeting_hours_goal: number | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  stripe_price_id: string | null;
+  subscription_status: string | null;
+  subscription_current_period_end: Date | null;
+  billing_plan: BillingPlan;
   created_at: Date;
   updated_at: Date;
 }
@@ -31,6 +40,11 @@ export interface UserResponse {
   followupsEnabled: boolean;
   followupTone: string;
   meetingHoursGoal: number | null;
+  billingPlan: BillingPlan;
+  subscriptionStatus: string | null;
+  subscriptionCurrentPeriodEnd: string | null;
+  /** True when server skips paid-feature API checks (showcase / demos). */
+  billingShowcaseMode: boolean;
   createdAt: Date;
 }
 
