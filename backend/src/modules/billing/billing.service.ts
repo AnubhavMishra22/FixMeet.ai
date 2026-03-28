@@ -21,7 +21,7 @@ function rethrowIfMissingBillingColumns(e: unknown): void {
     (/column/i.test(msg) && /does not exist/i.test(msg) && /stripe_|billing_plan/i.test(msg))
   ) {
     throw new ServiceUnavailableError(
-      'Billing database columns are missing. On the server run: cd /root/FixMeet.ai/backend && npm run db:migrate',
+      'Billing database columns are missing. Run database migrations from the backend directory: npm run db:migrate',
     );
   }
 }
