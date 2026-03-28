@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Loader2, Settings } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../../components/ui/card';
@@ -24,6 +24,18 @@ export default function PricingPage() {
   const user = useAuthStore((s) => s.user);
   const { toast } = useToast();
   const [tierLoading, setTierLoading] = useState<'pro' | 'max' | null>(null);
+
+  useEffect(() => {
+    const reset = () => setTierLoading(null);
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) reset();
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => {
+      window.removeEventListener('pageshow', onPageShow);
+      reset();
+    };
+  }, []);
 
   const configured = user?.billingStripeConfigured ?? false;
 

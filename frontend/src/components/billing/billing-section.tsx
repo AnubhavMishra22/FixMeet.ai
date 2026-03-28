@@ -22,6 +22,23 @@ export function BillingSection() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [checkoutTier, setCheckoutTier] = useState<'pro' | 'max' | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
+
+  // Reset loading UI on unmount and when the page is restored from the back/forward cache (bfcache).
+  useEffect(() => {
+    const resetLoadingUi = () => {
+      setCheckoutTier(null);
+      setPortalLoading(false);
+    };
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) resetLoadingUi();
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => {
+      window.removeEventListener('pageshow', onPageShow);
+      resetLoadingUi();
+    };
+  }, []);
+
   useEffect(() => {
     const billing = searchParams.get('billing');
     if (billing !== 'success' && billing !== 'cancel') return;
