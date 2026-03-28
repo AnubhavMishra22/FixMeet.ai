@@ -24,12 +24,12 @@ const envSchema = z.object({
   // MCP (optional — HTTP transport only mounts if enabled)
   MCP_ENABLED: z.enum(['true', 'false']).default('true').transform(v => v === 'true'),
   MCP_RATE_LIMIT: z.string().default('30').transform(Number),
-  // Stripe billing (optional — checkout/portal only if secret set; webhook if webhook secret set)
+  // Stripe (optional). Checkout and Customer Portal need STRIPE_SECRET_KEY. Webhooks need that plus STRIPE_WEBHOOK_SECRET.
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_PRICE_ID_PRO: z.string().optional(),
   STRIPE_PRICE_ID_MAX: z.string().optional(),
-  /** When true, API plan checks are skipped (dashboard stays usable); webhooks still update DB */
+  // If true, paid-feature API checks are skipped so demos work without a subscription. Webhooks still update the database.
   BILLING_SHOWCASE_MODE: z.enum(['true', 'false']).default('false').transform(v => v === 'true'),
 });
 

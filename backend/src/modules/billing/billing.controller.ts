@@ -4,6 +4,7 @@ import { isStripeConfigured } from './stripe-client.js';
 import * as billingService from './billing.service.js';
 import type { CheckoutSessionBody } from './billing.schema.js';
 
+/** Request body is already parsed and validated by the route middleware. */
 function checkoutBody(req: Request): CheckoutSessionBody {
   return req.body as CheckoutSessionBody;
 }

@@ -7,6 +7,7 @@ import { Badge } from '../../../components/ui/badge';
 import { MailCheck, Calendar, Clock, User, Send, SkipForward, Loader2 } from 'lucide-react';
 import { getFollowups, sendFollowup as sendFollowupApi } from '../../../lib/api';
 import { useToast } from '../../../stores/toast-store';
+import { ShowcaseTierBanner } from '../../../components/billing/showcase-tier-banner';
 import type { MeetingFollowupWithBooking, FollowupStatus } from '../../../types';
 
 type Filter = 'all' | 'draft' | 'sent' | 'skipped';
@@ -157,6 +158,8 @@ export default function FollowupsPage() {
           </Button>
         )}
       </div>
+
+      <ShowcaseTierBanner tier="max" />
 
       <div className="flex gap-2">
         {(['all', 'draft', 'sent', 'skipped'] as Filter[]).map((f) => (

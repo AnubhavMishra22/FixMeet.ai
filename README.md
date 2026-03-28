@@ -290,6 +290,22 @@ To enable the AI scheduling assistant:
 
 The AI copilot can check availability, create bookings, list meetings, and cancel bookings through natural-language conversation. Default model is `gemini-2.5-flash-lite` (free tier friendly).
 
+### Stripe billing (test mode)
+
+Use this to demo Checkout, webhooks, and the Customer Portal without charging real cards.
+
+1. **Backend environment** — In `backend/.env`, set:
+   - `STRIPE_SECRET_KEY` (test key from the [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys))
+   - `STRIPE_PRICE_ID_PRO` and `STRIPE_PRICE_ID_MAX` (recurring Prices on two Products)
+   - `STRIPE_WEBHOOK_SECRET` (from the Stripe CLI or Dashboard webhook endpoint)
+   - `FRONTEND_URL` (e.g. `http://localhost:5173`) so return URLs are correct
+2. **Forward webhooks locally** — With the Stripe CLI:  
+   `stripe listen --forward-to localhost:3001/api/stripe/webhook`  
+   Copy the printed signing secret into `STRIPE_WEBHOOK_SECRET` and restart the backend.
+3. **Optional showcase** — Set `BILLING_SHOWCASE_MODE=true` so paid-tier API rules stay relaxed while webhooks still update plan fields in the database (good for portfolio demos).
+4. **In the app** — Log in, open **Plans & pricing** or **Settings → Plan & billing**, choose **Upgrade to Pro/Max (test)**, and complete Checkout with Stripe’s test card `4242 4242 4242 4242` (any future expiry, any CVC). You are redirected back to Settings; after the webhook runs, **Current plan** should show Pro or Max. Use **Manage billing** to open the Customer Portal (invoices, cancel, payment method).
+5. **Honest copy** — When showcase mode is on, the UI explains that Pro/Max navigation stays open for the demo; production would enforce those tiers.
+
 ---
 
 ## Deployment

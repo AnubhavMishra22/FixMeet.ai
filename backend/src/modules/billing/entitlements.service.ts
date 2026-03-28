@@ -9,6 +9,7 @@ const PLAN_RANK: Record<BillingPlan, number> = {
   max: 2,
 };
 
+/** Returns the cached plan from the database (updated by Stripe webhooks). */
 export async function getPlanForUser(userId: string): Promise<BillingPlan> {
   const rows = await sql<{ billing_plan: BillingPlan }[]>`
     SELECT billing_plan FROM users WHERE id = ${userId} LIMIT 1
@@ -21,7 +22,8 @@ export async function getPlanForUser(userId: string): Promise<BillingPlan> {
 }
 
 /**
- * Enforces minimum tier for paid API routes. Skipped when BILLING_SHOWCASE_MODE is true.
+ * Throws ForbiddenError if the user’s plan is below `minimum`.
+ * No-op when BILLING_SHOWCASE_MODE is enabled.
  */
 export async function assertPlanAtLeast(
   userId: string,
