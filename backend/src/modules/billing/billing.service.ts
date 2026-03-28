@@ -1,13 +1,38 @@
-import type Stripe from 'stripe';
+import Stripe from 'stripe';
 import { sql } from '../../config/database.js';
 import { env } from '../../config/env.js';
-import { BadRequestError, NotFoundError } from '../../utils/errors.js';
+import { BadRequestError, NotFoundError, ServiceUnavailableError } from '../../utils/errors.js';
 import type { BillingPlan } from '../auth/auth.types.js';
 import { getStripe } from './stripe-client.js';
 import type { CheckoutSessionBody } from './billing.schema.js';
 
 // Inside sql.begin(), the transaction handle is callable like `sql` but postgres.js types do not expose the template tag. Cast to the root sql type when building queries.
 type PgTx = typeof sql;
+
+/** Postgres undefined_column — billing migration not applied on this DB */
+function rethrowIfMissingBillingColumns(e: unknown): void {
+  const code =
+    typeof e === 'object' && e !== null && 'code' in e
+      ? String((e as { code: unknown }).code)
+      : '';
+  const msg = e instanceof Error ? e.message : String(e);
+  if (
+    code === '42703' ||
+    (/column/i.test(msg) && /does not exist/i.test(msg) && /stripe_|billing_plan/i.test(msg))
+  ) {
+    throw new ServiceUnavailableError(
+      'Billing database columns are missing. On the server run: cd /root/FixMeet.ai/backend && npm run db:migrate',
+    );
+  }
+}
+
+function throwStripeAsBadRequest(err: unknown): never {
+  if (err instanceof Stripe.errors.StripeError) {
+    console.error('Stripe API error:', err.type, err.code, err.message);
+    throw new BadRequestError(err.message);
+  }
+  throw err;
+}
 
 function priceIdForTier(tier: CheckoutSessionBody['tier']): string {
   const id =
@@ -113,15 +138,21 @@ export async function createCheckoutSession(
   const stripe = getStripe();
   const priceId = priceIdForTier(body.tier);
 
-  const users = await sql<{ stripe_customer_id: string | null }[]>`
-    SELECT stripe_customer_id FROM users WHERE id = ${userId} LIMIT 1
-  `;
-  const existingCustomerId = users[0]?.stripe_customer_id ?? null;
+  let existingCustomerId: string | null = null;
+  try {
+    const users = await sql<{ stripe_customer_id: string | null }[]>`
+      SELECT stripe_customer_id FROM users WHERE id = ${userId} LIMIT 1
+    `;
+    existingCustomerId = users[0]?.stripe_customer_id ?? null;
+  } catch (e) {
+    rethrowIfMissingBillingColumns(e);
+    throw e;
+  }
 
   const successUrl = `${env.FRONTEND_URL.replace(/\/$/, '')}/dashboard/settings?billing=success`;
   const cancelUrl = `${env.FRONTEND_URL.replace(/\/$/, '')}/dashboard/settings?billing=cancel`;
 
-  const session = await stripe.checkout.sessions.create({
+  const baseParams: Stripe.Checkout.SessionCreateParams = {
     mode: 'subscription',
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: successUrl,
@@ -131,29 +162,70 @@ export async function createCheckoutSession(
     subscription_data: {
       metadata: { userId },
     },
-    ...(existingCustomerId
-      ? { customer: existingCustomerId }
-      : { customer_email: email }),
-  });
+  };
 
-  return { url: session.url };
+  const withCustomer = (customerId: string | null): Stripe.Checkout.SessionCreateParams =>
+    customerId
+      ? { ...baseParams, customer: customerId }
+      : { ...baseParams, customer_email: email };
+
+  try {
+    const session = await stripe.checkout.sessions.create(withCustomer(existingCustomerId));
+    return { url: session.url };
+  } catch (err) {
+    if (
+      err instanceof Stripe.errors.StripeError &&
+      err.code === 'resource_missing' &&
+      existingCustomerId
+    ) {
+      // Stale customer id in DB (e.g. deleted in Stripe Dashboard)
+      await sql`
+        UPDATE users SET stripe_customer_id = NULL, updated_at = NOW() WHERE id = ${userId}
+      `;
+      try {
+        const session = await stripe.checkout.sessions.create(withCustomer(null));
+        return { url: session.url };
+      } catch (e) {
+        throwStripeAsBadRequest(e);
+      }
+    }
+    throwStripeAsBadRequest(err);
+  }
 }
 
 export async function createPortalSession(userId: string): Promise<{ url: string }> {
-  const rows = await sql<{ stripe_customer_id: string | null }[]>`
-    SELECT stripe_customer_id FROM users WHERE id = ${userId} LIMIT 1
-  `;
-  const customerId = rows[0]?.stripe_customer_id;
+  let customerId: string | null = null;
+  try {
+    const rows = await sql<{ stripe_customer_id: string | null }[]>`
+      SELECT stripe_customer_id FROM users WHERE id = ${userId} LIMIT 1
+    `;
+    customerId = rows[0]?.stripe_customer_id ?? null;
+  } catch (e) {
+    rethrowIfMissingBillingColumns(e);
+    throw e;
+  }
   if (!customerId) {
     throw new BadRequestError('No Stripe customer on file. Subscribe once via Checkout first.');
   }
   const stripe = getStripe();
   const returnUrl = `${env.FRONTEND_URL.replace(/\/$/, '')}/dashboard/settings`;
-  const session = await stripe.billingPortal.sessions.create({
-    customer: customerId,
-    return_url: returnUrl,
-  });
-  return { url: session.url };
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: returnUrl,
+    });
+    return { url: session.url };
+  } catch (err) {
+    if (err instanceof Stripe.errors.StripeError && err.code === 'resource_missing') {
+      await sql`
+        UPDATE users SET stripe_customer_id = NULL, updated_at = NOW() WHERE id = ${userId}
+      `;
+      throw new BadRequestError(
+        'Stripe customer no longer exists. Use Upgrade again to create a new Checkout session.',
+      );
+    }
+    throwStripeAsBadRequest(err);
+  }
 }
 
 export async function getUserEmail(userId: string): Promise<string> {
