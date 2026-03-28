@@ -12,6 +12,14 @@ import {
 
 type PgTx = typeof sql;
 
+async function findUserIdFromSubscription(sub: Stripe.Subscription): Promise<string | null> {
+  const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
+  return (
+    (await findUserIdByStripeSubscriptionId(sub.id)) ??
+    (await findUserIdByStripeCustomerId(customerId))
+  );
+}
+
 async function claimEvent(tx: unknown, eventId: string): Promise<boolean> {
   const t = tx as PgTx;
   const rows = await t<{ event_id: string }[]>`
@@ -48,11 +56,7 @@ async function handleSubscriptionUpdated(
   tx: unknown,
   sub: Stripe.Subscription,
 ): Promise<void> {
-  let userId =
-    (await findUserIdByStripeSubscriptionId(sub.id)) ??
-    (typeof sub.customer === 'string'
-      ? await findUserIdByStripeCustomerId(sub.customer)
-      : await findUserIdByStripeCustomerId(sub.customer.id));
+  const userId = await findUserIdFromSubscription(sub);
   if (!userId) {
     console.warn('[stripe webhook] customer.subscription.updated: no user for', sub.id);
     return;
@@ -68,11 +72,7 @@ async function handleSubscriptionDeleted(
   tx: unknown,
   sub: Stripe.Subscription,
 ): Promise<void> {
-  const userId =
-    (await findUserIdByStripeSubscriptionId(sub.id)) ??
-    (typeof sub.customer === 'string'
-      ? await findUserIdByStripeCustomerId(sub.customer)
-      : await findUserIdByStripeCustomerId(sub.customer.id));
+  const userId = await findUserIdFromSubscription(sub);
   if (!userId) {
     console.warn('[stripe webhook] customer.subscription.deleted: no user for', sub.id);
     return;
