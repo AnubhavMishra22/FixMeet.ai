@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as aiService from './ai.service.js';
 import type { ChatInput } from './ai.schema.js';
 import { UnauthorizedError, TimeoutError } from '../../utils/errors.js';
+import { assertPlanAtLeast } from '../billing/entitlements.service.js';
 
 export async function chat(
   req: Request<object, object, ChatInput>,
@@ -11,6 +12,8 @@ export async function chat(
   if (!userId) {
     throw new UnauthorizedError('Authentication required');
   }
+
+  await assertPlanAtLeast(userId, 'pro');
 
   const { message, conversationHistory } = req.body;
 

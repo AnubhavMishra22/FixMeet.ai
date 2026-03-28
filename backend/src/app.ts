@@ -12,6 +12,7 @@ import cookieParser from 'cookie-parser';
 import { env, isProd } from './config/env.js';
 import { AppError } from './utils/errors.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
+import { handleStripeWebhook } from './modules/billing/billing.webhook.js';
 
 const app = express();
 
@@ -41,6 +42,17 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.options('*', cors());
+
+// Stripe webhooks need raw body (must be before express.json)
+if (env.STRIPE_WEBHOOK_SECRET && env.STRIPE_SECRET_KEY) {
+  app.post(
+    '/api/stripe/webhook',
+    express.raw({ type: 'application/json' }),
+    (req, res, next) => {
+      handleStripeWebhook(req, res).catch(next);
+    },
+  );
+}
 
 // Body parsing
 app.use(express.json());
@@ -96,6 +108,9 @@ async function mountRoutes() {
     // MCP API key management routes
     const mcpKeysRoutes = await import('./mcp/api-keys.routes.js');
     app.use('/api/mcp-keys', authMiddleware, mcpKeysRoutes.default);
+
+    const billingRoutes = await import('./modules/billing/billing.routes.js');
+    app.use('/api/billing', authMiddleware, billingRoutes.default);
 
     // AI routes - only mount if GOOGLE_AI_API_KEY is configured
     if (env.GOOGLE_AI_API_KEY) {
