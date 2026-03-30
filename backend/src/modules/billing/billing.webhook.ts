@@ -10,6 +10,7 @@ import {
   findUserIdByStripeSubscriptionId,
 } from './billing.service.js';
 
+// Transaction handle from sql.begin(): runtime supports sql`...` but TypeScript types are incomplete, so we align it with the root client type.
 type PgTx = typeof sql;
 
 async function findUserIdFromSubscription(sub: Stripe.Subscription): Promise<string | null> {
@@ -36,13 +37,17 @@ async function handleCheckoutCompleted(
 ): Promise<void> {
   const userId = session.metadata?.userId ?? session.client_reference_id;
   if (!userId) {
-    console.error('[stripe webhook] checkout.session.completed missing userId metadata');
+    console.error(
+      'Stripe webhook: checkout.session.completed has no user id (set metadata.userId or client_reference_id).',
+    );
     return;
   }
   const subRef = session.subscription;
   const subscriptionId = typeof subRef === 'string' ? subRef : subRef?.id;
   if (!subscriptionId) {
-    console.error('[stripe webhook] checkout.session.completed missing subscription');
+    console.error(
+      'Stripe webhook: checkout.session.completed has no subscription id; cannot update billing.',
+    );
     return;
   }
   const stripe = getStripe();
@@ -58,7 +63,9 @@ async function handleSubscriptionUpdated(
 ): Promise<void> {
   const userId = await findUserIdFromSubscription(sub);
   if (!userId) {
-    console.warn('[stripe webhook] customer.subscription.updated: no user for', sub.id);
+    console.warn(
+      `Stripe webhook: customer.subscription.updated could not match a user (subscription id: ${sub.id}).`,
+    );
     return;
   }
   const stripe = getStripe();
@@ -74,7 +81,9 @@ async function handleSubscriptionDeleted(
 ): Promise<void> {
   const userId = await findUserIdFromSubscription(sub);
   if (!userId) {
-    console.warn('[stripe webhook] customer.subscription.deleted: no user for', sub.id);
+    console.warn(
+      `Stripe webhook: customer.subscription.deleted could not match a user (subscription id: ${sub.id}).`,
+    );
     return;
   }
   await clearSubscriptionForUser(tx, userId);
@@ -104,7 +113,7 @@ export async function handleStripeWebhook(req: Request, res: Response): Promise<
     event = getStripe().webhooks.constructEvent(rawBody, sig, secret);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error('[stripe webhook] signature verify failed:', msg);
+    console.error('Stripe webhook: signature verification failed.', msg);
     res.status(400).send(`Webhook signature verification failed: ${msg}`);
     return;
   }
@@ -131,7 +140,7 @@ export async function handleStripeWebhook(req: Request, res: Response): Promise<
       }
     });
   } catch (e) {
-    console.error('[stripe webhook] handler error:', e);
+    console.error('Stripe webhook: handler threw while processing event.', e);
     res.status(500).json({ error: 'Webhook handler failed' });
     return;
   }

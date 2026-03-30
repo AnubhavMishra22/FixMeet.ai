@@ -6,7 +6,7 @@ import type { BillingPlan } from '../auth/auth.types.js';
 import { getStripe } from './stripe-client.js';
 import type { CheckoutSessionBody } from './billing.schema.js';
 
-/** Transaction client from `sql.begin` — cast for queries (postgres TransactionSql typings omit the template tag). */
+// Inside sql.begin(), the transaction handle is callable like `sql` but postgres.js types do not expose the template tag. Cast to the root sql type when building queries.
 type PgTx = typeof sql;
 
 function priceIdForTier(tier: CheckoutSessionBody['tier']): string {
@@ -31,7 +31,10 @@ export function priceIdToPlan(priceId: string | null): BillingPlan {
   if (!priceId) return 'free';
   if (env.STRIPE_PRICE_ID_MAX && priceId === env.STRIPE_PRICE_ID_MAX) return 'max';
   if (env.STRIPE_PRICE_ID_PRO && priceId === env.STRIPE_PRICE_ID_PRO) return 'pro';
-  console.warn('[billing] Unknown Stripe price id, defaulting plan to free:', priceId);
+  console.warn(
+    'Billing: unrecognized Stripe price id; treating user as free. priceId=',
+    priceId,
+  );
   return 'free';
 }
 

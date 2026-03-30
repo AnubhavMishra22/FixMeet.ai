@@ -15,6 +15,7 @@ import {
   MailCheck,
   BarChart3,
   Presentation,
+  CreditCard,
 } from 'lucide-react';
 
 const navigation = [
@@ -26,8 +27,21 @@ const navigation = [
   { name: 'Follow-ups', href: '/dashboard/followups', icon: MailCheck, badge: 'Max' },
   { name: 'Insights', href: '/dashboard/insights', icon: BarChart3, badge: 'Max' },
   { name: 'Demo', href: '/dashboard/demo', icon: Presentation, badge: null },
+  { name: 'Plans & pricing', href: '/dashboard/pricing', icon: CreditCard, badge: null },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings, badge: null },
 ];
+
+function navLinkAccessibleName(
+  item: (typeof navigation)[number],
+  billingShowcaseMode: boolean | undefined,
+): string {
+  if (!item.badge) return item.name;
+  const tier = item.badge;
+  if (!billingShowcaseMode) {
+    return `${item.name} (${tier})`;
+  }
+  return `${item.name} (${tier}). Showcase: this area stays open without ${tier}; in production it would require ${tier}.`;
+}
 
 const SIDEBAR_WIDTH_STORAGE_KEY = 'fixmeet-sidebar-width-px';
 const SIDEBAR_MIN_WIDTH = 56;
@@ -178,7 +192,7 @@ export function DashboardLayout({ children }: Props) {
           >
             {navigation.map((item) => {
               const isActive = isNavItemActive(location.pathname, item.href);
-              const navA11yLabel = item.badge ? `${item.name} (${item.badge})` : item.name;
+              const navA11yLabel = navLinkAccessibleName(item, user?.billingShowcaseMode);
               return (
                 <Link
                   key={item.name}

@@ -43,7 +43,7 @@ app.use(cors({
 }));
 app.options('*', cors());
 
-// Stripe webhooks need raw body (must be before express.json)
+// Stripe signature verification needs the raw request body; register before express.json() parses JSON.
 if (env.STRIPE_WEBHOOK_SECRET && env.STRIPE_SECRET_KEY) {
   app.post(
     '/api/stripe/webhook',

@@ -30,6 +30,9 @@ function generateUsername(email: string): string {
 
 function sanitizeUser(user: UserWithPassword) {
   const billingPlan = (user.billing_plan ?? 'free') as BillingPlan;
+  const billingStripeConfigured = Boolean(
+    env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_PRO && env.STRIPE_PRICE_ID_MAX,
+  );
   return {
     id: user.id,
     email: user.email,
@@ -48,6 +51,8 @@ function sanitizeUser(user: UserWithPassword) {
       ? user.subscription_current_period_end.toISOString()
       : null,
     billingShowcaseMode: env.BILLING_SHOWCASE_MODE,
+    hasStripeCustomer: Boolean(user.stripe_customer_id),
+    billingStripeConfigured,
     createdAt: user.created_at,
   };
 }

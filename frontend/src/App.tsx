@@ -16,6 +16,7 @@ import EditEventTypePage from './pages/dashboard/event-types/edit';
 import BookingsPage from './pages/dashboard/bookings/index';
 import BookingDetailsPage from './pages/dashboard/bookings/details';
 import SettingsPage from './pages/dashboard/settings/index';
+import PricingPage from './pages/dashboard/pricing/index';
 import AIChatPage from './pages/dashboard/ai/index';
 import BriefsPage from './pages/dashboard/briefs/index';
 import BriefDetailsPage from './pages/dashboard/briefs/details';
@@ -103,6 +104,16 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <SettingsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/pricing"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <PricingPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

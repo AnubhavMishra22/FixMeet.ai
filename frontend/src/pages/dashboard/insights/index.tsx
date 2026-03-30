@@ -19,6 +19,7 @@ import {
 } from '../../../lib/api';
 import { useAuthStore } from '../../../stores/auth-store';
 import { useToast } from '../../../stores/toast-store';
+import { ShowcaseTierBanner } from '../../../components/billing/showcase-tier-banner';
 import { RefreshCw } from 'lucide-react';
 import type {
   DateRange,
@@ -162,6 +163,7 @@ export default function InsightsPage() {
           <h1 className="text-2xl font-bold">Insights</h1>
           <p className="text-gray-600">Analyze your meeting patterns and performance</p>
         </div>
+        <ShowcaseTierBanner tier="max" />
         <InsightsSkeleton />
       </div>
     );
@@ -174,6 +176,7 @@ export default function InsightsPage() {
           <h1 className="text-2xl font-bold">Insights</h1>
           <p className="text-gray-600">Analyze your meeting patterns and performance</p>
         </div>
+        <ShowcaseTierBanner tier="max" />
         <InsightsEmptyState />
       </div>
     );
@@ -195,6 +198,8 @@ export default function InsightsPage() {
           </Button>
         </div>
       </div>
+
+      <ShowcaseTierBanner tier="max" />
 
       <div id="insights-export-area">
         {/* Date range selector */}

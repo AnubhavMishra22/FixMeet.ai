@@ -7,6 +7,7 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { FileText, MailCheck, Key, Copy, Plus, Trash2, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { BillingSection } from '../../../components/billing/billing-section';
 import { Switch } from '../../../components/ui/switch';
 import { useAuthStore } from '../../../stores/auth-store';
 import { useToast } from '../../../stores/toast-store';
@@ -79,6 +80,8 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-gray-600">Manage your account settings</p>
       </div>
+
+      <BillingSection />
 
       <Card>
         <CardHeader>

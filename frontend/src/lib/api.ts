@@ -240,4 +240,26 @@ export async function revokeMcpApiKey(id: string): Promise<void> {
   await api.delete(`/api/mcp-keys/${id}`);
 }
 
+// ---------------------------------------------------------------------------
+// Stripe billing (Checkout + Customer Portal)
+// ---------------------------------------------------------------------------
+
+export async function createBillingCheckoutSession(tier: 'pro' | 'max'): Promise<string> {
+  const { data } = await api.post('/api/billing/checkout-session', { tier });
+  const url = data?.data?.url as string | undefined;
+  if (!url) {
+    throw new Error('Checkout did not return a URL');
+  }
+  return url;
+}
+
+export async function createBillingPortalSession(): Promise<string> {
+  const { data } = await api.post('/api/billing/portal-session');
+  const url = data?.data?.url as string | undefined;
+  if (!url) {
+    throw new Error('Portal did not return a URL');
+  }
+  return url;
+}
+
 export default api;

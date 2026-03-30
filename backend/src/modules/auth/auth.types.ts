@@ -1,4 +1,4 @@
-/** Mirrors `users.billing_plan` — entitlement tier (updated from Stripe webhooks). */
+/** Stored on `users.billing_plan`; kept in sync with Stripe via webhooks. */
 export type BillingPlan = 'free' | 'pro' | 'max';
 
 export interface User {
@@ -43,8 +43,12 @@ export interface UserResponse {
   billingPlan: BillingPlan;
   subscriptionStatus: string | null;
   subscriptionCurrentPeriodEnd: string | null;
-  /** True when server skips paid-feature API checks (showcase / demos). */
+  /** Reflects BILLING_SHOWCASE_MODE: when true, the API does not enforce paid tiers. */
   billingShowcaseMode: boolean;
+  /** True after Checkout has created or attached a Stripe Customer for this user. */
+  hasStripeCustomer: boolean;
+  /** True when Stripe secret key and both tier price IDs are set (Checkout/Portal can run). */
+  billingStripeConfigured: boolean;
   createdAt: Date;
 }
 

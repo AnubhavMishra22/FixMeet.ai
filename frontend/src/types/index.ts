@@ -14,6 +14,8 @@ export interface User {
   subscriptionStatus: string | null;
   subscriptionCurrentPeriodEnd: string | null;
   billingShowcaseMode: boolean;
+  hasStripeCustomer: boolean;
+  billingStripeConfigured: boolean;
   createdAt: string;
 }
 

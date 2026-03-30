@@ -7,6 +7,7 @@ import { Badge } from '../../../components/ui/badge';
 import { FileText, Calendar, Clock, User, Loader2, RefreshCw } from 'lucide-react';
 import { getBriefs, regenerateBrief } from '../../../lib/api';
 import { useToast } from '../../../stores/toast-store';
+import { ShowcaseTierBanner } from '../../../components/billing/showcase-tier-banner';
 import type { MeetingBriefWithBooking, BriefStatus } from '../../../types';
 
 type Filter = 'upcoming' | 'past';
@@ -73,6 +74,8 @@ export default function BriefsPage() {
         <h1 className="text-2xl font-bold">Meeting Briefs</h1>
         <p className="text-gray-600">AI-generated preparation notes for your meetings</p>
       </div>
+
+      <ShowcaseTierBanner tier="pro" />
 
       <div className="flex gap-2">
         <Button
