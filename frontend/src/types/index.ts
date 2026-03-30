@@ -10,6 +10,10 @@ export interface User {
   followupsEnabled: boolean;
   followupTone: 'formal' | 'friendly' | 'casual';
   meetingHoursGoal: number | null;
+  billingPlan: 'free' | 'pro' | 'max';
+  subscriptionStatus: string | null;
+  subscriptionCurrentPeriodEnd: string | null;
+  billingShowcaseMode: boolean;
   createdAt: string;
 }
 
