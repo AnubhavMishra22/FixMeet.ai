@@ -1,5 +1,4 @@
 import { Analytics } from '@vercel/analytics/react';
-import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/auth/protected-route';
 import { DashboardLayout } from './components/layout/dashboard-layout';
@@ -30,30 +29,10 @@ import DemoPage from './pages/dashboard/demo/index';
 import PublicBookingPage from './pages/booking/public-booking';
 import BookingManagePage from './pages/booking/booking-manage';
 
-const DevDashboardPreviewPage = lazy(() => import('./pages/dev/dashboard-preview'));
-
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Local UI preview — no API, no login (dev only) */}
-        {import.meta.env.DEV && (
-          <Route
-            path="/dev/dashboard-preview"
-            element={
-              <Suspense
-                fallback={
-                  <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-                  </div>
-                }
-              >
-                <DevDashboardPreviewPage />
-              </Suspense>
-            }
-          />
-        )}
-
         {/* Auth routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
