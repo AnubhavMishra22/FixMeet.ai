@@ -166,7 +166,7 @@ export function DashboardLayout({ children }: Props) {
 
   /** One inset for logo, nav, and footer. */
   const sidebarContentPadX = showLabels
-    ? 'pl-8 pr-2 sm:pl-8 sm:pr-3 md:pl-8 md:pr-4'
+    ? 'pl-6 pr-2 sm:pl-6 sm:pr-3 md:pl-6 md:pr-4'
     : 'px-2 sm:px-3 md:px-4';
 
   return (
