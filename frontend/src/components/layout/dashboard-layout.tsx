@@ -229,7 +229,7 @@ export function DashboardLayout({ children }: Props) {
                   aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center rounded-md py-2 transition-colors ${
                     showLabels
-                      ? 'justify-start gap-3 pl-0 pr-2 md:pr-3'
+                      ? 'justify-start gap-3 pl-1.5 pr-2 md:pr-3'
                       : 'justify-center gap-0 px-2 md:px-3'
                   } ${
                     isActive
