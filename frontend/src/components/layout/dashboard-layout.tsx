@@ -187,7 +187,7 @@ export function DashboardLayout({ children }: Props) {
               aria-label={APP_NAME}
               className={`flex min-w-0 w-full items-center outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-100 ${
                 showLabels
-                  ? 'justify-start gap-3 rounded-md pt-1.5 pb-1 pl-0 pr-2 md:pt-2 md:pb-1 md:pr-3'
+                  ? 'justify-start gap-3 rounded-md pt-1.5 pb-1 pl-1.5 pr-2 md:pt-2 md:pb-1 md:pr-3'
                   : 'justify-center gap-0 rounded-md pt-1.5 pb-1 px-0 md:pt-2 md:pb-1'
               }`}
             >
@@ -196,7 +196,7 @@ export function DashboardLayout({ children }: Props) {
                   src={LOGO_PATH}
                   alt=""
                   aria-hidden
-                  className="h-10 w-auto max-w-full shrink-0 object-contain object-left pl-1.5 md:h-11"
+                  className="h-9 w-auto max-w-full shrink-0 object-contain object-left md:h-10"
                 />
               ) : (
                 <img
