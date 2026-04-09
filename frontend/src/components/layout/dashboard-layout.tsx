@@ -166,8 +166,8 @@ export function DashboardLayout({ children }: Props) {
 
   /** One inset for logo, nav, and footer. */
   const sidebarContentPadX = showLabels
-    ? 'pl-6 pr-2 sm:pl-6 sm:pr-3 md:pl-6 md:pr-4'
-    : 'px-2 sm:px-3 md:px-4';
+    ? 'pl-6 pr-2 sm:pr-3 md:pr-4'
+    : 'px-2';
 
   return (
     <div>
@@ -178,15 +178,17 @@ export function DashboardLayout({ children }: Props) {
       >
         <div className="flex h-full min-h-0 flex-col">
           {/* Logo — expanded: same structure as nav rows (icon + label); narrow: icon only. */}
-          <div className={`min-w-0 shrink-0 border-b border-cyan-200 pt-3 pb-2 md:pt-4 ${sidebarContentPadX}`}>
+          <div
+            className={`min-w-0 shrink-0 border-b border-cyan-200 pt-2 pb-1 md:pt-2.5 md:pb-1 ${sidebarContentPadX}`}
+          >
             <Link
               to="/dashboard"
               title={APP_NAME}
               aria-label={APP_NAME}
               className={`flex min-w-0 w-full items-center outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-100 ${
                 showLabels
-                  ? 'justify-start gap-3 rounded-md py-2 pl-0 pr-2 md:pr-3'
-                  : 'justify-center gap-0 rounded-md py-2 px-2 md:px-3'
+                  ? 'justify-start gap-3 rounded-md pt-1.5 pb-1 pl-0 pr-2 md:pt-2 md:pb-1 md:pr-3'
+                  : 'justify-center gap-0 rounded-md pt-1.5 pb-1 px-0 md:pt-2 md:pb-1'
               }`}
             >
               {showLabels ? (
@@ -230,7 +232,7 @@ export function DashboardLayout({ children }: Props) {
                   className={`flex items-center rounded-md py-2 transition-colors ${
                     showLabels
                       ? 'justify-start gap-3 pl-1.5 pr-2 md:pr-3'
-                      : 'justify-center gap-0 px-2 md:px-3'
+                      : 'justify-center gap-0 px-0'
                   } ${
                     isActive
                       ? 'bg-primary/10 text-primary'
