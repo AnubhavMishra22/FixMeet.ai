@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
-import { APP_NAME, LOGO_PATH, LOGO_SMALL_PATH } from '../../lib/constants';
+import { APP_NAME, LOGO_SMALL_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -177,7 +177,7 @@ export function DashboardLayout({ children }: Props) {
         style={{ width: sidebarWidth }}
       >
         <div className="flex h-full min-h-0 flex-col">
-          {/* Logo — expanded: full PNG wordmark; narrow: small mark. Layout/spacing from main (PR #86). */}
+          {/* Logo — expanded: same structure as nav rows (icon + label); narrow: icon only. */}
           <div
             className={`min-w-0 shrink-0 border-b border-cyan-200 pt-2 pb-1 md:pt-2.5 md:pb-1 ${sidebarContentPadX}`}
           >
@@ -187,17 +187,22 @@ export function DashboardLayout({ children }: Props) {
               aria-label={APP_NAME}
               className={`flex min-w-0 w-full items-center outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-100 ${
                 showLabels
-                  ? 'justify-start gap-3 rounded-md pt-1.5 pb-1 pl-1.5 pr-2 md:pt-2 md:pb-1 md:pr-3'
+                  ? 'justify-start gap-3 rounded-md pt-1.5 pb-1 pl-0 pr-2 md:pt-2 md:pb-1 md:pr-3'
                   : 'justify-center gap-0 rounded-md pt-1.5 pb-1 px-0 md:pt-2 md:pb-1'
               }`}
             >
               {showLabels ? (
-                <img
-                  src={LOGO_PATH}
-                  alt=""
-                  aria-hidden
-                  className="h-9 w-auto max-w-full shrink-0 object-contain object-left md:h-10"
-                />
+                <>
+                  <img
+                    src={LOGO_SMALL_PATH}
+                    alt=""
+                    aria-hidden
+                    className="h-6 w-6 shrink-0 object-contain md:h-7 md:w-7"
+                  />
+                  <span className="min-w-0 truncate font-bold leading-none text-primary-wordmark text-[1.25rem] md:text-[1.375rem]">
+                    {APP_NAME}
+                  </span>
+                </>
               ) : (
                 <img
                   src={LOGO_SMALL_PATH}
