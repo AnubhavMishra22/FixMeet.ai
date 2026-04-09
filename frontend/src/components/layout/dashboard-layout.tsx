@@ -196,7 +196,7 @@ export function DashboardLayout({ children }: Props) {
                   src={LOGO_PATH}
                   alt=""
                   aria-hidden
-                  className="h-9 w-auto max-w-full shrink-0 object-contain object-left md:h-10"
+                  className="h-10 w-auto max-w-full shrink-0 object-contain object-left pl-1.5 md:h-11"
                 />
               ) : (
                 <img
