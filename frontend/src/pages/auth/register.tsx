@@ -43,8 +43,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-sky-50">
-      <img src={LOGO_PATH} alt="FixMeet logo" className="h-40 w-auto mb-2" />
-      <p className="mb-6 text-2xl font-bold tracking-tight text-primary-wordmark">FixMeet</p>
+      <img src={LOGO_PATH} alt="FixMeet logo" className="h-48 w-auto mb-2" />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <h1 className="text-2xl font-semibold leading-none tracking-tight">Create an account</h1>
