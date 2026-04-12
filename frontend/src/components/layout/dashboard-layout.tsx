@@ -182,7 +182,7 @@ export function DashboardLayout({ children }: Props) {
         style={{ width: sidebarWidth }}
       >
         <div className="flex h-full min-h-0 flex-col">
-          {/* Logo — SVG icon + label when expanded; icon only when rail is narrow (same asset as nav-style mark). */}
+          {/* Logo — compact SVG + label when expanded; larger icon when rail is icon-only. */}
           <div className={`min-w-0 shrink-0 border-b border-cyan-200 py-2 ${sidebarPadX}`}>
             <Link
               to="/dashboard"
@@ -193,13 +193,14 @@ export function DashboardLayout({ children }: Props) {
             >
               {showLabels ? (
                 <>
+                  {/* Icon smaller than collapsed rail so it pairs with the wordmark (h-10 looked huge vs ~1.375rem text). */}
                   <img
                     src={LOGO_SMALL_PATH}
                     alt=""
                     aria-hidden
-                    className="h-10 w-10 shrink-0 object-contain md:h-11 md:w-11"
+                    className="h-7 w-7 shrink-0 object-contain md:h-8 md:w-8"
                   />
-                  <span className="-ml-0.5 shrink-0 translate-y-1 text-[1.375rem] font-bold leading-none text-primary-wordmark md:-ml-1">
+                  <span className="-ml-0.5 shrink-0 text-[1.375rem] font-bold leading-none text-primary-wordmark md:-ml-1">
                     {APP_NAME}
                   </span>
                 </>
