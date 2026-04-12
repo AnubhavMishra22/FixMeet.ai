@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
-import { LOGO_SMALL_PATH } from '../../lib/constants';
+import { LOGO_PATH, LOGO_SMALL_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -172,16 +172,27 @@ export function DashboardLayout({ children }: Props) {
         style={{ width: sidebarWidth }}
       >
         <div className="flex h-full min-h-0 flex-col">
-          {/* Logo — wordmark: primary-wordmark (slightly lighter than buttons/links primary). */}
-          <div className="border-b border-cyan-200 px-2 py-3 sm:px-3 sm:py-4 md:px-6 md:py-6">
+          {/* Logo — full wordmark when expanded (same rules as login); icon-only when rail is narrow. */}
+          <div className="min-w-0 border-b border-cyan-200 px-2 py-3 sm:px-3 sm:py-4 md:px-6 md:py-6">
             <Link
               to="/dashboard"
-              className={`flex items-center gap-2 text-xl font-bold text-primary-wordmark transition-colors hover:text-primary ${
+              className={`flex min-w-0 items-center outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-100 ${
                 showLabels ? 'justify-start' : 'justify-center'
               }`}
             >
-              <img src={LOGO_SMALL_PATH} alt="FixMeet logo" className="h-7 w-7 shrink-0 md:h-8 md:w-8" />
-              {showLabels && <span className="truncate">FixMeet</span>}
+              {showLabels ? (
+                <img
+                  src={LOGO_PATH}
+                  alt="FixMeet logo"
+                  className="h-10 w-auto max-w-full shrink-0 object-contain md:h-11"
+                />
+              ) : (
+                <img
+                  src={LOGO_SMALL_PATH}
+                  alt="FixMeet logo"
+                  className="h-8 w-8 shrink-0 object-contain"
+                />
+              )}
             </Link>
           </div>
 
