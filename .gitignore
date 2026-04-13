@@ -46,6 +46,9 @@ Thumbs.db
 # Local PR drafting
 PR_DESCRIPTION.md
 
+# Local-only notes (interview prep, flows — do not push)
+.local/
+
 # Local scratch / temp (do not commit)
 commit-msg-temp.txt
 merge-commit-msg.txt
