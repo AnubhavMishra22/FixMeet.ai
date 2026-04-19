@@ -9,7 +9,10 @@ interface Props {
   tier: 'pro' | 'max';
 }
 
-/** Soft gate hint when the API runs in showcase mode (paid areas stay open). */
+/**
+ * Hint when paid-tier API checks are relaxed: showcase mode, or enforcement flag off
+ * (matches backend so the UI does not imply a subscription is required).
+ */
 export function ShowcaseTierBanner({ tier }: Props) {
   const user = useAuthStore((s) => s.user);
   const [dismissed, setDismissed] = useState(() => {
@@ -20,7 +23,9 @@ export function ShowcaseTierBanner({ tier }: Props) {
     }
   });
 
-  if (!user?.billingShowcaseMode || dismissed) {
+  const showcase = user?.billingShowcaseMode === true;
+  const gatesOff = user?.billingEnforcePaidFeatures === false;
+  if ((!showcase && !gatesOff) || dismissed || !user) {
     return null;
   }
 
@@ -41,8 +46,17 @@ export function ShowcaseTierBanner({ tier }: Props) {
       className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
     >
       <p className="min-w-0 flex-1 leading-relaxed">
-        <span className="font-medium">Showcase:</span> this demo keeps {label} areas unlocked. In production,
-        an active {label} subscription would be required here.
+        {showcase ? (
+          <>
+            <span className="font-medium">Showcase:</span> this demo keeps {label} areas unlocked. In production,
+            an active {label} subscription would be required here.
+          </>
+        ) : (
+          <>
+            <span className="font-medium">Open access:</span> plan tier checks are disabled on the server. You can
+            use this area without a {label} subscription while enforcement stays off.
+          </>
+        )}
       </p>
       <Button
         type="button"

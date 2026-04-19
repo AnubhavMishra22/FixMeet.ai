@@ -34,8 +34,12 @@ const navigation = [
 function navLinkAccessibleName(
   item: (typeof navigation)[number],
   billingShowcaseMode: boolean | undefined,
+  billingEnforcePaidFeatures: boolean | undefined,
 ): string {
   if (!item.badge) return item.name;
+  if (billingEnforcePaidFeatures !== true) {
+    return item.name;
+  }
   const tier = item.badge;
   if (!billingShowcaseMode) {
     return `${item.name} (${tier})`;
@@ -164,6 +168,8 @@ export function DashboardLayout({ children }: Props) {
     navigate('/login');
   };
 
+  const showNavTierBadges = user?.billingEnforcePaidFeatures === true;
+
   return (
     <div>
       {/* Sidebar — light blue, width controlled by drag */}
@@ -192,7 +198,11 @@ export function DashboardLayout({ children }: Props) {
           >
             {navigation.map((item) => {
               const isActive = isNavItemActive(location.pathname, item.href);
-              const navA11yLabel = navLinkAccessibleName(item, user?.billingShowcaseMode);
+              const navA11yLabel = navLinkAccessibleName(
+                item,
+                user?.billingShowcaseMode,
+                user?.billingEnforcePaidFeatures,
+              );
               return (
                 <Link
                   key={item.name}
@@ -212,7 +222,7 @@ export function DashboardLayout({ children }: Props) {
                   {showLabels && (
                     <>
                       <span className="min-w-0 flex-1 truncate">{item.name}</span>
-                      {item.badge && (
+                      {showNavTierBadges && item.badge && (
                         <Badge
                           variant="secondary"
                           className="ml-auto shrink-0 text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0 font-semibold"

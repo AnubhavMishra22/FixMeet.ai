@@ -14,6 +14,8 @@ export interface User {
   subscriptionStatus: string | null;
   subscriptionCurrentPeriodEnd: string | null;
   billingShowcaseMode: boolean;
+  /** When false, paid-tier API checks are off; UI should not imply Pro/Max is required to use those areas. */
+  billingEnforcePaidFeatures: boolean;
   hasStripeCustomer: boolean;
   billingStripeConfigured: boolean;
   createdAt: string;

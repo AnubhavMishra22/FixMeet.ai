@@ -45,6 +45,8 @@ export interface UserResponse {
   subscriptionCurrentPeriodEnd: string | null;
   /** Reflects BILLING_SHOWCASE_MODE: when true, the API does not enforce paid tiers. */
   billingShowcaseMode: boolean;
+  /** Reflects BILLING_ENFORCE_PAID_FEATURES: when false, assertPlanAtLeast is a no-op (UI should not imply Pro/Max is required). */
+  billingEnforcePaidFeatures: boolean;
   /** True after Checkout has created or attached a Stripe Customer for this user. */
   hasStripeCustomer: boolean;
   /** True when Stripe secret key and both tier price IDs are set (Checkout/Portal can run). */

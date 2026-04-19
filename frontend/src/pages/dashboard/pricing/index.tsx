@@ -61,10 +61,19 @@ export default function PricingPage() {
           This project uses Stripe test mode for Checkout and the Customer Portal. No real charges when you use
           Stripe&apos;s test card. Your plan in the app updates after webhooks run.
         </p>
-        {user?.billingShowcaseMode && (
+        {(user?.billingShowcaseMode || user?.billingEnforcePaidFeatures === false) && (
           <p className="mt-2 text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 max-w-2xl">
-            <span className="font-medium">Showcase mode is on:</span> Pro and Max areas in the app stay open even
-            on the Free plan. Checkout still works so you can demo the full billing flow.
+            {user?.billingShowcaseMode ? (
+              <>
+                <span className="font-medium">Showcase mode is on:</span> Pro and Max areas in the app stay open even
+                on the Free plan. Checkout still works so you can demo the full billing flow.
+              </>
+            ) : (
+              <>
+                <span className="font-medium">Plan tier enforcement is off:</span> Pro and Max areas stay available
+                without upgrading. You can still use Checkout to try the billing flow.
+              </>
+            )}
           </p>
         )}
       </div>
