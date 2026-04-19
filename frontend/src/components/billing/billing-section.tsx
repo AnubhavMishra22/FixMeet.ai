@@ -131,9 +131,9 @@ export function BillingSection() {
           <Badge variant="secondary" className="font-semibold">
             {planLabel(user.billingPlan)}
           </Badge>
-          {user.billingShowcaseMode && (
+          {(user.billingShowcaseMode || user.billingEnforcePaidFeatures === false) && (
             <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-0.5">
-              Showcase: API gates relaxed
+              {user.billingShowcaseMode ? 'Showcase: API gates relaxed' : 'Plan tier enforcement: off (server)'}
             </span>
           )}
         </div>

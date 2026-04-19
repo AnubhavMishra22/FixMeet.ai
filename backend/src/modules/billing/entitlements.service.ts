@@ -23,12 +23,15 @@ export async function getPlanForUser(userId: string): Promise<BillingPlan> {
 
 /**
  * Throws ForbiddenError if the user’s plan is below `minimum`.
- * No-op when BILLING_SHOWCASE_MODE is enabled.
+ * No-op when BILLING_ENFORCE_PAID_FEATURES is false, or when BILLING_SHOWCASE_MODE is enabled.
  */
 export async function assertPlanAtLeast(
   userId: string,
   minimum: BillingPlan,
 ): Promise<void> {
+  if (!env.BILLING_ENFORCE_PAID_FEATURES) {
+    return;
+  }
   if (env.BILLING_SHOWCASE_MODE) {
     return;
   }

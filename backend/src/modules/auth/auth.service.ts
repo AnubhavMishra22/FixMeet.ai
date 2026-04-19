@@ -51,6 +51,7 @@ function sanitizeUser(user: UserWithPassword) {
       ? user.subscription_current_period_end.toISOString()
       : null,
     billingShowcaseMode: env.BILLING_SHOWCASE_MODE,
+    billingEnforcePaidFeatures: env.BILLING_ENFORCE_PAID_FEATURES,
     hasStripeCustomer: Boolean(user.stripe_customer_id),
     billingStripeConfigured,
     createdAt: user.created_at,

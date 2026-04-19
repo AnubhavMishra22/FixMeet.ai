@@ -31,6 +31,8 @@ const envSchema = z.object({
   STRIPE_PRICE_ID_MAX: z.string().optional(),
   // If true, paid-feature API checks are skipped so demos work without a subscription. Webhooks still update the database.
   BILLING_SHOWCASE_MODE: z.enum(['true', 'false']).default('false').transform(v => v === 'true'),
+  // If true, routes that call assertPlanAtLeast enforce Pro/Max tiers. Default off until product gating is ready.
+  BILLING_ENFORCE_PAID_FEATURES: z.enum(['true', 'false']).default('false').transform(v => v === 'true'),
 });
 
 const parsed = envSchema.safeParse(process.env);
