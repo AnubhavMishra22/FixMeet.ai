@@ -1,9 +1,13 @@
 export const APP_NAME = 'FixMeet';
 
-// Logo (transparent PNG) for all pages
-export const LOGO_PATH = '/logo-transparent.png';
-// Small logo for the navbar (same file, sized via CSS)
-export const LOGO_SMALL_PATH = '/logo-transparent.png';
+// Logo (transparent PNG) for auth pages — dev cache-bust so replaced files show after refresh
+export const LOGO_PATH =
+  import.meta.env.DEV
+    ? `/logo-transparent.png?t=${Date.now()}`
+    : '/logo-transparent.png';
+// Icon-only SVG for navbar — same dev cache-bust as LOGO_PATH when the file changes
+export const LOGO_SMALL_PATH =
+  import.meta.env.DEV ? `/logo-icon.svg?t=${Date.now()}` : '/logo-icon.svg';
 
 export const BOOKING_STATUS = {
   confirmed: { label: 'Confirmed', color: 'bg-green-100 text-green-800' },

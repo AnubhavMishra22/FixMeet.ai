@@ -7,6 +7,7 @@ import { useAuthStore } from '../../stores/auth-store';
 import { useToast } from '../../stores/toast-store';
 import api from '../../lib/api';
 import type { EventType, BookingWithDetails } from '../../types';
+import { DashboardLocalClock } from './dashboard-local-clock';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -53,6 +54,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Welcome back, {user?.name?.split(' ')[0]}!</h1>
+        <DashboardLocalClock />
         <div className="flex items-center gap-2 mt-2">
           <p className="text-gray-600">Your booking link:</p>
           <code className="bg-gray-100 px-2 py-1 rounded text-sm">{bookingLink}</code>

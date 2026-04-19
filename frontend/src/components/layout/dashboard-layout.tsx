@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth-store';
-import { LOGO_SMALL_PATH } from '../../lib/constants';
+import { APP_NAME, LOGO_SMALL_PATH } from '../../lib/constants';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -169,6 +169,8 @@ export function DashboardLayout({ children }: Props) {
   };
 
   const showNavTierBadges = user?.billingEnforcePaidFeatures === true;
+  /** One inset for logo, nav, and footer. */
+  const sidebarContentPadX = showLabels ? 'pl-6 pr-2 sm:pr-3 md:pr-4' : 'px-2';
 
   return (
     <div>
@@ -178,22 +180,46 @@ export function DashboardLayout({ children }: Props) {
         style={{ width: sidebarWidth }}
       >
         <div className="flex h-full min-h-0 flex-col">
-          {/* Logo — wordmark: primary-wordmark (slightly lighter than buttons/links primary). */}
-          <div className="border-b border-cyan-200 px-2 py-3 sm:px-3 sm:py-4 md:px-6 md:py-6">
+          {/* Logo — expanded: same structure as nav rows (icon + label); narrow: icon only. */}
+          <div
+            className={`min-w-0 shrink-0 border-b border-cyan-200 pt-2 pb-1 md:pt-2.5 md:pb-1 ${sidebarContentPadX}`}
+          >
             <Link
               to="/dashboard"
-              className={`flex items-center gap-2 text-xl font-bold text-primary-wordmark transition-colors hover:text-primary ${
-                showLabels ? 'justify-start' : 'justify-center'
+              title={APP_NAME}
+              aria-label={APP_NAME}
+              className={`flex min-w-0 w-full items-center outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-100 ${
+                showLabels
+                  ? 'justify-start gap-3 rounded-md pt-1.5 pb-1 pl-0 pr-2 md:pt-2 md:pb-1 md:pr-3'
+                  : 'justify-center gap-0 rounded-md pt-1.5 pb-1 px-0 md:pt-2 md:pb-1'
               }`}
             >
-              <img src={LOGO_SMALL_PATH} alt="FixMeet logo" className="h-7 w-7 shrink-0 md:h-8 md:w-8" />
-              {showLabels && <span className="truncate">FixMeet</span>}
+              {showLabels ? (
+                <>
+                  <img
+                    src={LOGO_SMALL_PATH}
+                    alt=""
+                    aria-hidden
+                    className="h-6 w-6 shrink-0 object-contain md:h-7 md:w-7"
+                  />
+                  <span className="min-w-0 truncate font-bold leading-none text-primary-wordmark text-[1.25rem] md:text-[1.375rem]">
+                    {APP_NAME}
+                  </span>
+                </>
+              ) : (
+                <img
+                  src={LOGO_SMALL_PATH}
+                  alt=""
+                  aria-hidden
+                  className="h-10 w-10 shrink-0 object-contain md:h-11 md:w-11"
+                />
+              )}
             </Link>
           </div>
 
           {/* Navigation */}
           <nav
-            className="scrollbar-none flex min-h-0 flex-1 flex-col space-y-1 overflow-y-auto overflow-x-hidden p-2 md:p-4"
+            className={`scrollbar-none flex min-h-0 flex-1 flex-col space-y-1 overflow-y-auto overflow-x-hidden pb-2 pt-1.5 md:pb-3 md:pt-2 ${sidebarContentPadX}`}
             aria-label="Main navigation"
           >
             {navigation.map((item) => {
@@ -210,8 +236,10 @@ export function DashboardLayout({ children }: Props) {
                   title={navA11yLabel}
                   aria-label={navA11yLabel}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`flex items-center rounded-md px-2 py-2 transition-colors md:px-3 ${
-                    showLabels ? 'justify-start gap-3' : 'justify-center gap-0'
+                  className={`flex items-center rounded-md py-2 transition-colors ${
+                    showLabels
+                      ? 'justify-start gap-3 pl-1.5 pr-2 md:pr-3'
+                      : 'justify-center gap-0 px-0'
                   } ${
                     isActive
                       ? 'bg-primary/10 text-primary'
@@ -238,7 +266,7 @@ export function DashboardLayout({ children }: Props) {
           </nav>
 
           {/* User section */}
-          <div className="border-t border-cyan-200 p-2 md:p-4">
+          <div className={`border-t border-cyan-200 py-2 md:py-4 ${sidebarContentPadX}`}>
             <div
               className={`mb-2 flex items-center gap-3 md:mb-3 ${showLabels ? 'justify-start' : 'justify-center'}`}
             >

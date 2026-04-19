@@ -45,3 +45,17 @@ Thumbs.db
 
 # Local PR drafting
 PR_DESCRIPTION.md
+
+# Local-only notes (interview prep, flows — do not push)
+.local/
+
+# Local scratch / temp (do not commit)
+commit-msg-temp.txt
+merge-commit-msg.txt
+.gitmsg-plain.txt
+.git-commit-msg2.txt
+.commit-remove-preview.txt
+.gh-gql-*.json
+.gh-pr*.graphql
+railway-db-url.txt
+docker-compose.override.yml

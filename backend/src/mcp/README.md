@@ -75,8 +75,6 @@ Authorization: Bearer eyJhbG...
 4. Restart Claude Desktop
 5. FixMeet tools appear in the tools menu
 
-See `backend/claude-desktop-config.example.json` for a ready-to-use template.
-
 ### Option B: Local mode (direct database access)
 
 For local development, the MCP server can connect directly to the database:
