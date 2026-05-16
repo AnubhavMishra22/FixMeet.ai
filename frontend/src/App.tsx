@@ -1,5 +1,6 @@
 import { Analytics } from '@vercel/analytics/react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HomeRoute } from './components/auth/home-route';
 import { ProtectedRoute } from './components/auth/protected-route';
 import { DashboardLayout } from './components/layout/dashboard-layout';
 import { Toaster } from './components/ui/toaster';
@@ -199,8 +200,8 @@ function App() {
         {/* Public booking page */}
         <Route path="/:username/:slug" element={<PublicBookingPage />} />
 
-        {/* Redirects */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* Public landing — auth-aware: signed-in users go to /dashboard */}
+        <Route path="/" element={<HomeRoute />} />
         <Route path="/settings/calendars" element={<Navigate to="/dashboard/settings" replace />} />
       </Routes>
 
