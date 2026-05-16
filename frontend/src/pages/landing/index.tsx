@@ -1,8 +1,61 @@
 import { Link } from 'react-router-dom';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import {
+  Sparkles,
+  ArrowRight,
+  CalendarDays,
+  FileText,
+  MailCheck,
+  BarChart3,
+  type LucideIcon,
+} from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { APP_NAME, LOGO_PATH } from '../../lib/constants';
 import './landing.css';
+
+interface Feature {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  iconClass: string;
+}
+
+const features: Feature[] = [
+  {
+    icon: Sparkles,
+    title: 'AI Copilot',
+    description:
+      'Schedule, reschedule, and triage your calendar by chatting in plain English.',
+    iconClass: 'bg-primary/10 text-primary',
+  },
+  {
+    icon: CalendarDays,
+    title: 'Smart Scheduling',
+    description:
+      'Public booking pages, availability rules, buffers, and Google Calendar sync.',
+    iconClass: 'bg-sky-100 text-sky-700',
+  },
+  {
+    icon: FileText,
+    title: 'Meeting Briefs',
+    description:
+      'Pre-meeting prep notes generated automatically from invitee and meeting context.',
+    iconClass: 'bg-indigo-100 text-indigo-700',
+  },
+  {
+    icon: MailCheck,
+    title: 'AI Follow-ups',
+    description:
+      'Polished post-meeting emails with action items, ready to review and send.',
+    iconClass: 'bg-violet-100 text-violet-700',
+  },
+  {
+    icon: BarChart3,
+    title: 'Insights',
+    description:
+      'Trends, peak hours, and cancellation patterns — surfaced at a glance.',
+    iconClass: 'bg-cyan-100 text-cyan-700',
+  },
+];
 
 /**
  * Public landing page for FixMeet.
@@ -87,6 +140,43 @@ export default function LandingPage() {
             </Button>
           </Link>
         </div>
+
+        {/* Feature highlights */}
+        <section
+          aria-labelledby="features-heading"
+          className="fm-rise fm-rise-4 mt-16 w-full md:mt-24"
+        >
+          <h2
+            id="features-heading"
+            className="text-sm font-semibold uppercase tracking-wider text-slate-500"
+          >
+            What you get out of the box
+          </h2>
+
+          <ul
+            role="list"
+            className="mt-5 grid grid-cols-1 gap-4 text-left sm:grid-cols-2 lg:grid-cols-5"
+          >
+            {features.map((f) => {
+              const Icon = f.icon;
+              return (
+                <li
+                  key={f.title}
+                  className="fm-glass group relative rounded-2xl border border-white/60 p-5 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <span
+                    className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl ${f.iconClass}`}
+                    aria-hidden
+                  >
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="text-base font-semibold text-slate-900">{f.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">{f.description}</p>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       </main>
     </div>
   );
