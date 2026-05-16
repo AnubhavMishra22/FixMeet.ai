@@ -42,7 +42,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-sky-50">
-      <img src={LOGO_PATH} alt="FixMeet logo" className="h-48 w-auto mb-2" />
+      <Link to="/" aria-label="FixMeet home" className="mb-2 transition-opacity hover:opacity-90">
+        <img src={LOGO_PATH} alt="FixMeet logo" className="h-48 w-auto" />
+      </Link>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <h1 className="text-2xl font-semibold leading-none tracking-tight">Welcome back</h1>

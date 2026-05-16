@@ -67,6 +67,13 @@ const features: Feature[] = [
 export default function LandingPage() {
   return (
     <div className="fm-landing fm-grid fm-wires text-slate-900">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-slate-900 focus:shadow"
+      >
+        Skip to content
+      </a>
+
       <span aria-hidden className="fm-blob b1" />
       <span aria-hidden className="fm-blob b2" />
       <span aria-hidden className="fm-blob b3" />
@@ -178,6 +185,19 @@ export default function LandingPage() {
           </ul>
         </section>
       </main>
+
+      <footer className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-8 text-center text-xs text-slate-500 md:px-8">
+        <p>
+          © {new Date().getFullYear()} {APP_NAME} · Built for AI-native scheduling. ·{' '}
+          <Link to="/login" className="font-medium text-slate-700 hover:text-slate-900">
+            Sign in
+          </Link>{' '}
+          ·{' '}
+          <Link to="/register" className="font-medium text-slate-700 hover:text-slate-900">
+            Create account
+          </Link>
+        </p>
+      </footer>
     </div>
   );
 }
