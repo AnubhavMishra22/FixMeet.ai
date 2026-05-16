@@ -34,17 +34,13 @@ const navigation = [
 function navLinkAccessibleName(
   item: (typeof navigation)[number],
   billingShowcaseMode: boolean | undefined,
-  billingEnforcePaidFeatures: boolean | undefined,
 ): string {
   if (!item.badge) return item.name;
-  if (billingEnforcePaidFeatures !== true) {
-    return item.name;
-  }
   const tier = item.badge;
-  if (!billingShowcaseMode) {
-    return `${item.name} (${tier})`;
+  if (billingShowcaseMode) {
+    return `${item.name} (${tier}). Showcase: this area stays open without ${tier}; in production it would require ${tier}.`;
   }
-  return `${item.name} (${tier}). Showcase: this area stays open without ${tier}; in production it would require ${tier}.`;
+  return `${item.name} (${tier})`;
 }
 
 const SIDEBAR_WIDTH_STORAGE_KEY = 'fixmeet-sidebar-width-px';
@@ -168,7 +164,6 @@ export function DashboardLayout({ children }: Props) {
     navigate('/login');
   };
 
-  const showNavTierBadges = user?.billingEnforcePaidFeatures === true;
   /** One inset for logo, nav, and footer. */
   const sidebarContentPadX = showLabels ? 'pl-6 pr-2 sm:pr-3 md:pr-4' : 'px-2';
 
@@ -224,11 +219,7 @@ export function DashboardLayout({ children }: Props) {
           >
             {navigation.map((item) => {
               const isActive = isNavItemActive(location.pathname, item.href);
-              const navA11yLabel = navLinkAccessibleName(
-                item,
-                user?.billingShowcaseMode,
-                user?.billingEnforcePaidFeatures,
-              );
+              const navA11yLabel = navLinkAccessibleName(item, user?.billingShowcaseMode);
               return (
                 <Link
                   key={item.name}
@@ -249,15 +240,15 @@ export function DashboardLayout({ children }: Props) {
                   <item.icon className="h-5 w-5 shrink-0" />
                   {showLabels && (
                     <>
-                      <span className="min-w-0 flex-1 truncate">{item.name}</span>
-                      {showNavTierBadges && item.badge && (
+                      {item.badge && (
                         <Badge
                           variant="secondary"
-                          className="ml-auto shrink-0 text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0 font-semibold"
+                          className="shrink-0 text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0 font-semibold"
                         >
                           {item.badge}
                         </Badge>
                       )}
+                      <span className="min-w-0 flex-1 truncate">{item.name}</span>
                     </>
                   )}
                 </Link>
