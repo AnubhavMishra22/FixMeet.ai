@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Sparkles,
@@ -11,6 +12,52 @@ import {
 import { Button } from '../../components/ui/button';
 import { APP_NAME, LOGO_PATH } from '../../lib/constants';
 import './landing.css';
+
+/**
+ * Tracks the pointer position and writes it into CSS variables
+ * (`--fm-cursor-x`, `--fm-cursor-y`) on the landing root, so the
+ * `.fm-cursor-glow` radial gradient can follow the cursor without
+ * triggering React re-renders.
+ *
+ * Skips touch-only devices (would leave a stuck spotlight) and
+ * collapses pointermove bursts to one update per animation frame.
+ */
+function useCursorSpotlight(rootRef: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    if (typeof window.matchMedia === 'function') {
+      const fine = window.matchMedia('(pointer: fine)');
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (!fine.matches || reduced.matches) return;
+    }
+
+    let raf = 0;
+    let nextX = window.innerWidth / 2;
+    let nextY = window.innerHeight / 2;
+
+    const flush = () => {
+      raf = 0;
+      root.style.setProperty('--fm-cursor-x', `${nextX}px`);
+      root.style.setProperty('--fm-cursor-y', `${nextY}px`);
+    };
+
+    const onMove = (e: PointerEvent) => {
+      nextX = e.clientX;
+      nextY = e.clientY;
+      if (!raf) raf = requestAnimationFrame(flush);
+    };
+
+    flush();
+    window.addEventListener('pointermove', onMove, { passive: true });
+
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [rootRef]);
+}
 
 interface Feature {
   icon: LucideIcon;
@@ -65,8 +112,11 @@ const features: Feature[] = [
  * background lives in `landing.css` and respects prefers-reduced-motion.
  */
 export default function LandingPage() {
+  const rootRef = useRef<HTMLDivElement>(null);
+  useCursorSpotlight(rootRef);
+
   return (
-    <div className="fm-landing fm-grid fm-wires text-slate-900">
+    <div ref={rootRef} className="fm-landing fm-grid fm-wires text-slate-900">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-slate-900 focus:shadow"
@@ -77,6 +127,7 @@ export default function LandingPage() {
       <span aria-hidden className="fm-blob b1" />
       <span aria-hidden className="fm-blob b2" />
       <span aria-hidden className="fm-blob b3" />
+      <span aria-hidden className="fm-cursor-glow" />
 
       {/* Top navigation */}
       <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 md:px-8">
