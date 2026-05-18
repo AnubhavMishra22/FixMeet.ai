@@ -38,9 +38,9 @@ function navLinkAccessibleName(
   if (!item.badge) return item.name;
   const tier = item.badge;
   if (billingShowcaseMode) {
-    return `(${tier}) ${item.name}. Showcase: this area stays open without ${tier}; in production it would require ${tier}.`;
+    return `${item.name} (${tier}). Showcase: this area stays open without ${tier}; in production it would require ${tier}.`;
   }
-  return `(${tier}) ${item.name}`;
+  return `${item.name} (${tier})`;
 }
 
 const SIDEBAR_WIDTH_STORAGE_KEY = 'fixmeet-sidebar-width-px';
@@ -240,17 +240,17 @@ export function DashboardLayout({ children }: Props) {
                   <item.icon className="h-5 w-5 shrink-0" />
                   {showLabels && (
                     <>
+                      <span className="min-w-0 flex-1 truncate">{item.name}</span>
                       {item.badge && (
                         <Badge
                           variant="secondary"
-                          className={`shrink-0 text-[10px] px-1.5 py-0.5 text-primary border-0 font-semibold pointer-events-none ${
+                          className={`ml-auto shrink-0 text-[10px] px-1.5 py-0.5 text-primary border-0 font-semibold pointer-events-none ${
                             isActive ? 'bg-white/80' : 'bg-primary/10'
                           }`}
                         >
                           {item.badge}
                         </Badge>
                       )}
-                      <span className="min-w-0 flex-1 truncate">{item.name}</span>
                     </>
                   )}
                 </Link>
