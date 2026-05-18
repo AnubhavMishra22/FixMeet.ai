@@ -238,21 +238,22 @@ export function DashboardLayout({ children }: Props) {
                   }`}
                 >
                   <item.icon className="h-5 w-5 shrink-0" />
-                  {showLabels && (
-                    <>
-                      <span className="min-w-0 flex-1 truncate">{item.name}</span>
-                      {item.badge && (
+                  {showLabels &&
+                    (item.badge ? (
+                      <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto] items-center gap-1.5 pr-4">
+                        <span className="truncate">{item.name}</span>
                         <Badge
                           variant="secondary"
-                          className={`ml-auto shrink-0 text-[10px] px-1.5 py-0.5 text-primary border-0 font-semibold pointer-events-none ${
+                          className={`shrink-0 text-[10px] px-1.5 py-0.5 text-primary border-0 font-semibold pointer-events-none ${
                             isActive ? 'bg-white/80' : 'bg-primary/10'
                           }`}
                         >
                           {item.badge}
                         </Badge>
-                      )}
-                    </>
-                  )}
+                      </div>
+                    ) : (
+                      <span className="min-w-0 flex-1 truncate">{item.name}</span>
+                    ))}
                 </Link>
               );
             })}
