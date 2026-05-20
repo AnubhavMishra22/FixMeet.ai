@@ -160,11 +160,6 @@ export default function LandingPage() {
         id="main"
         className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center px-5 pt-10 pb-16 text-center md:px-8 md:pt-16 md:pb-24"
       >
-        <span className="fm-rise fm-rise-1 mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm backdrop-blur">
-          <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
-          AI-native scheduling, briefs, and follow-ups
-        </span>
-
         <img
           src={LOGO_PATH}
           alt={`${APP_NAME} logo`}
