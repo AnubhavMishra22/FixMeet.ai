@@ -27,6 +27,12 @@ export function getAccessToken() {
   return accessToken;
 }
 
+/** Routes where a failed session refresh should not hard-redirect to /login. */
+function isPublicAuthRoute(): boolean {
+  const path = window.location.pathname.replace(/\/$/, '') || '/';
+  return path === '/' || path === '/login' || path === '/register';
+}
+
 // Add auth header to requests
 api.interceptors.request.use((config) => {
   if (accessToken) {
@@ -57,7 +63,11 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         setAccessToken(null);
-        window.location.href = '/login';
+        // On the landing page and auth screens, stay put so visitors see the page
+        // instead of being forced to /login when there is no session.
+        if (!isPublicAuthRoute()) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
