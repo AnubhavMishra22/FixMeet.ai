@@ -62,15 +62,46 @@ function useCursorSpotlight(rootRef: React.RefObject<HTMLDivElement | null>) {
 interface Feature {
   icon: LucideIcon;
   title: string;
+  description: string;
   iconClass: string;
 }
 
 const features: Feature[] = [
-  { icon: Sparkles, title: 'AI Copilot', iconClass: 'bg-primary/10 text-primary' },
-  { icon: CalendarDays, title: 'Smart Scheduling', iconClass: 'bg-sky-100 text-sky-700' },
-  { icon: FileText, title: 'Meeting Briefs', iconClass: 'bg-indigo-100 text-indigo-700' },
-  { icon: MailCheck, title: 'AI Follow-ups', iconClass: 'bg-violet-100 text-violet-700' },
-  { icon: BarChart3, title: 'Insights', iconClass: 'bg-cyan-100 text-cyan-700' },
+  {
+    icon: Sparkles,
+    title: 'AI Copilot',
+    description:
+      'Schedule, reschedule, and triage your calendar by chatting in plain English.',
+    iconClass: 'bg-primary/10 text-primary',
+  },
+  {
+    icon: CalendarDays,
+    title: 'Smart Scheduling',
+    description:
+      'Public booking pages, availability rules, buffers, and Google Calendar sync.',
+    iconClass: 'bg-sky-100 text-sky-700',
+  },
+  {
+    icon: FileText,
+    title: 'Meeting Briefs',
+    description:
+      'Pre-meeting prep notes generated automatically from invitee and meeting context.',
+    iconClass: 'bg-indigo-100 text-indigo-700',
+  },
+  {
+    icon: MailCheck,
+    title: 'AI Follow-ups',
+    description:
+      'Polished post-meeting emails with action items, ready to review and send.',
+    iconClass: 'bg-violet-100 text-violet-700',
+  },
+  {
+    icon: BarChart3,
+    title: 'Insights',
+    description:
+      'Trends, peak hours, and cancellation patterns — surfaced at a glance.',
+    iconClass: 'bg-cyan-100 text-cyan-700',
+  },
 ];
 
 /**
@@ -155,22 +186,23 @@ export default function LandingPage() {
         >
           <ul
             role="list"
-            className="grid grid-cols-2 gap-2 text-left sm:grid-cols-3 lg:grid-cols-5 lg:gap-3"
+            className="grid grid-cols-1 gap-3 text-left sm:grid-cols-2 lg:grid-cols-5"
           >
             {features.map((f) => {
               const Icon = f.icon;
               return (
                 <li
                   key={f.title}
-                  className="fm-glass flex items-center gap-2 rounded-xl border border-white/60 px-3 py-2 shadow-sm transition-shadow hover:shadow-md"
+                  className="fm-glass rounded-xl border border-white/60 px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md"
                 >
                   <span
-                    className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${f.iconClass}`}
+                    className={`mb-1.5 inline-flex h-8 w-8 items-center justify-center rounded-lg ${f.iconClass}`}
                     aria-hidden
                   >
                     <Icon className="h-4 w-4" />
                   </span>
                   <h3 className="text-sm font-semibold leading-tight text-slate-900">{f.title}</h3>
+                  <p className="mt-0.5 text-xs leading-snug text-slate-600">{f.description}</p>
                 </li>
               );
             })}
