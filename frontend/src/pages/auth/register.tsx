@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { AuthPageLayout } from '../../components/auth/auth-page-layout';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -42,11 +43,11 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-sky-50">
+    <AuthPageLayout>
       <Link to="/" aria-label="FixMeet home" className="mb-2 transition-opacity hover:opacity-90">
         <img src={LOGO_PATH} alt="FixMeet logo" className="h-48 w-auto" />
       </Link>
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md border-white/70 bg-white/80 shadow-lg backdrop-blur-md">
         <CardHeader className="text-center">
           <h1 className="text-2xl font-semibold leading-none tracking-tight">Create an account</h1>
           <CardDescription>
@@ -108,6 +109,6 @@ export default function RegisterPage() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </AuthPageLayout>
   );
 }

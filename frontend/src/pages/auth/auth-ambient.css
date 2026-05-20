@@ -1,0 +1,135 @@
+/* Auth pages — same motion language as landing, shifted teal/violet palette */
+
+.fm-auth {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(1100px 520px at 22% 18%, rgba(45, 212, 191, 0.16), transparent 58%),
+    radial-gradient(880px 480px at 78% 32%, rgba(139, 92, 246, 0.14), transparent 58%),
+    radial-gradient(820px 460px at 48% 92%, rgba(52, 211, 153, 0.12), transparent 60%),
+    linear-gradient(145deg, #f6fbff 0%, #edf7f5 48%, #f5f3ff 100%);
+  background-size: 140% 140%, 140% 140%, 140% 140%, 200% 200%;
+  background-position: 0% 0%, 100% 0%, 50% 100%, 0% 0%;
+  animation: fm-auth-bg-pan 30s ease-in-out infinite alternate;
+}
+
+@keyframes fm-auth-bg-pan {
+  0% {
+    background-position: 0% 0%, 100% 0%, 50% 100%, 0% 0%;
+  }
+  50% {
+    background-position: 28% 22%, 72% 28%, 58% 78%, 48% 52%;
+  }
+  100% {
+    background-position: 55% 38%, 42% 58%, 32% 62%, 100% 100%;
+  }
+}
+
+.fm-auth-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(15, 23, 42, 0.11) 1px, transparent 1.4px);
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 42%, black 0%, transparent 78%);
+          mask-image: radial-gradient(ellipse 85% 75% at 50% 42%, black 0%, transparent 78%);
+  animation: fm-auth-grid-drift 62s linear infinite;
+}
+
+@keyframes fm-auth-grid-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 28px 28px; }
+}
+
+.fm-auth-wires::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    128deg,
+    transparent 0 92px,
+    rgba(139, 92, 246, 0.045) 92px 93px
+  );
+  animation: fm-auth-wires-drift 42s linear infinite;
+}
+
+@keyframes fm-auth-wires-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 100px 0; }
+}
+
+.fm-auth-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(72px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.fm-auth-blob.b1 {
+  width: 400px;
+  height: 400px;
+  top: -100px;
+  left: -100px;
+  background: linear-gradient(135deg, #2dd4bf, #8b5cf6);
+  animation: fm-auth-float-a 24s ease-in-out infinite alternate;
+}
+
+.fm-auth-blob.b2 {
+  width: 440px;
+  height: 440px;
+  top: 30%;
+  right: -130px;
+  background: linear-gradient(135deg, #34d399, #c084fc);
+  animation: fm-auth-float-b 28s ease-in-out infinite alternate-reverse;
+}
+
+.fm-auth-blob.b3 {
+  width: 340px;
+  height: 340px;
+  bottom: -110px;
+  left: 42%;
+  background: linear-gradient(135deg, #67e8f9, #a78bfa);
+  animation: fm-auth-float-a 20s ease-in-out infinite alternate;
+}
+
+@keyframes fm-auth-float-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(36px, -28px, 0) scale(1.07); }
+}
+
+@keyframes fm-auth-float-b {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-44px, 26px, 0) scale(1.05); }
+}
+
+.fm-auth .fm-cursor-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(
+    480px circle at var(--fm-cursor-x, 50%) var(--fm-cursor-y, 50%),
+    rgba(45, 212, 191, 0.2),
+    rgba(139, 92, 246, 0.09) 38%,
+    transparent 66%
+  );
+  mix-blend-mode: plus-lighter;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fm-auth,
+  .fm-auth-blob {
+    animation: none !important;
+  }
+  .fm-auth-grid::before,
+  .fm-auth-wires::after {
+    animation: none !important;
+  }
+  .fm-auth .fm-cursor-glow {
+    display: none;
+  }
+}
