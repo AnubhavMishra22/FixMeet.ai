@@ -130,7 +130,7 @@ export default function LandingPage() {
       <span aria-hidden className="fm-cursor-glow" />
 
       {/* Top navigation */}
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 md:px-8">
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-3 md:px-8 md:py-4">
         <Link
           to="/"
           aria-label={APP_NAME}
@@ -158,20 +158,21 @@ export default function LandingPage() {
       {/* Hero */}
       <main
         id="main"
-        className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center px-5 pt-10 pb-16 text-center md:px-8 md:pt-16 md:pb-24"
+        className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center px-5 pt-2 pb-16 text-center md:px-8 md:pt-3 md:pb-24"
       >
         <h1 className="sr-only">{APP_NAME}</h1>
-        <img
-          src={LOGO_PATH}
-          alt=""
-          aria-hidden
-          className="fm-rise fm-rise-1 h-44 w-auto drop-shadow-sm sm:h-52 md:h-60 lg:h-64"
-        />
-
-        <p className="fm-rise fm-rise-2 max-w-2xl text-lg text-slate-700 md:text-xl">
-          The <span className="font-semibold text-primary">AI-native scheduling SaaS</span>{' '}
-          that books, briefs, and follows up — for you.
-        </p>
+        <div className="fm-rise fm-rise-1 flex flex-col items-center gap-0">
+          <img
+            src={LOGO_PATH}
+            alt=""
+            aria-hidden
+            className="h-52 w-auto max-w-[min(92vw,28rem)] drop-shadow-sm sm:h-60 md:h-72 lg:h-80"
+          />
+          <p className="fm-rise fm-rise-2 -mt-4 max-w-2xl text-lg leading-snug text-slate-700 sm:-mt-5 md:-mt-6 md:text-xl">
+            The <span className="font-semibold text-primary">AI-native scheduling SaaS</span>{' '}
+            that books, briefs, and follows up — for you.
+          </p>
+        </div>
 
         <p className="fm-rise fm-rise-3 mt-3 max-w-2xl text-base text-slate-600 md:mt-4">
           Share a link. Let invitees pick a time. Show up prepared with AI briefs and close the
