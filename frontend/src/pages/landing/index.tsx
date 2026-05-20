@@ -160,22 +160,20 @@ export default function LandingPage() {
         id="main"
         className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center px-5 pt-10 pb-16 text-center md:px-8 md:pt-16 md:pb-24"
       >
+        <h1 className="sr-only">{APP_NAME}</h1>
         <img
           src={LOGO_PATH}
-          alt={`${APP_NAME} logo`}
-          className="fm-rise fm-rise-1 mb-3 h-24 w-auto drop-shadow-sm md:h-32"
+          alt=""
+          aria-hidden
+          className="fm-rise fm-rise-1 mb-4 h-36 w-auto drop-shadow-sm sm:h-40 md:h-48 lg:h-52"
         />
 
-        <h1 className="fm-rise fm-rise-2 text-4xl font-bold tracking-tight md:text-6xl">
-          {APP_NAME}
-        </h1>
-
-        <p className="fm-rise fm-rise-3 mt-4 max-w-2xl text-lg text-slate-700 md:text-xl">
+        <p className="fm-rise fm-rise-2 mt-2 max-w-2xl text-lg text-slate-700 md:text-xl">
           The <span className="font-semibold text-primary">AI-native scheduling SaaS</span>{' '}
           that books, briefs, and follows up — for you.
         </p>
 
-        <p className="fm-rise fm-rise-3 mt-3 max-w-2xl text-base text-slate-600">
+        <p className="fm-rise fm-rise-3 mt-3 max-w-2xl text-base text-slate-600 md:mt-4">
           Share a link. Let invitees pick a time. Show up prepared with AI briefs and close the
           loop with personalized follow-ups — all on autopilot.
         </p>
