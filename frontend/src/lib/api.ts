@@ -27,6 +27,11 @@ export function getAccessToken() {
   return accessToken;
 }
 
+/** Non-dashboard routes (public booking, landing, auth) — no hard redirect to /login on 401. */
+function isPublicAuthRoute(): boolean {
+  return !window.location.pathname.startsWith('/dashboard');
+}
+
 // Add auth header to requests
 api.interceptors.request.use((config) => {
   if (accessToken) {
@@ -57,7 +62,11 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         setAccessToken(null);
-        window.location.href = '/login';
+        // On the landing page and auth screens, stay put so visitors see the page
+        // instead of being forced to /login when there is no session.
+        if (!isPublicAuthRoute()) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
