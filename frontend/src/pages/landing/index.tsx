@@ -149,12 +149,12 @@ export default function LandingPage() {
           >
             Sign in
           </Link>
-          <Link to="/register">
-            <Button size="sm">
+          <Button asChild size="sm">
+            <Link to="/register">
               Get started
               <ArrowRight className="ml-1.5 h-4 w-4" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </nav>
       </header>
 

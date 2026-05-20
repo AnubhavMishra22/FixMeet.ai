@@ -27,10 +27,9 @@ export function getAccessToken() {
   return accessToken;
 }
 
-/** Routes where a failed session refresh should not hard-redirect to /login. */
+/** Non-dashboard routes (public booking, landing, auth) — no hard redirect to /login on 401. */
 function isPublicAuthRoute(): boolean {
-  const path = window.location.pathname.replace(/\/$/, '') || '/';
-  return path === '/' || path === '/login' || path === '/register';
+  return !window.location.pathname.startsWith('/dashboard');
 }
 
 // Add auth header to requests
