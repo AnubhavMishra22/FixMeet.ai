@@ -161,7 +161,7 @@ export default function LandingPage() {
       {/* Hero */}
       <main
         id="main"
-        className="relative z-10 mx-auto mt-4 flex w-full max-w-6xl flex-1 flex-col items-center px-5 pb-0 pt-2 text-center md:mt-8 md:px-8 md:pt-4"
+        className="relative z-10 mx-auto -mt-5 flex w-full max-w-6xl flex-1 flex-col items-center px-5 pb-0 pt-0 text-center md:-mt-9 md:px-8"
       >
         <h1 className="sr-only">{APP_NAME}</h1>
         <div className="fm-rise fm-rise-1 flex flex-col items-center gap-0">
