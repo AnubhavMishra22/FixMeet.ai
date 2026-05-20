@@ -16,10 +16,10 @@ export function HomeRoute() {
   const fetched = useRef(false);
 
   useEffect(() => {
-    if (fetched.current) return;
+    if (!isLoading || fetched.current) return;
     fetched.current = true;
     void fetchUser();
-  }, [fetchUser]);
+  }, [fetchUser, isLoading]);
 
   if (isLoading) {
     return (
