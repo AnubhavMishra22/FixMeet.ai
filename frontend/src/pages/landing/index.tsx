@@ -13,6 +13,15 @@ import { Button } from '../../components/ui/button';
 import { APP_NAME, LOGO_PATH } from '../../lib/constants';
 import './landing.css';
 
+/**
+ * Tracks the pointer position and writes it into CSS variables
+ * (`--fm-cursor-x`, `--fm-cursor-y`) on the landing root, so the
+ * `.fm-cursor-glow` radial gradient can follow the cursor without
+ * triggering React re-renders.
+ *
+ * Skips touch-only devices (would leave a stuck spotlight) and
+ * collapses pointermove bursts to one update per animation frame.
+ */
 function useCursorSpotlight(rootRef: React.RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const root = rootRef.current;
@@ -53,67 +62,61 @@ function useCursorSpotlight(rootRef: React.RefObject<HTMLDivElement | null>) {
 interface Feature {
   icon: LucideIcon;
   title: string;
+  description: string;
   iconClass: string;
-  /** Absolute placement on md+ viewports (corners / edges). */
-  cornerClass: string;
 }
 
 const features: Feature[] = [
   {
     icon: Sparkles,
     title: 'AI Copilot',
+    description:
+      'Schedule, reschedule, and triage your calendar by chatting in plain English.',
     iconClass: 'bg-primary/10 text-primary',
-    cornerClass: 'md:left-6 md:top-[5.5rem] md:max-w-[11rem]',
   },
   {
     icon: CalendarDays,
     title: 'Smart Scheduling',
+    description:
+      'Public booking pages, availability rules, buffers, and Google Calendar sync.',
     iconClass: 'bg-sky-100 text-sky-700',
-    cornerClass: 'md:right-6 md:top-[5.5rem] md:max-w-[11rem]',
   },
   {
     icon: FileText,
     title: 'Meeting Briefs',
+    description:
+      'Pre-meeting prep notes generated automatically from invitee and meeting context.',
     iconClass: 'bg-indigo-100 text-indigo-700',
-    cornerClass: 'md:left-6 md:bottom-6 md:max-w-[11rem]',
   },
   {
     icon: MailCheck,
     title: 'AI Follow-ups',
+    description:
+      'Polished post-meeting emails with action items, ready to review and send.',
     iconClass: 'bg-violet-100 text-violet-700',
-    cornerClass: 'md:right-6 md:bottom-6 md:max-w-[11rem]',
   },
   {
     icon: BarChart3,
     title: 'Insights',
+    description:
+      'Trends, peak hours, and cancellation patterns — surfaced at a glance.',
     iconClass: 'bg-cyan-100 text-cyan-700',
-    cornerClass: 'md:left-1/2 md:-translate-x-1/2 md:bottom-6 md:max-w-[9rem]',
   },
 ];
 
-function FeatureChip({ icon: Icon, title, iconClass }: Feature) {
-  return (
-    <li className="fm-glass flex items-center gap-2 rounded-xl border border-white/60 px-3 py-2 shadow-sm">
-      <span
-        className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconClass}`}
-        aria-hidden
-      >
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="text-sm font-semibold text-slate-800">{title}</span>
-    </li>
-  );
-}
-
+/**
+ * Public landing page for FixMeet.
+ *
+ * First-load surface for unauthenticated visitors. Features the brand,
+ * a one-line value prop, and CTAs into /register and /login. The animated
+ * background lives in `landing.css` and respects prefers-reduced-motion.
+ */
 export default function LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null);
   useCursorSpotlight(rootRef);
 
   return (
-    <div
-      ref={rootRef}
-      className="fm-landing fm-grid fm-wires flex h-screen max-h-screen flex-col overflow-hidden text-slate-900"
-    >
+    <div ref={rootRef} className="fm-landing fm-grid fm-wires text-slate-900">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-slate-900 focus:shadow"
@@ -126,13 +129,14 @@ export default function LandingPage() {
       <span aria-hidden className="fm-blob b3" />
       <span aria-hidden className="fm-cursor-glow" />
 
-      <header className="relative z-10 flex shrink-0 items-center justify-between px-5 py-4 md:px-8">
+      {/* Top navigation */}
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 md:px-8">
         <Link
           to="/"
           aria-label={APP_NAME}
           className="flex items-center gap-2 text-lg font-bold text-primary-wordmark transition-opacity hover:opacity-90"
         >
-          <img src={LOGO_PATH} alt="" aria-hidden className="h-8 w-8 object-contain" />
+          <img src={LOGO_PATH} alt="" aria-hidden className="h-9 w-9 object-contain" />
           <span>{APP_NAME}</span>
         </Link>
         <nav className="flex items-center gap-2 sm:gap-3" aria-label="Primary">
@@ -151,63 +155,100 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        {/* Corner highlights — desktop */}
-        <ul
-          aria-label="Product highlights"
-          className="pointer-events-none absolute inset-0 hidden md:block"
+      {/* Hero */}
+      <main
+        id="main"
+        className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center px-5 pt-10 pb-16 text-center md:px-8 md:pt-16 md:pb-24"
+      >
+        <span className="fm-rise fm-rise-1 mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm backdrop-blur">
+          <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
+          AI-native scheduling, briefs, and follow-ups
+        </span>
+
+        <img
+          src={LOGO_PATH}
+          alt={`${APP_NAME} logo`}
+          className="fm-rise fm-rise-1 mb-3 h-24 w-auto drop-shadow-sm md:h-32"
+        />
+
+        <h1 className="fm-rise fm-rise-2 text-4xl font-bold tracking-tight md:text-6xl">
+          {APP_NAME}
+        </h1>
+
+        <p className="fm-rise fm-rise-3 mt-4 max-w-2xl text-lg text-slate-700 md:text-xl">
+          The <span className="font-semibold text-primary">AI-native scheduling SaaS</span>{' '}
+          that books, briefs, and follows up — for you.
+        </p>
+
+        <p className="fm-rise fm-rise-3 mt-3 max-w-2xl text-base text-slate-600">
+          Share a link. Let invitees pick a time. Show up prepared with AI briefs and close the
+          loop with personalized follow-ups — all on autopilot.
+        </p>
+
+        <div className="fm-rise fm-rise-4 mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
+          <Link to="/register" className="sm:w-auto">
+            <Button size="lg" className="w-full sm:w-auto">
+              Create your free account
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+          <Link to="/login" className="sm:w-auto">
+            <Button size="lg" variant="outline" className="w-full sm:w-auto">
+              Sign in
+            </Button>
+          </Link>
+        </div>
+
+        {/* Feature highlights */}
+        <section
+          aria-labelledby="features-heading"
+          className="fm-rise fm-rise-4 mt-16 w-full md:mt-24"
         >
-          {features.map((f) => (
-            <li key={f.title} className={`pointer-events-auto absolute ${f.cornerClass}`}>
-              <FeatureChip {...f} />
-            </li>
-          ))}
-        </ul>
+          <h2
+            id="features-heading"
+            className="text-sm font-semibold uppercase tracking-wider text-slate-500"
+          >
+            What you get out of the box
+          </h2>
 
-        <main
-          id="main"
-          className="flex flex-1 flex-col items-center justify-center px-5 text-center md:px-8"
-        >
-          <img
-            src={LOGO_PATH}
-            alt={`${APP_NAME} logo`}
-            className="fm-rise fm-rise-1 mb-2 h-16 w-auto drop-shadow-sm sm:h-20 md:h-24"
-          />
+          <ul
+            role="list"
+            className="mt-5 grid grid-cols-1 gap-4 text-left sm:grid-cols-2 lg:grid-cols-5"
+          >
+            {features.map((f) => {
+              const Icon = f.icon;
+              return (
+                <li
+                  key={f.title}
+                  className="fm-glass group relative rounded-2xl border border-white/60 p-5 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <span
+                    className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl ${f.iconClass}`}
+                    aria-hidden
+                  >
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="text-base font-semibold text-slate-900">{f.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">{f.description}</p>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      </main>
 
-          <h1 className="fm-rise fm-rise-2 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-            {APP_NAME}
-          </h1>
-
-          <p className="fm-rise fm-rise-3 mt-2 max-w-md text-base text-slate-700 sm:text-lg">
-            <span className="font-semibold text-primary">AI-native scheduling SaaS</span> — book,
-            brief, and follow up in one place.
-          </p>
-
-          <div className="fm-rise fm-rise-4 mt-5 flex w-full max-w-sm flex-col gap-2 sm:max-w-md sm:flex-row sm:justify-center sm:gap-3">
-            <Link to="/register" className="sm:flex-1 sm:max-w-[12rem]">
-              <Button size="default" className="w-full">
-                Get started
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link to="/login" className="sm:flex-1 sm:max-w-[12rem]">
-              <Button size="default" variant="outline" className="w-full">
-                Sign in
-              </Button>
-            </Link>
-          </div>
-        </main>
-
-        {/* Compact strip — mobile / narrow */}
-        <ul
-          aria-label="Product highlights"
-          className="relative z-10 flex shrink-0 flex-wrap justify-center gap-2 px-4 pb-4 md:hidden"
-        >
-          {features.map((f) => (
-            <FeatureChip key={f.title} {...f} />
-          ))}
-        </ul>
-      </div>
+      <footer className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-8 text-center text-xs text-slate-500 md:px-8">
+        <p>
+          © {new Date().getFullYear()} {APP_NAME} · Built for AI-native scheduling. ·{' '}
+          <Link to="/login" className="font-medium text-slate-700 hover:text-slate-900">
+            Sign in
+          </Link>{' '}
+          ·{' '}
+          <Link to="/register" className="font-medium text-slate-700 hover:text-slate-900">
+            Create account
+          </Link>
+        </p>
+      </footer>
     </div>
   );
 }
