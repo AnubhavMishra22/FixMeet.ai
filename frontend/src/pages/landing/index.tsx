@@ -130,7 +130,7 @@ export default function LandingPage() {
       <span aria-hidden className="fm-cursor-glow" />
 
       {/* Top navigation */}
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-3 md:px-8 md:py-4">
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-2 md:px-8">
         <Link
           to="/"
           aria-label={APP_NAME}
@@ -158,7 +158,7 @@ export default function LandingPage() {
       {/* Hero */}
       <main
         id="main"
-        className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center px-5 pt-2 pb-16 text-center md:px-8 md:pt-3 md:pb-24"
+        className="relative z-10 mx-auto -mt-8 flex w-full max-w-6xl flex-col items-center px-5 pb-16 pt-0 text-center md:-mt-12 md:px-8 md:pb-24"
       >
         <h1 className="sr-only">{APP_NAME}</h1>
         <div className="fm-rise fm-rise-1 flex flex-col items-center gap-0">
@@ -166,9 +166,9 @@ export default function LandingPage() {
             src={LOGO_PATH}
             alt=""
             aria-hidden
-            className="h-52 w-auto max-w-[min(92vw,28rem)] drop-shadow-sm sm:h-60 md:h-72 lg:h-80"
+            className="block h-52 w-auto max-w-[min(92vw,28rem)] drop-shadow-sm sm:h-60 md:h-72 lg:h-80"
           />
-          <p className="fm-rise fm-rise-2 -mt-4 max-w-2xl text-lg leading-snug text-slate-700 sm:-mt-5 md:-mt-6 md:text-xl">
+          <p className="fm-rise fm-rise-2 -mt-6 max-w-2xl text-lg leading-snug text-slate-700 sm:-mt-7 md:-mt-8 md:text-xl">
             The <span className="font-semibold text-primary">AI-native scheduling SaaS</span>{' '}
             that books, briefs, and follows up — for you.
           </p>
