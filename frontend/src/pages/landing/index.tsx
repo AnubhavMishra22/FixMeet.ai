@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Sparkles,
@@ -10,54 +10,9 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
+import { useCursorSpotlight } from '../../hooks/use-cursor-spotlight';
 import { APP_NAME, LOGO_PATH } from '../../lib/constants';
 import './landing.css';
-
-/**
- * Tracks the pointer position and writes it into CSS variables
- * (`--fm-cursor-x`, `--fm-cursor-y`) on the landing root, so the
- * `.fm-cursor-glow` radial gradient can follow the cursor without
- * triggering React re-renders.
- *
- * Skips touch-only devices (would leave a stuck spotlight) and
- * collapses pointermove bursts to one update per animation frame.
- */
-function useCursorSpotlight(rootRef: React.RefObject<HTMLDivElement | null>) {
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-
-    if (typeof window.matchMedia === 'function') {
-      const fine = window.matchMedia('(pointer: fine)');
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-      if (!fine.matches || reduced.matches) return;
-    }
-
-    let raf = 0;
-    let nextX = window.innerWidth / 2;
-    let nextY = window.innerHeight / 2;
-
-    const flush = () => {
-      raf = 0;
-      root.style.setProperty('--fm-cursor-x', `${nextX}px`);
-      root.style.setProperty('--fm-cursor-y', `${nextY}px`);
-    };
-
-    const onMove = (e: PointerEvent) => {
-      nextX = e.clientX;
-      nextY = e.clientY;
-      if (!raf) raf = requestAnimationFrame(flush);
-    };
-
-    flush();
-    window.addEventListener('pointermove', onMove, { passive: true });
-
-    return () => {
-      window.removeEventListener('pointermove', onMove);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, [rootRef]);
-}
 
 interface Feature {
   icon: LucideIcon;
