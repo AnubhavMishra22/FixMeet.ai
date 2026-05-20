@@ -165,10 +165,10 @@ export default function LandingPage() {
           src={LOGO_PATH}
           alt=""
           aria-hidden
-          className="fm-rise fm-rise-1 mb-4 h-36 w-auto drop-shadow-sm sm:h-40 md:h-48 lg:h-52"
+          className="fm-rise fm-rise-1 h-44 w-auto drop-shadow-sm sm:h-52 md:h-60 lg:h-64"
         />
 
-        <p className="fm-rise fm-rise-2 mt-2 max-w-2xl text-lg text-slate-700 md:text-xl">
+        <p className="fm-rise fm-rise-2 max-w-2xl text-lg text-slate-700 md:text-xl">
           The <span className="font-semibold text-primary">AI-native scheduling SaaS</span>{' '}
           that books, briefs, and follows up — for you.
         </p>
