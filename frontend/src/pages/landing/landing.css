@@ -10,7 +10,10 @@
 
 .fm-landing {
   position: relative;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
   overflow: hidden;
   background:
     radial-gradient(1200px 600px at 18% 20%, rgba(56, 189, 248, 0.18), transparent 60%),
