@@ -116,7 +116,10 @@ export default function LandingPage() {
   useCursorSpotlight(rootRef);
 
   return (
-    <div ref={rootRef} className="fm-landing fm-grid fm-wires text-slate-900">
+    <div
+      ref={rootRef}
+      className="fm-landing fm-grid fm-wires flex min-h-screen flex-col text-slate-900"
+    >
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-slate-900 focus:shadow"
@@ -130,7 +133,7 @@ export default function LandingPage() {
       <span aria-hidden className="fm-cursor-glow" />
 
       {/* Top navigation */}
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-2 md:px-8">
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl shrink-0 items-center justify-between px-5 py-2 md:px-8">
         <Link
           to="/"
           aria-label={APP_NAME}
@@ -158,7 +161,7 @@ export default function LandingPage() {
       {/* Hero */}
       <main
         id="main"
-        className="relative z-10 mx-auto -mt-8 flex w-full max-w-6xl flex-col items-center px-5 pb-6 pt-0 text-center md:-mt-12 md:px-8 md:pb-8"
+        className="relative z-10 mx-auto -mt-8 flex w-full max-w-6xl flex-1 flex-col items-center px-5 pb-0 pt-0 text-center md:-mt-12 md:px-8"
       >
         <h1 className="sr-only">{APP_NAME}</h1>
         <div className="fm-rise fm-rise-1 flex flex-col items-center gap-0">
