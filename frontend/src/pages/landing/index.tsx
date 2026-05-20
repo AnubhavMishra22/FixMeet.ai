@@ -179,24 +179,10 @@ export default function LandingPage() {
           loop with personalized follow-ups — all on autopilot.
         </p>
 
-        <div className="fm-rise fm-rise-4 mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link to="/register" className="sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto">
-              Create your free account
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
-          <Link to="/login" className="sm:w-auto">
-            <Button size="lg" variant="outline" className="w-full sm:w-auto">
-              Sign in
-            </Button>
-          </Link>
-        </div>
-
         {/* Feature highlights */}
         <section
           aria-labelledby="features-heading"
-          className="fm-rise fm-rise-4 mt-16 w-full md:mt-24"
+          className="fm-rise fm-rise-4 mt-12 w-full md:mt-16"
         >
           <h2
             id="features-heading"
