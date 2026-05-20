@@ -158,7 +158,7 @@ export default function LandingPage() {
       {/* Hero */}
       <main
         id="main"
-        className="relative z-10 mx-auto -mt-8 flex w-full max-w-6xl flex-col items-center px-5 pb-16 pt-0 text-center md:-mt-12 md:px-8 md:pb-24"
+        className="relative z-10 mx-auto -mt-8 flex w-full max-w-6xl flex-col items-center px-5 pb-6 pt-0 text-center md:-mt-12 md:px-8 md:pb-8"
       >
         <h1 className="sr-only">{APP_NAME}</h1>
         <div className="fm-rise fm-rise-1 flex flex-col items-center gap-0">
@@ -210,7 +210,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-8 text-center text-xs text-slate-500 md:px-8">
+      <footer className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-6 pt-0 text-center text-xs text-slate-500 md:px-8">
         <p>
           © {new Date().getFullYear()} {APP_NAME} · Built for AI-native scheduling. ·{' '}
           <Link to="/login" className="font-medium text-slate-700 hover:text-slate-900">
