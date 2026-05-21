@@ -88,7 +88,7 @@ export default function LandingPage() {
       <span aria-hidden className="fm-cursor-glow" />
 
       {/* Top navigation */}
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl shrink-0 items-center justify-between px-5 py-2 md:px-8">
+      <header className="relative z-20 mx-auto flex w-full max-w-6xl shrink-0 items-center justify-between px-5 py-2 md:px-8">
         <Link
           to="/"
           aria-label={APP_NAME}
@@ -97,10 +97,10 @@ export default function LandingPage() {
           <img src={LOGO_PATH} alt="" aria-hidden className="h-9 w-9 object-contain" />
           <span>{APP_NAME}</span>
         </Link>
-        <nav className="flex items-center gap-2 sm:gap-3" aria-label="Primary">
+        <nav className="relative z-20 flex items-center gap-2 sm:gap-3" aria-label="Primary">
           <Link
             to="/login"
-            className="hidden rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-white/60 hover:text-slate-900 sm:inline-flex"
+            className="inline-flex rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-white/60 hover:text-slate-900"
           >
             Sign in
           </Link>
