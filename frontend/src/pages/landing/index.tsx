@@ -126,8 +126,11 @@ export default function LandingPage() {
             aria-hidden
             className="block h-52 w-auto max-w-[min(92vw,28rem)] drop-shadow-sm sm:h-60 md:h-72 lg:h-80"
           />
-          <p className="fm-rise fm-rise-2 -mt-6 max-w-2xl text-lg leading-snug text-slate-700 sm:-mt-7 md:-mt-8 md:text-xl">
-            The <span className="font-semibold text-primary">AI-Native Meeting Scheduling SaaS</span>{' '}
+          <p className="fm-rise fm-rise-2 -mt-6 w-full max-w-5xl text-lg leading-snug text-slate-700 sm:-mt-7 md:-mt-8 md:text-xl">
+            The{' '}
+            <span className="inline-block whitespace-nowrap font-semibold text-primary">
+              AI-Native Meeting Scheduling SaaS
+            </span>{' '}
             that books, briefs, and follows up, for you.
           </p>
         </div>
