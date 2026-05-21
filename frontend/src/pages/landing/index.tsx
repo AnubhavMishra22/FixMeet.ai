@@ -88,29 +88,31 @@ export default function LandingPage() {
       <span aria-hidden className="fm-cursor-glow" />
 
       {/* Top navigation */}
-      <header className="relative z-20 mx-auto flex w-full max-w-6xl shrink-0 items-center justify-between px-5 py-2 md:px-8">
-        <Link
-          to="/"
-          aria-label={APP_NAME}
-          className="flex items-center gap-2 text-lg font-bold text-primary-wordmark transition-opacity hover:opacity-90"
-        >
-          <img src={LOGO_PATH} alt="" aria-hidden className="h-9 w-9 object-contain" />
-          <span>{APP_NAME}</span>
-        </Link>
-        <nav className="relative z-20 flex items-center gap-2 sm:gap-3" aria-label="Primary">
+      <header className="relative z-20 mx-auto w-full max-w-6xl shrink-0 px-5 pt-3 md:px-8 md:pt-4">
+        <div className="fm-glass flex items-center justify-between rounded-2xl border border-white/70 px-4 py-2 shadow-sm sm:px-5 sm:py-2.5">
           <Link
-            to="/login"
-            className="inline-flex rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-white/60 hover:text-slate-900"
+            to="/"
+            aria-label={APP_NAME}
+            className="flex items-center gap-2 text-lg font-bold text-primary-wordmark transition-opacity hover:opacity-90"
           >
-            Sign in
+            <img src={LOGO_PATH} alt="" aria-hidden className="h-9 w-9 object-contain" />
+            <span>{APP_NAME}</span>
           </Link>
-          <Button asChild size="sm">
-            <Link to="/register">
-              Get started
-              <ArrowRight className="ml-1.5 h-4 w-4" />
+          <nav className="flex items-center gap-2 sm:gap-3" aria-label="Primary">
+            <Link
+              to="/login"
+              className="inline-flex rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-white/80 hover:text-slate-900"
+            >
+              Sign in
             </Link>
-          </Button>
-        </nav>
+            <Button asChild size="sm">
+              <Link to="/register">
+                Get started
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Link>
+            </Button>
+          </nav>
+        </div>
       </header>
 
       {/* Hero */}
