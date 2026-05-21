@@ -157,6 +157,14 @@
   -webkit-backdrop-filter: saturate(140%) blur(8px);
 }
 
+/* Landing navbar — lighter frosted glass than feature cards */
+.fm-nav-glass {
+  background-color: rgba(255, 255, 255, 0.28);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
 /* Gentle reveal for hero/feature content */
 @keyframes fm-rise {
   from { opacity: 0; transform: translate3d(0, 12px, 0); }

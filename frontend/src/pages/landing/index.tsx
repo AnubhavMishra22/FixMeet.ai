@@ -89,7 +89,7 @@ export default function LandingPage() {
 
       {/* Top navigation */}
       <header className="relative z-20 mx-auto w-full max-w-6xl shrink-0 px-5 pt-3 md:px-8 md:pt-4">
-        <div className="fm-glass flex items-center justify-between rounded-2xl border border-white/70 px-4 py-2 shadow-sm sm:px-5 sm:py-2.5">
+        <div className="fm-nav-glass flex items-center justify-between rounded-2xl border border-white/45 px-4 py-2 sm:px-5 sm:py-2.5">
           <Link
             to="/"
             aria-label={APP_NAME}
@@ -99,12 +99,9 @@ export default function LandingPage() {
             <span>{APP_NAME}</span>
           </Link>
           <nav className="flex items-center gap-2 sm:gap-3" aria-label="Primary">
-            <Link
-              to="/login"
-              className="inline-flex rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-white/80 hover:text-slate-900"
-            >
-              Sign in
-            </Link>
+            <Button asChild size="sm" variant="default">
+              <Link to="/login">Sign in</Link>
+            </Button>
             <Button asChild size="sm">
               <Link to="/register">
                 Get started
