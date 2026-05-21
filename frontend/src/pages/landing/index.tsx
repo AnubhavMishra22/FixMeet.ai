@@ -99,7 +99,7 @@ export default function LandingPage() {
             <span>{APP_NAME}</span>
           </Link>
           <nav className="flex items-center gap-2 sm:gap-3" aria-label="Primary">
-            <Button asChild size="sm" variant="default">
+            <Button asChild size="sm">
               <Link to="/login">Sign in</Link>
             </Button>
             <Button asChild size="sm">
@@ -127,7 +127,7 @@ export default function LandingPage() {
           />
           <p className="fm-rise fm-rise-2 -mt-6 w-full max-w-5xl text-lg leading-snug text-slate-700 sm:-mt-7 md:-mt-8 md:text-xl">
             The{' '}
-            <span className="inline-block whitespace-nowrap font-semibold text-primary">
+            <span className="inline-block font-semibold text-primary sm:whitespace-nowrap">
               AI-Native Meeting Scheduling SaaS
             </span>{' '}
             that books, briefs, and follows up, for you.
