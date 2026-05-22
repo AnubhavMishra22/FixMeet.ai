@@ -88,29 +88,28 @@ export default function LandingPage() {
       <span aria-hidden className="fm-cursor-glow" />
 
       {/* Top navigation */}
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl shrink-0 items-center justify-between px-5 py-2 md:px-8">
-        <Link
-          to="/"
-          aria-label={APP_NAME}
-          className="flex items-center gap-2 text-lg font-bold text-primary-wordmark transition-opacity hover:opacity-90"
-        >
-          <img src={LOGO_PATH} alt="" aria-hidden className="h-9 w-9 object-contain" />
-          <span>{APP_NAME}</span>
-        </Link>
-        <nav className="flex items-center gap-2 sm:gap-3" aria-label="Primary">
+      <header className="relative z-20 mx-auto w-full max-w-6xl shrink-0 px-5 pt-3 md:px-8 md:pt-4">
+        <div className="fm-nav-glass flex items-center justify-between rounded-2xl border border-white/45 px-4 py-2 sm:px-5 sm:py-2.5">
           <Link
-            to="/login"
-            className="hidden rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-white/60 hover:text-slate-900 sm:inline-flex"
+            to="/"
+            aria-label={APP_NAME}
+            className="flex items-center gap-2 text-lg font-bold text-primary-wordmark transition-opacity hover:opacity-90"
           >
-            Sign in
+            <img src={LOGO_PATH} alt="" aria-hidden className="h-9 w-9 object-contain" />
+            <span>{APP_NAME}</span>
           </Link>
-          <Button asChild size="sm">
-            <Link to="/register">
-              Get started
-              <ArrowRight className="ml-1.5 h-4 w-4" />
-            </Link>
-          </Button>
-        </nav>
+          <nav className="flex items-center gap-2 sm:gap-3" aria-label="Primary">
+            <Button asChild size="sm">
+              <Link to="/login">Sign in</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link to="/register">
+                Get started
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Link>
+            </Button>
+          </nav>
+        </div>
       </header>
 
       {/* Hero */}
@@ -126,15 +125,18 @@ export default function LandingPage() {
             aria-hidden
             className="block h-52 w-auto max-w-[min(92vw,28rem)] drop-shadow-sm sm:h-60 md:h-72 lg:h-80"
           />
-          <p className="fm-rise fm-rise-2 -mt-6 max-w-2xl text-lg leading-snug text-slate-700 sm:-mt-7 md:-mt-8 md:text-xl">
-            The <span className="font-semibold text-primary">AI-native scheduling SaaS</span>{' '}
-            that books, briefs, and follows up — for you.
+          <p className="fm-rise fm-rise-2 -mt-6 w-full max-w-5xl text-lg leading-snug text-slate-700 sm:-mt-7 md:-mt-8 md:text-xl">
+            The{' '}
+            <span className="inline-block font-semibold text-primary sm:whitespace-nowrap">
+              AI-Native Meeting Scheduling SaaS
+            </span>{' '}
+            that books, briefs, and follows up, for you.
           </p>
         </div>
 
         <p className="fm-rise fm-rise-3 mt-3 max-w-2xl text-base text-slate-600 md:mt-4">
           Share a link. Let invitees pick a time. Show up prepared with AI briefs and close the
-          loop with personalized follow-ups — all on autopilot.
+          loop with personalized follow-ups, all on autopilot.
         </p>
 
         {/* Feature highlights */}
